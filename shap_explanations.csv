@@ -1,0 +1,154 @@
+provider_id,top_features,explanation,shap_top1_val,shap_top2_val,shap_top3_val
+PRV0001,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3384,0.2196,0.2015
+PRV0002,spec_Cardiology; pct_93000; services_per_patient,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, excessive services per patient.",0.1968,0.0919,0.0724
+PRV0003,spec_Dermatology; pct_11100; pct_11101,"Flagged due to: specialty mix (Dermatology), over-use of code 11100, over-use of code 11101.",0.6365,0.5755,0.463
+PRV0004,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.283,0.2199,0.1875
+PRV0005,pct_99213; services_per_patient; spec_Family Medicine,"Flagged due to: over-use of code 99213, excessive services per patient.",0.045,0.0057,-0.0019
+PRV0006,std_billed; pct_27447; pct_43239,"Flagged due to: std billed, over-use of code 27447, over-use of code 43239.",0.8492,0.7494,0.7449
+PRV0007,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.2439,0.1733,0.1658
+PRV0008,pct_90837; top_tier_share; code_entropy,"Flagged due to: over-use of code 90837, over-use of top-tier billing codes, unusual code diversity.",0.9106,0.8446,0.6178
+PRV0009,pct_99214; pct_99213; spec_Family Medicine,"Flagged due to: over-use of code 99214, over-use of code 99213, specialty mix (Family Medicine).",0.2336,0.0392,0.0107
+PRV0010,spec_Cardiology; pct_93010; pct_93000,"Flagged due to: specialty mix (Cardiology), over-use of code 93010, over-use of code 93000.",0.1832,0.1117,0.0998
+PRV0011,spec_Cardiology; pct_93000; pct_93005,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93005.",0.1441,0.0652,0.0398
+PRV0012,std_billed; pct_99232; spec_Surgery,"Flagged due to: std billed, over-use of code 99232, specialty mix (Surgery).",0.645,0.5712,0.4213
+PRV0013,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.4125,0.2746,0.2541
+PRV0014,spec_Dermatology; pct_11100; pct_11101,"Flagged due to: specialty mix (Dermatology), over-use of code 11100, over-use of code 11101.",0.6499,0.4706,0.4684
+PRV0015,spec_Cardiology; pct_93005; pct_93000,"Flagged due to: specialty mix (Cardiology), over-use of code 93005, over-use of code 93000.",0.2269,0.2242,0.166
+PRV0016,pct_99213; pct_99214; spec_Family Medicine,"Flagged due to: over-use of code 99213, over-use of code 99214, specialty mix (Family Medicine).",0.1348,0.0544,0.0423
+PRV0017,pct_72148; spec_Radiology; pct_70553,"Flagged due to: over-use of code 72148, specialty mix (Radiology), over-use of code 70553.",0.2733,0.224,0.1872
+PRV0018,pct_99214; spec_Family Medicine; pct_99213,No dominant single-feature driver.,-0.0069,-0.0085,-0.0167
+PRV0019,spec_Dermatology; pct_11101; pct_11100,"Flagged due to: specialty mix (Dermatology), over-use of code 11101, over-use of code 11100.",0.6443,0.5293,0.5211
+PRV0020,pct_70553; pct_72148; spec_Radiology,"Flagged due to: over-use of code 70553, over-use of code 72148, specialty mix (Radiology).",0.2505,0.244,0.222
+PRV0021,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.2756,0.2126,0.1978
+PRV0022,spec_Cardiology; pct_93000; pct_93005,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93005.",0.2065,0.0789,0.0642
+PRV0023,std_billed; pct_99232; spec_Surgery,"Flagged due to: std billed, over-use of code 99232, specialty mix (Surgery).",0.6096,0.4503,0.3879
+PRV0024,spec_Dermatology; pct_11100; pct_11101,"Flagged due to: specialty mix (Dermatology), over-use of code 11100, over-use of code 11101.",0.6594,0.6347,0.5373
+PRV0025,total_claims; unique_patients; claims_per_day,"Flagged due to: high total claim count, unique patients, unusually high daily claim volume.",1.1154,1.0342,1.0194
+PRV0026,pct_99232; billed_days; spec_Family Medicine,"Flagged due to: over-use of code 99232, billed days, specialty mix (Family Medicine).",0.1866,0.0648,0.0289
+PRV0027,pct_93000; spec_Cardiology; top_tier_share,"Flagged due to: over-use of code 93000, specialty mix (Cardiology), over-use of top-tier billing codes.",0.5005,0.3116,0.2456
+PRV0028,pct_99214; pct_99213; spec_Family Medicine,"Flagged due to: over-use of code 99214, over-use of code 99213, specialty mix (Family Medicine).",0.2426,0.0487,0.0357
+PRV0029,pct_99214; billed_days; spec_Family Medicine,"Flagged due to: over-use of code 99214, billed days, specialty mix (Family Medicine).",0.0414,0.0121,0.0065
+PRV0030,pct_90834; spec_Psychiatry; pct_90837,"Flagged due to: over-use of code 90834, specialty mix (Psychiatry), over-use of code 90837.",0.4537,0.198,0.1964
+PRV0031,pct_90834; spec_Psychiatry; pct_90837,"Flagged due to: over-use of code 90834, specialty mix (Psychiatry), over-use of code 90837.",0.3307,0.2528,0.2418
+PRV0032,std_billed; pct_99232; spec_Surgery,"Flagged due to: std billed, over-use of code 99232, specialty mix (Surgery).",0.622,0.4495,0.4299
+PRV0033,spec_Cardiology; pct_93000; billed_cv,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, high billing variability.",0.194,0.1815,0.0394
+PRV0034,spec_Cardiology; pct_93000; pct_93010,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93010.",0.1557,0.0945,0.0609
+PRV0035,spec_Cardiology; pct_93000; pct_93010,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93010.",0.212,0.1204,0.0989
+PRV0036,spec_Family Medicine; avg_minutes; top_tier_share,"Flagged due to: specialty mix (Family Medicine), above-peer average service duration.",0.0185,0.0106,-0.0041
+PRV0037,avg_minutes; pct_99213; spec_Family Medicine,"Flagged due to: above-peer average service duration, over-use of code 99213, specialty mix (Family Medicine).",0.0299,0.0274,0.0271
+PRV0038,spec_Cardiology; pct_93010; billed_cv,"Flagged due to: specialty mix (Cardiology), over-use of code 93010, high billing variability.",0.1205,0.0611,0.0428
+PRV0039,billed_days; top_tier_share; spec_Family Medicine,"Flagged due to: billed days, over-use of top-tier billing codes, specialty mix (Family Medicine).",0.0981,0.0891,0.0335
+PRV0040,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3455,0.2751,0.2289
+PRV0041,spec_Cardiology; pct_93000; billed_cv,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, high billing variability.",0.1613,0.0597,0.0396
+PRV0042,spec_Dermatology; pct_11101; pct_11100,"Flagged due to: specialty mix (Dermatology), over-use of code 11101, over-use of code 11100.",0.6044,0.5238,0.5144
+PRV0043,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.4996,0.2369,0.2207
+PRV0044,spec_Cardiology; max_daily_minutes; pct_93000,"Flagged due to: specialty mix (Cardiology), extreme single-day minutes billed, over-use of code 93000.",0.2379,0.1471,0.1035
+PRV0045,max_daily_minutes; spec_Dermatology; pct_11101,"Flagged due to: extreme single-day minutes billed, specialty mix (Dermatology), over-use of code 11101.",0.9665,0.8035,0.5216
+PRV0046,spec_Dermatology; pct_11101; pct_11100,"Flagged due to: specialty mix (Dermatology), over-use of code 11101, over-use of code 11100.",0.6176,0.5155,0.4621
+PRV0047,spec_Cardiology; pct_93000; pct_93005,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93005.",0.1581,0.0793,0.0637
+PRV0048,services_per_patient; spec_Family Medicine; max_daily_minutes,Flagged due to: excessive services per patient.,0.0751,-0.0008,-0.0118
+PRV0049,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.4226,0.2065,0.2028
+PRV0050,pct_99213; spec_Family Medicine; unique_patients,"Flagged due to: over-use of code 99213, specialty mix (Family Medicine), unique patients.",0.0657,0.0116,0.0038
+PRV0051,pct_99232; spec_Family Medicine; pct_99213,"Flagged due to: over-use of code 99232, specialty mix (Family Medicine), over-use of code 99213.",0.1937,0.0361,0.0138
+PRV0052,spec_Family Medicine; pct_27447; dup_rate,No dominant single-feature driver.,-0.0085,-0.0272,-0.0274
+PRV0053,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3568,0.179,0.1674
+PRV0054,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.303,0.2051,0.1957
+PRV0055,pct_90834; services_per_patient; pct_90837,"Flagged due to: over-use of code 90834, excessive services per patient, over-use of code 90837.",0.361,0.2885,0.246
+PRV0056,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3184,0.1972,0.1957
+PRV0057,spec_Cardiology; billed_days; pct_93000,"Flagged due to: specialty mix (Cardiology), billed days, over-use of code 93000.",0.2332,0.1344,0.1219
+PRV0058,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.2437,0.1924,0.163
+PRV0059,billed_days; unique_patients; spec_Family Medicine,"Flagged due to: billed days, unique patients, specialty mix (Family Medicine).",0.0912,0.0259,0.015
+PRV0060,pct_99213; spec_Family Medicine; unique_patients,Flagged due to: over-use of code 99213.,0.0122,-0.0008,-0.0196
+PRV0061,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.2642,0.1778,0.1618
+PRV0062,pct_93010; spec_Cardiology; pct_93000,"Flagged due to: over-use of code 93010, specialty mix (Cardiology), over-use of code 93000.",0.2716,0.1852,0.1147
+PRV0063,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.2548,0.2009,0.1565
+PRV0064,pct_90837; pct_90834; spec_Psychiatry,"Flagged due to: over-use of code 90837, over-use of code 90834, specialty mix (Psychiatry).",0.4561,0.4293,0.2612
+PRV0065,pct_72148; spec_Radiology; max_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), max billed.",0.2667,0.2394,0.181
+PRV0066,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.4089,0.2625,0.2286
+PRV0067,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.2803,0.2165,0.168
+PRV0068,spec_Cardiology; pct_93010; pct_93000,"Flagged due to: specialty mix (Cardiology), over-use of code 93010, over-use of code 93000.",0.1479,0.1146,0.0944
+PRV0069,spec_Family Medicine; unique_patients; total_claims,No dominant single-feature driver.,-0.001,-0.0096,-0.0175
+PRV0070,spec_Cardiology; pct_93000; pct_93010,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93010.",0.2005,0.1231,0.0856
+PRV0071,spec_Family Medicine; total_billed; pct_99213,No dominant single-feature driver.,-0.0107,-0.0246,-0.0251
+PRV0072,spec_Cardiology; pct_93010; pct_93000,"Flagged due to: specialty mix (Cardiology), over-use of code 93010, over-use of code 93000.",0.2055,0.1249,0.102
+PRV0073,spec_Dermatology; pct_11100; pct_11101,"Flagged due to: specialty mix (Dermatology), over-use of code 11100, over-use of code 11101.",0.6891,0.6768,0.5678
+PRV0074,pct_99232; unique_patients; total_claims,"Flagged due to: over-use of code 99232, unique patients, high total claim count.",0.0952,0.0174,0.0137
+PRV0075,max_daily_minutes; unique_patients; pct_99213,"Flagged due to: extreme single-day minutes billed, unique patients.",0.0067,0.0033,-0.0026
+PRV0076,billed_days; pct_99213; max_billed,"Flagged due to: billed days, over-use of code 99213, max billed.",0.1108,0.0288,0.0169
+PRV0077,dup_rate; services_per_patient; top_tier_share,"Flagged due to: elevated duplicate claim rate, excessive services per patient, over-use of top-tier billing codes.",1.4177,0.8472,0.1122
+PRV0078,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.322,0.225,0.2181
+PRV0079,pct_70553; pct_72148; spec_Radiology,"Flagged due to: over-use of code 70553, over-use of code 72148, specialty mix (Radiology).",0.3854,0.354,0.2749
+PRV0080,pct_90834; spec_Psychiatry; pct_90837,"Flagged due to: over-use of code 90834, specialty mix (Psychiatry), over-use of code 90837.",0.4387,0.2043,0.1904
+PRV0081,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3262,0.3235,0.2249
+PRV0082,pct_93005; spec_Cardiology; services_per_patient,"Flagged due to: over-use of code 93005, specialty mix (Cardiology), excessive services per patient.",0.4113,0.2543,0.2294
+PRV0083,spec_Dermatology; pct_11101; pct_11100,"Flagged due to: specialty mix (Dermatology), over-use of code 11101, over-use of code 11100.",0.6547,0.6178,0.526
+PRV0084,pct_99213; top_tier_share; spec_Family Medicine,"Flagged due to: over-use of code 99213, over-use of top-tier billing codes, specialty mix (Family Medicine).",0.161,0.1322,0.0517
+PRV0085,services_per_patient; pct_99213; spec_Family Medicine,"Flagged due to: excessive services per patient, over-use of code 99213.",0.061,0.0456,-0.0017
+PRV0086,spec_Family Medicine; max_billed; pct_99213,No dominant single-feature driver.,-0.0011,-0.009,-0.019
+PRV0087,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3065,0.1938,0.19
+PRV0088,spec_Cardiology; pct_93000; pct_93005,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93005.",0.2011,0.1206,0.0935
+PRV0089,max_daily_minutes; pct_99215; spec_Family Medicine,"Flagged due to: extreme single-day minutes billed, over-use of code 99215, specialty mix (Family Medicine).",1.0759,0.7672,0.2279
+PRV0090,pct_72148; pct_70553; spec_Radiology,"Flagged due to: over-use of code 72148, over-use of code 70553, specialty mix (Radiology).",0.2677,0.2409,0.2236
+PRV0091,pct_99213; spec_Family Medicine; unique_patients,"Flagged due to: over-use of code 99213, specialty mix (Family Medicine).",0.0695,0.0034,-0.0186
+PRV0092,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3406,0.2404,0.2168
+PRV0093,pct_93005; pct_93010; spec_Cardiology,"Flagged due to: over-use of code 93005, over-use of code 93010, specialty mix (Cardiology).",0.4383,0.3143,0.272
+PRV0094,spec_Cardiology; pct_93000; billed_cv,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, high billing variability.",0.1247,0.0427,0.0278
+PRV0095,spec_Cardiology; pct_93010; unique_patients,"Flagged due to: specialty mix (Cardiology), over-use of code 93010, unique patients.",0.2007,0.0918,0.0902
+PRV0096,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.2949,0.2264,0.1847
+PRV0097,pct_93005; spec_Cardiology; pct_93000,"Flagged due to: over-use of code 93005, specialty mix (Cardiology), over-use of code 93000.",0.4829,0.1748,0.0873
+PRV0098,claims_per_day; total_claims; unique_patients,"Flagged due to: unusually high daily claim volume, high total claim count, unique patients.",1.3653,1.2019,1.1728
+PRV0099,spec_Family Medicine; unique_patients; total_billed,No dominant single-feature driver.,-0.0085,-0.0161,-0.0189
+PRV0100,std_billed; spec_Surgery; pct_99232,"Flagged due to: std billed, specialty mix (Surgery), over-use of code 99232.",0.6072,0.4035,0.3861
+PRV0101,pct_11101; spec_Dermatology; pct_11100,"Flagged due to: over-use of code 11101, specialty mix (Dermatology), over-use of code 11100.",0.7859,0.6443,0.5987
+PRV0102,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.2396,0.1999,0.1579
+PRV0103,billed_days; top_tier_share; total_claims,"Flagged due to: billed days, over-use of top-tier billing codes, high total claim count.",0.0511,0.0381,0.0308
+PRV0104,std_billed; pct_99232; spec_Surgery,"Flagged due to: std billed, over-use of code 99232, specialty mix (Surgery).",0.6945,0.4411,0.3994
+PRV0105,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.2513,0.1742,0.1509
+PRV0106,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.5851,0.3468,0.2686
+PRV0107,spec_Cardiology; pct_93000; billed_cv,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, high billing variability.",0.2026,0.074,0.0586
+PRV0108,pct_99214; pct_99213; spec_Family Medicine,"Flagged due to: over-use of code 99214, over-use of code 99213, specialty mix (Family Medicine).",0.0535,0.0308,0.0226
+PRV0109,max_daily_minutes; services_per_patient; spec_Family Medicine,"Flagged due to: extreme single-day minutes billed, excessive services per patient.",0.0399,0.0103,-0.0135
+PRV0110,spec_Dermatology; pct_11100; pct_11101,"Flagged due to: specialty mix (Dermatology), over-use of code 11100, over-use of code 11101.",0.6248,0.5633,0.5428
+PRV0111,spec_Cardiology; pct_93000; billed_days,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, billed days.",0.2074,0.099,0.0562
+PRV0112,services_per_patient; unique_codes; pct_72148,"Flagged due to: excessive services per patient, unique codes, over-use of code 72148.",0.6434,0.4904,0.4879
+PRV0113,spec_Cardiology; pct_93000; billed_cv,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, high billing variability.",0.2052,0.1897,0.0388
+PRV0114,max_billed; pct_72148; pct_70553,"Flagged due to: max billed, over-use of code 72148, over-use of code 70553.",0.2966,0.2634,0.2204
+PRV0115,pct_99213; spec_Family Medicine; claims_per_day,Flagged due to: over-use of code 99213.,0.0096,0.0006,-0.0199
+PRV0116,spec_Dermatology; pct_11101; pct_11100,"Flagged due to: specialty mix (Dermatology), over-use of code 11101, over-use of code 11100.",0.6127,0.5005,0.4843
+PRV0117,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.2958,0.2165,0.201
+PRV0118,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.4509,0.1953,0.1744
+PRV0119,pct_93000; spec_Cardiology; top_tier_share,"Flagged due to: over-use of code 93000, specialty mix (Cardiology), over-use of top-tier billing codes.",0.4453,0.2589,0.0942
+PRV0120,pct_70553; pct_72148; spec_Radiology,"Flagged due to: over-use of code 70553, over-use of code 72148, specialty mix (Radiology).",0.5442,0.416,0.3465
+PRV0121,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.4068,0.2474,0.2216
+PRV0122,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.3955,0.2556,0.2108
+PRV0123,billed_days; services_per_patient; spec_Family Medicine,"Flagged due to: billed days, excessive services per patient, specialty mix (Family Medicine).",0.1209,0.0942,0.0431
+PRV0124,pct_93005; spec_Cardiology; pct_93000,"Flagged due to: over-use of code 93005, specialty mix (Cardiology), over-use of code 93000.",0.3183,0.1859,0.1356
+PRV0125,max_daily_minutes; spec_Family Medicine; pct_99213,"Flagged due to: extreme single-day minutes billed, specialty mix (Family Medicine), over-use of code 99213.",0.0203,0.0157,0.0055
+PRV0126,pct_93005; spec_Cardiology; services_per_patient,"Flagged due to: over-use of code 93005, specialty mix (Cardiology), excessive services per patient.",0.4205,0.2428,0.2116
+PRV0127,dup_rate; spec_Cardiology; pct_93000,"Flagged due to: elevated duplicate claim rate, specialty mix (Cardiology), over-use of code 93000.",0.5572,0.2962,0.1713
+PRV0128,spec_Family Medicine; max_daily_minutes; pct_99213,Flagged due to: specialty mix (Family Medicine).,0.0059,-0.0063,-0.0085
+PRV0129,pct_99213; billed_days; spec_Family Medicine,Flagged due to: over-use of code 99213.,0.0463,0.0007,-0.0065
+PRV0130,pct_72148; spec_Radiology; avg_billed,"Flagged due to: over-use of code 72148, specialty mix (Radiology), above-peer average billed amount.",0.2394,0.1972,0.1652
+PRV0131,pct_99213; services_per_patient; spec_Family Medicine,"Flagged due to: over-use of code 99213, excessive services per patient.",0.0677,0.0092,-0.0129
+PRV0132,std_billed; spec_Surgery; max_billed,"Flagged due to: std billed, specialty mix (Surgery), max billed.",0.7012,0.4516,0.438
+PRV0133,dup_rate; services_per_patient; pct_72148,"Flagged due to: elevated duplicate claim rate, excessive services per patient, over-use of code 72148.",1.2793,0.7618,0.2598
+PRV0134,spec_Cardiology; pct_93000; pct_93005,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93005.",0.1839,0.1237,0.0507
+PRV0135,pct_70553; pct_72148; spec_Radiology,"Flagged due to: over-use of code 70553, over-use of code 72148, specialty mix (Radiology).",0.3453,0.3344,0.2496
+PRV0136,pct_99213; spec_Family Medicine; max_billed,"Flagged due to: over-use of code 99213, specialty mix (Family Medicine), max billed.",0.2442,0.0724,0.0575
+PRV0137,std_billed; pct_99232; spec_Surgery,"Flagged due to: std billed, over-use of code 99232, specialty mix (Surgery).",0.6676,0.4178,0.3845
+PRV0138,spec_Cardiology; pct_93000; pct_93005,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93005.",0.1914,0.0801,0.0526
+PRV0139,pct_90834; pct_90837; spec_Psychiatry,"Flagged due to: over-use of code 90834, over-use of code 90837, specialty mix (Psychiatry).",0.3598,0.267,0.2348
+PRV0140,billed_days; services_per_patient; unique_patients,"Flagged due to: billed days, excessive services per patient.",0.0431,0.0027,-0.0027
+PRV0141,spec_Cardiology; pct_93000; avg_minutes,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, above-peer average service duration.",0.2238,0.1116,0.0785
+PRV0142,pct_93005; services_per_patient; pct_93010,"Flagged due to: over-use of code 93005, excessive services per patient, over-use of code 93010.",1.1242,1.1224,0.9565
+PRV0143,std_billed; spec_Surgery; pct_99232,"Flagged due to: std billed, specialty mix (Surgery), over-use of code 99232.",0.6263,0.4161,0.4052
+PRV0144,spec_Radiology; pct_72148; pct_70553,"Flagged due to: specialty mix (Radiology), over-use of code 72148, over-use of code 70553.",0.2768,0.2683,0.2664
+PRV0145,spec_Cardiology; pct_93000; pct_93005,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, over-use of code 93005.",0.1601,0.0606,0.0358
+PRV0146,unique_patients; total_claims; pct_99232,"Flagged due to: unique patients, high total claim count.",0.0221,0.0166,-0.0034
+PRV0147,spec_Cardiology; avg_minutes; top_tier_share,"Flagged due to: specialty mix (Cardiology), above-peer average service duration, over-use of top-tier billing codes.",0.2668,0.1446,0.139
+PRV0148,pct_72148; pct_70553; spec_Radiology,"Flagged due to: over-use of code 72148, over-use of code 70553, specialty mix (Radiology).",0.2526,0.2511,0.2364
+PRV0149,spec_Cardiology; pct_93000; billed_cv,"Flagged due to: specialty mix (Cardiology), over-use of code 93000, high billing variability.",0.1947,0.1561,0.0366
+PRV0150,pct_99214; top_tier_share; spec_Family Medicine,"Flagged due to: over-use of code 99214, over-use of top-tier billing codes, specialty mix (Family Medicine).",0.224,0.116,0.0594
+TRAP01,total_billed; pct_72148; total_claims,"Flagged due to: high total amount billed, over-use of code 72148, high total claim count.",0.7286,0.4787,0.45
+TRAP02,billed_days; unique_codes; pct_99213,"Flagged due to: billed days, unique codes, over-use of code 99213.",1.1084,0.375,0.3617
+TRAP03,max_daily_minutes; pct_99215; top_tier_share,"Flagged due to: extreme single-day minutes billed, over-use of code 99215, over-use of top-tier billing codes.",1.0118,0.7688,0.2367
