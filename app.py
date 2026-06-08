@@ -18,6 +18,7 @@ ML_CSV      = "ml_scores.csv"
 METRICS_CSV = "provider_metrics.csv"
 EXPLS_JSON  = "explanations.json"
 CLAIMS_CSV  = "claims.csv"
+SHAP_CSV    = "shap_explanations.csv"
 
 RISK_THRESHOLD = 10   # minimum risk score to appear in worklist (Phase 6)
 
@@ -93,6 +94,12 @@ def load_explanations():
         return {}
     with open(EXPLS_JSON) as f:
         return json.load(f)
+
+@st.cache_data
+def load_shap_explanations():
+    if not os.path.exists(SHAP_CSV):
+        return pd.DataFrame()
+    return pd.read_csv(SHAP_CSV, dtype={"provider_id": str})
 
 @st.cache_data
 def load_claims_sample():
@@ -408,16 +415,38 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
 
     # ── Tab 4: Explanation ────────────────────────────────────────────────────
     with tab4:
+        # SHAP feature drivers (loaded lazily from pre-computed CSV)
+        shap_df = load_shap_explanations()
+        if not shap_df.empty:
+            shap_row = shap_df[shap_df["provider_id"] == pid]
+            if not shap_row.empty:
+                st.markdown("**SHAP feature drivers (IsolationForest):**")
+                feats = shap_row.iloc[0]["top_features"].split(";")
+                vals  = [shap_row.iloc[0].get(f"shap_top{i}_val", 0)
+                         for i in range(1, len(feats) + 1)]
+                shap_disp = pd.DataFrame({
+                    "Feature":        [f.strip() for f in feats[:3]],
+                    "SHAP value":     [round(v, 4) for v in vals[:3]],
+                })
+                st.dataframe(shap_disp, hide_index=True, use_container_width=False)
+                st.caption("Higher SHAP value = stronger driver toward anomaly classification.")
+                st.markdown("---")
+
         if pid in expls:
             st.text_area(
                 "Audit explanation (template-based; set ANTHROPIC_API_KEY for AI-enriched):",
                 value=expls[pid]["explanation"],
-                height=280,
+                height=300,
                 key=f"expl_{pid}",
             )
         else:
-            st.info("Explanation not generated for this provider. "
-                    "Run explain.py for the top-N providers.")
+            st.info("Full explanation not pre-generated for this provider.")
+            if st.button("Generate explanation now", key=f"gen_expl_{pid}"):
+                with st.spinner("Running explain.py..."):
+                    from explain import build_explanations
+                    build_explanations()
+                    st.cache_data.clear()
+                st.rerun()
 
 
 if __name__ == "__main__":

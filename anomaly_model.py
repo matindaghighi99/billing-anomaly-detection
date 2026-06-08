@@ -36,6 +36,77 @@ INPUT_CSV  = "claims.csv"
 METRICS_CSV = "provider_metrics.csv"
 OUTPUT_CSV = "ml_scores.csv"
 
+# ── DuckDB helper ─────────────────────────────────────────────────────────────
+
+def _build_core_with_duckdb(df: pd.DataFrame) -> pd.DataFrame:
+    """Build per-provider core aggregates using DuckDB SQL.
+
+    Faster than pandas groupby on larger datasets; same result.
+    Falls back to pandas if duckdb is not installed.
+    """
+    try:
+        import duckdb
+    except ImportError:
+        return None
+
+    con = duckdb.connect()
+    con.register("claims", df)
+
+    core = con.execute("""
+        SELECT
+            provider_id,
+            COUNT(*)                                         AS total_claims,
+            SUM(amount_billed)                              AS total_billed,
+            AVG(amount_billed)                              AS avg_billed,
+            STDDEV_SAMP(amount_billed)                      AS std_billed,
+            AVG(service_minutes)                            AS avg_minutes,
+            COUNT(DISTINCT patient_id)                      AS unique_patients,
+            COUNT(DISTINCT fee_code)                        AS unique_codes,
+            MAX(amount_billed)                              AS max_billed,
+            COUNT(DISTINCT service_date)                    AS billed_days
+        FROM claims
+        GROUP BY provider_id
+    """).df()
+
+    # Derived columns
+    core["claims_per_day"]       = core["total_claims"] / core["billed_days"].clip(lower=1)
+    core["services_per_patient"] = core["total_claims"] / core["unique_patients"].clip(lower=1)
+    core["billed_cv"]            = core["std_billed"] / core["avg_billed"].clip(lower=0.01)
+
+    # Max daily minutes via DuckDB
+    daily_max = con.execute("""
+        SELECT provider_id, MAX(daily_min) AS max_daily_minutes
+        FROM (
+            SELECT provider_id, service_date,
+                   SUM(service_minutes) AS daily_min
+            FROM claims
+            GROUP BY provider_id, service_date
+        ) t
+        GROUP BY provider_id
+    """).df()
+
+    # Duplicate rate: rows where (provider, patient, fee_code, date) appears > once
+    dup_counts = con.execute("""
+        SELECT provider_id, COUNT(*) AS dup_groups
+        FROM (
+            SELECT provider_id, patient_id, fee_code, service_date
+            FROM claims
+            GROUP BY provider_id, patient_id, fee_code, service_date
+            HAVING COUNT(*) > 1
+        ) d
+        GROUP BY provider_id
+    """).df()
+
+    con.close()
+
+    core = core.merge(daily_max, on="provider_id", how="left")
+    core = core.merge(dup_counts, on="provider_id", how="left")
+    core["max_daily_minutes"] = core["max_daily_minutes"].fillna(0)
+    core["dup_rate"] = (core["dup_groups"].fillna(0) / core["total_claims"]).fillna(0)
+    core = core.drop(columns=["dup_groups"], errors="ignore")
+    core = core.set_index("provider_id")
+    return core
+
 # All 15 fee codes — for encoding code-mix features
 ALL_CODES = [
     "99213","99214","99215","99232",
@@ -53,29 +124,45 @@ def load_claims() -> pd.DataFrame:
                               "patient_id": str, "clinic_id": str})
 
 
-def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
-    """One row per provider with ~25 numeric features."""
+def build_feature_matrix(df: pd.DataFrame,
+                          provider_subset: list = None) -> pd.DataFrame:
+    """One row per provider with ~25 numeric features.
+
+    provider_subset: optional list of provider_ids to score (two-stage funnel).
+    Uses DuckDB for core aggregations when available; falls back to pandas.
+    """
+    if provider_subset is not None:
+        df = df[df["provider_id"].isin(provider_subset)].copy()
 
     # ── Specialty encoding ───────────────────────────────────────────────────
     spec_dummies = pd.get_dummies(
         df.groupby("provider_id")["specialty"].first(), prefix="spec"
     )
 
-    # ── Core metrics ─────────────────────────────────────────────────────────
-    billed_days = df.groupby("provider_id")["service_date"].nunique().rename("billed_days")
-    core = df.groupby("provider_id").agg(
-        total_claims    =("claim_id",        "count"),
-        total_billed    =("amount_billed",   "sum"),
-        avg_billed      =("amount_billed",   "mean"),
-        std_billed      =("amount_billed",   "std"),
-        avg_minutes     =("service_minutes", "mean"),
-        unique_patients =("patient_id",      "nunique"),
-        unique_codes    =("fee_code",        "nunique"),
-        max_billed      =("amount_billed",   "max"),
-    ).join(billed_days)
-    core["claims_per_day"]       = core["total_claims"] / core["billed_days"].clip(lower=1)
-    core["services_per_patient"] = core["total_claims"] / core["unique_patients"].clip(lower=1)
-    core["billed_cv"]            = core["std_billed"] / core["avg_billed"].clip(lower=0.01)
+    # ── Core metrics (DuckDB fast path) ──────────────────────────────────────
+    core = _build_core_with_duckdb(df)
+    if core is None:
+        # Pandas fallback
+        billed_days = df.groupby("provider_id")["service_date"].nunique().rename("billed_days")
+        core = df.groupby("provider_id").agg(
+            total_claims    =("claim_id",        "count"),
+            total_billed    =("amount_billed",   "sum"),
+            avg_billed      =("amount_billed",   "mean"),
+            std_billed      =("amount_billed",   "std"),
+            avg_minutes     =("service_minutes", "mean"),
+            unique_patients =("patient_id",      "nunique"),
+            unique_codes    =("fee_code",        "nunique"),
+            max_billed      =("amount_billed",   "max"),
+        ).join(billed_days)
+        core["claims_per_day"]       = core["total_claims"] / core["billed_days"].clip(lower=1)
+        core["services_per_patient"] = core["total_claims"] / core["unique_patients"].clip(lower=1)
+        core["billed_cv"]            = core["std_billed"] / core["avg_billed"].clip(lower=0.01)
+        dup_key   = ["provider_id", "patient_id", "fee_code", "service_date"]
+        dup_total = df.groupby(dup_key).size().reset_index(name="cnt")
+        dup_total = dup_total[dup_total["cnt"] > 1].groupby("provider_id")["cnt"].count()
+        core["dup_rate"] = (dup_total / core["total_claims"]).fillna(0)
+        daily_min = df.groupby(["provider_id", "service_date"])["service_minutes"].sum()
+        core["max_daily_minutes"] = daily_min.groupby("provider_id").max()
 
     # ── Top-tier code share ──────────────────────────────────────────────────
     SPECIALTY_TOP = {
@@ -102,9 +189,7 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
           .size()
           .unstack(fill_value=0)
     )
-    # Normalise to fractions
     code_fractions = code_counts.div(code_counts.sum(axis=1), axis=0)
-    # Keep only codes present in fee schedule; fill missing columns with 0
     for c in ALL_CODES:
         if c not in code_fractions.columns:
             code_fractions[c] = 0.0
@@ -116,16 +201,6 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
         return float(-np.sum(p * np.log2(p)))
 
     core["code_entropy"] = code_fractions.apply(entropy, axis=1)
-
-    # ── Duplicate rate ───────────────────────────────────────────────────────
-    dup_key   = ["provider_id", "patient_id", "fee_code", "service_date"]
-    dup_total = df.groupby(dup_key).size().reset_index(name="cnt")
-    dup_total = dup_total[dup_total["cnt"] > 1].groupby("provider_id")["cnt"].count()
-    core["dup_rate"] = (dup_total / core["total_claims"]).fillna(0)
-
-    # ── Max daily minutes ─────────────────────────────────────────────────────
-    daily_min = df.groupby(["provider_id", "service_date"])["service_minutes"].sum()
-    core["max_daily_minutes"] = daily_min.groupby("provider_id").max()
 
     # ── Assemble ──────────────────────────────────────────────────────────────
     features = core.join(code_fractions).join(spec_dummies)
@@ -206,13 +281,29 @@ def fit_ensemble(features: pd.DataFrame) -> pd.DataFrame:
     })
 
 
-def run_anomaly_model(df: pd.DataFrame = None):
+def run_anomaly_model(df: pd.DataFrame = None,
+                      provider_subset: list = None):
+    """Score all providers (or a subset for the two-stage funnel).
+
+    provider_subset: if given, only these providers are scored; all others
+    receive ml_score=0, ml_is_anomaly=0 in the final CSV.
+    """
     if df is None:
         df = load_claims()
-    features = build_feature_matrix(df)
+    features = build_feature_matrix(df, provider_subset=provider_subset)
     scores   = fit_ensemble(features)
     meta     = df[["provider_id","provider_name","specialty"]].drop_duplicates("provider_id")
     scores   = scores.merge(meta, on="provider_id")
+
+    if provider_subset is not None:
+        # Pad unscored providers with zero scores so downstream joins work
+        all_meta  = df[["provider_id","provider_name","specialty"]].drop_duplicates("provider_id")
+        unscored  = all_meta[~all_meta["provider_id"].isin(scores["provider_id"])]
+        if not unscored.empty:
+            zero_cols = {c: 0 for c in scores.columns if c not in ("provider_id","provider_name","specialty")}
+            pad = unscored.assign(**zero_cols)
+            scores = pd.concat([scores, pad], ignore_index=True)
+
     scores.to_csv(OUTPUT_CSV, index=False)
     return scores
 
