@@ -1,0 +1,61 @@
+provider_id,provider_name,specialty,rule,evidence,estimated_exposure
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,465 service-minutes on 2024-01-01 across 29 claims (max 1 440 per day)",4544.16
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,455 service-minutes on 2024-01-02 across 29 claims (max 1 440 per day)",4563.13
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,535 service-minutes on 2024-01-18 across 29 claims (max 1 440 per day)",4732.16
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,500 service-minutes on 2024-01-25 across 29 claims (max 1 440 per day)",4674.76
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,470 service-minutes on 2024-01-29 across 29 claims (max 1 440 per day)",4609.72
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,585 service-minutes on 2024-02-02 across 30 claims (max 1 440 per day)",4897.98
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,560 service-minutes on 2024-02-14 across 29 claims (max 1 440 per day)",4764.0
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,465 service-minutes on 2024-02-29 across 29 claims (max 1 440 per day)",4638.94
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,535 service-minutes on 2024-03-05 across 29 claims (max 1 440 per day)",4761.08
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,460 service-minutes on 2024-03-19 across 29 claims (max 1 440 per day)",4558.1
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,445 service-minutes on 2024-03-28 across 28 claims (max 1 440 per day)",4510.76
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,535 service-minutes on 2024-04-02 across 29 claims (max 1 440 per day)",4728.16
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,520 service-minutes on 2024-04-04 across 29 claims (max 1 440 per day)",4661.98
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,470 service-minutes on 2024-04-08 across 29 claims (max 1 440 per day)",4619.5
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,465 service-minutes on 2024-04-11 across 27 claims (max 1 440 per day)",4488.2
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,470 service-minutes on 2024-04-23 across 27 claims (max 1 440 per day)",4450.84
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,450 service-minutes on 2024-04-24 across 28 claims (max 1 440 per day)",4479.33
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,480 service-minutes on 2024-04-25 across 27 claims (max 1 440 per day)",4545.0
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,450 service-minutes on 2024-05-07 across 27 claims (max 1 440 per day)",4438.68
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,445 service-minutes on 2024-05-13 across 30 claims (max 1 440 per day)",4626.8
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,445 service-minutes on 2024-05-17 across 30 claims (max 1 440 per day)",4663.52
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,470 service-minutes on 2024-05-22 across 28 claims (max 1 440 per day)",4476.11
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,585 service-minutes on 2024-05-30 across 29 claims (max 1 440 per day)",4873.25
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,470 service-minutes on 2024-07-09 across 28 claims (max 1 440 per day)",4645.92
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,585 service-minutes on 2024-07-11 across 29 claims (max 1 440 per day)",4814.12
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,465 service-minutes on 2024-07-29 across 28 claims (max 1 440 per day)",4518.1
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,495 service-minutes on 2024-07-30 across 29 claims (max 1 440 per day)",4746.13
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,475 service-minutes on 2024-08-08 across 29 claims (max 1 440 per day)",4572.96
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,460 service-minutes on 2024-08-09 across 27 claims (max 1 440 per day)",4498.56
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,665 service-minutes on 2024-09-05 across 29 claims (max 1 440 per day)",4999.29
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,470 service-minutes on 2024-09-06 across 29 claims (max 1 440 per day)",4631.81
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,450 service-minutes on 2024-09-13 across 28 claims (max 1 440 per day)",4474.23
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,475 service-minutes on 2024-09-17 across 28 claims (max 1 440 per day)",4582.42
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,470 service-minutes on 2024-09-27 across 29 claims (max 1 440 per day)",4662.38
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,500 service-minutes on 2024-10-09 across 30 claims (max 1 440 per day)",4763.92
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,475 service-minutes on 2024-10-10 across 28 claims (max 1 440 per day)",4600.91
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,465 service-minutes on 2024-10-18 across 29 claims (max 1 440 per day)",4634.06
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,480 service-minutes on 2024-10-29 across 30 claims (max 1 440 per day)",4716.46
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,475 service-minutes on 2024-10-30 across 30 claims (max 1 440 per day)",4743.79
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,645 service-minutes on 2024-11-04 across 30 claims (max 1 440 per day)",5050.89
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,495 service-minutes on 2024-11-13 across 29 claims (max 1 440 per day)",4637.04
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,445 service-minutes on 2024-11-19 across 28 claims (max 1 440 per day)",4496.76
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,450 service-minutes on 2024-11-20 across 28 claims (max 1 440 per day)",4575.87
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,455 service-minutes on 2024-12-03 across 29 claims (max 1 440 per day)",4579.43
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,455 service-minutes on 2024-12-10 across 29 claims (max 1 440 per day)",4590.61
+PRV0025,Matthew Foster,Psychiatry,impossible_day,"Billed 1,490 service-minutes on 2024-12-23 across 28 claims (max 1 440 per day)",4618.76
+PRV0045,Angelica Tucker,Dermatology,impossible_day,"Billed 1,505 service-minutes on 2024-02-23 across 38 claims (max 1 440 per day)",7552.82
+PRV0045,Angelica Tucker,Dermatology,impossible_day,"Billed 1,535 service-minutes on 2024-03-21 across 40 claims (max 1 440 per day)",7730.2
+PRV0045,Angelica Tucker,Dermatology,impossible_day,"Billed 1,520 service-minutes on 2024-07-02 across 39 claims (max 1 440 per day)",7596.22
+PRV0045,Angelica Tucker,Dermatology,impossible_day,"Billed 1,505 service-minutes on 2024-08-28 across 38 claims (max 1 440 per day)",7581.31
+PRV0045,Angelica Tucker,Dermatology,impossible_day,"Billed 1,505 service-minutes on 2024-11-13 across 39 claims (max 1 440 per day)",7505.56
+PRV0089,Lisa Archer,Family Medicine,impossible_day,"Billed 1,515 service-minutes on 2024-05-17 across 39 claims (max 1 440 per day)",7594.3
+PRV0089,Lisa Archer,Family Medicine,impossible_day,"Billed 1,520 service-minutes on 2024-06-20 across 39 claims (max 1 440 per day)",7640.3
+PRV0089,Lisa Archer,Family Medicine,impossible_day,"Billed 1,535 service-minutes on 2024-07-03 across 39 claims (max 1 440 per day)",7672.77
+PRV0089,Lisa Archer,Family Medicine,impossible_day,"Billed 1,505 service-minutes on 2024-10-16 across 38 claims (max 1 440 per day)",7538.77
+PRV0089,Lisa Archer,Family Medicine,impossible_day,"Billed 1,535 service-minutes on 2024-11-12 across 39 claims (max 1 440 per day)",7760.31
+PRV0077,Angela Lopez,Family Medicine,duplicate_billing,48 duplicate claim events (same provider + patient + code + date billed >1 time),5440.02
+PRV0127,Michelle Evans,Cardiology,duplicate_billing,1 duplicate claim events (same provider + patient + code + date billed >1 time),67.0
+PRV0133,Mary Marshall,Radiology,duplicate_billing,52 duplicate claim events (same provider + patient + code + date billed >1 time),20226.42
+PRV0142,David Douglas Jr.,Cardiology,unbundling,Billed 142 patient-dates with component codes 93010+93005 instead of bundle 93000 (ECG Complete),1427.23

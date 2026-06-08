@@ -1,0 +1,142 @@
+{
+  "PRV0025": {
+    "provider_name": "Matthew Foster",
+    "specialty": "Psychiatry",
+    "risk_score": 87.8,
+    "estimated_exposure": 213460.58,
+    "explanation": "AUDIT SUMMARY \u2014 Matthew Foster (PRV0025) | Psychiatry | Risk Score: 88/100\n\nFINDINGS:\n  - Impossible billing volume: on 46 separate day(s) this provider's total billed service-minutes exceeded 1,440 (24 hours). Worst instance: Billed 1,645 service-minutes on 2024-11-04 across 30 claims (max 1 440 per day). Total dollar exposure across all impossible days: $213,460.58.\n  - Peer comparison outliers: claims per day of 25.31 is 5.1 standard deviations above the specialty median of 1.17; services per patient of 1.05 is 4.8 standard deviations above the specialty median of 1.00.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 100/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0089": {
+    "provider_name": "Lisa Archer",
+    "specialty": "Family Medicine",
+    "risk_score": 84.9,
+    "estimated_exposure": 38206.45,
+    "explanation": "AUDIT SUMMARY \u2014 Lisa Archer (PRV0089) | Family Medicine | Risk Score: 85/100\n\nFINDINGS:\n  - Impossible billing volume: on 5 separate day(s) this provider's total billed service-minutes exceeded 1,440 (24 hours). Worst instance: Billed 1,535 service-minutes on 2024-11-12 across 39 claims (max 1 440 per day). Total dollar exposure across all impossible days: $38,206.45.\n  - Peer comparison outliers: top tier share of 0.45 is 5.7 standard deviations above the specialty median of 0.14; avg minutes of 28.77 is 3.7 standard deviations above the specialty median of 22.40; avg billed of 148.28 is 3.6 standard deviations above the specialty median of 118.94.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 61/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0045": {
+    "provider_name": "Angelica Tucker",
+    "specialty": "Dermatology",
+    "risk_score": 82.6,
+    "estimated_exposure": 37966.11,
+    "explanation": "AUDIT SUMMARY \u2014 Angelica Tucker (PRV0045) | Dermatology | Risk Score: 83/100\n\nFINDINGS:\n  - Impossible billing volume: on 5 separate day(s) this provider's total billed service-minutes exceeded 1,440 (24 hours). Worst instance: Billed 1,535 service-minutes on 2024-03-21 across 40 claims (max 1 440 per day). Total dollar exposure across all impossible days: $37,966.11.\n  - Peer comparison outliers: avg minutes of 25.36 is 3.1 standard deviations above the specialty median of 17.24; claims per day of 2.46 is 3.1 standard deviations above the specialty median of 1.56; avg billed of 142.99 is 3.1 standard deviations above the specialty median of 111.40.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 84/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0133": {
+    "provider_name": "Mary Marshall",
+    "specialty": "Radiology",
+    "risk_score": 61.8,
+    "estimated_exposure": 20226.42,
+    "explanation": "AUDIT SUMMARY \u2014 Mary Marshall (PRV0133) | Radiology | Risk Score: 62/100\n\nFINDINGS:\n  - Duplicate billing detected: 52 duplicate claim events (same provider + patient + code + date billed >1 time). Each duplicate represents a claim submitted more than once with identical provider, patient, fee code, and service date. Estimated excess billing: $20,226.42.\n  - Peer comparison outliers: services per patient of 1.15 is 4.2 standard deviations above the specialty median of 1.00; claims per day of 2.04 is 3.4 standard deviations above the specialty median of 1.78.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 68/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0098": {
+    "provider_name": "Deborah Figueroa",
+    "specialty": "Family Medicine",
+    "risk_score": 24.9,
+    "estimated_exposure": 621307.48,
+    "explanation": "AUDIT SUMMARY \u2014 Deborah Figueroa (PRV0098) | Family Medicine | Risk Score: 25/100\n\nFINDINGS:\n  - Peer comparison outliers: claims per day of 25.28 is 6.4 standard deviations above the specialty median of 1.58.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 74/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0112": {
+    "provider_name": "Shannon Walker",
+    "specialty": "Family Medicine",
+    "risk_score": 39.0,
+    "estimated_exposure": 59523.74,
+    "explanation": "AUDIT SUMMARY \u2014 Shannon Walker (PRV0112) | Family Medicine | Risk Score: 39/100\n\nFINDINGS:\n  - Peer comparison outliers: avg billed of 157.05 is 4.8 standard deviations above the specialty median of 118.94; avg minutes of 30.38 is 4.7 standard deviations above the specialty median of 22.40; services per patient of 1.14 is 4.0 standard deviations above the specialty median of 1.00.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 76/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0008": {
+    "provider_name": "Gina Moore",
+    "specialty": "Psychiatry",
+    "risk_score": 39.8,
+    "estimated_exposure": 37630.89,
+    "explanation": "AUDIT SUMMARY \u2014 Gina Moore (PRV0008) | Psychiatry | Risk Score: 40/100\n\nFINDINGS:\n  - Peer comparison outliers: avg billed of 175.03 is 4.9 standard deviations above the specialty median of 159.17; top tier share of 0.88 is 4.9 standard deviations above the specialty median of 0.50; avg minutes of 57.53 is 4.6 standard deviations above the specialty median of 50.51.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 70/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0077": {
+    "provider_name": "Angela Lopez",
+    "specialty": "Family Medicine",
+    "risk_score": 52.6,
+    "estimated_exposure": 5440.02,
+    "explanation": "AUDIT SUMMARY \u2014 Angela Lopez (PRV0077) | Family Medicine | Risk Score: 53/100\n\nFINDINGS:\n  - Duplicate billing detected: 48 duplicate claim events (same provider + patient + code + date billed >1 time). Each duplicate represents a claim submitted more than once with identical provider, patient, fee code, and service date. Estimated excess billing: $5,440.02.\n  - Peer comparison outliers: services per patient of 1.16 is 4.6 standard deviations above the specialty median of 1.00.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0142": {
+    "provider_name": "David Douglas Jr.",
+    "specialty": "Cardiology",
+    "risk_score": 77.9,
+    "estimated_exposure": 1427.23,
+    "explanation": "AUDIT SUMMARY \u2014 David Douglas Jr. (PRV0142) | Cardiology | Risk Score: 78/100\n\nFINDINGS:\n  - Potential unbundling: Billed 142 patient-dates with component codes 93010+93005 instead of bundle 93000 (ECG Complete). Billing component codes 93005 (ECG Tracing) and 93010 (ECG Interpretation) separately, rather than using the bundle code 93000 (ECG Complete), inflates reimbursement. Estimated overcharge: $1,427.23.\n  - Peer comparison outliers: services per patient of 1.47 is 6.0 standard deviations above the specialty median of 1.00; claims per day of 2.25 is 5.8 standard deviations above the specialty median of 1.41; avg minutes of 14.85 is 5.4 standard deviations below the specialty median of 22.32.\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 89/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0006": {
+    "provider_name": "Connie Lawrence",
+    "specialty": "Surgery",
+    "risk_score": 19.9,
+    "estimated_exposure": 14157.33,
+    "explanation": "AUDIT SUMMARY \u2014 Connie Lawrence (PRV0006) | Surgery | Risk Score: 20/100\n\nFINDINGS:\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 99/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0104": {
+    "provider_name": "Christine Wright",
+    "specialty": "Surgery",
+    "risk_score": 13.2,
+    "estimated_exposure": 8662.023,
+    "explanation": "AUDIT SUMMARY \u2014 Christine Wright (PRV0104) | Surgery | Risk Score: 13/100\n\nFINDINGS:\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 66/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0132": {
+    "provider_name": "Dustin Jordan",
+    "specialty": "Surgery",
+    "risk_score": 13.0,
+    "estimated_exposure": 7916.647000000001,
+    "explanation": "AUDIT SUMMARY \u2014 Dustin Jordan (PRV0132) | Surgery | Risk Score: 13/100\n\nFINDINGS:\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 65/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0012": {
+    "provider_name": "Jamie Arnold",
+    "specialty": "Surgery",
+    "risk_score": 12.4,
+    "estimated_exposure": 8410.123,
+    "explanation": "AUDIT SUMMARY \u2014 Jamie Arnold (PRV0012) | Surgery | Risk Score: 12/100\n\nFINDINGS:\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 62/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0032": {
+    "provider_name": "James Ferrell",
+    "specialty": "Surgery",
+    "risk_score": 12.6,
+    "estimated_exposure": 6827.247,
+    "explanation": "AUDIT SUMMARY \u2014 James Ferrell (PRV0032) | Surgery | Risk Score: 13/100\n\nFINDINGS:\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 63/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0120": {
+    "provider_name": "Jeffrey Chandler",
+    "specialty": "Radiology",
+    "risk_score": 9.4,
+    "estimated_exposure": 13374.237,
+    "explanation": "AUDIT SUMMARY \u2014 Jeffrey Chandler (PRV0120) | Radiology | Risk Score: 9/100\n\nFINDINGS:\n  No specific flags triggered; surfaced by combined scoring.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0100": {
+    "provider_name": "Stephen Mckee",
+    "specialty": "Surgery",
+    "risk_score": 11.4,
+    "estimated_exposure": 7761.389999999999,
+    "explanation": "AUDIT SUMMARY \u2014 Stephen Mckee (PRV0100) | Surgery | Risk Score: 11/100\n\nFINDINGS:\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 57/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0143": {
+    "provider_name": "Patricia Rodriguez",
+    "specialty": "Surgery",
+    "risk_score": 11.1,
+    "estimated_exposure": 8203.476,
+    "explanation": "AUDIT SUMMARY \u2014 Patricia Rodriguez (PRV0143) | Surgery | Risk Score: 11/100\n\nFINDINGS:\n  No specific flags triggered; surfaced by combined scoring.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0023": {
+    "provider_name": "Ethan Adams",
+    "specialty": "Surgery",
+    "risk_score": 11.1,
+    "estimated_exposure": 8170.052000000001,
+    "explanation": "AUDIT SUMMARY \u2014 Ethan Adams (PRV0023) | Surgery | Risk Score: 11/100\n\nFINDINGS:\n  - Machine-learning anomaly detection (Isolation Forest) scored this provider 56/100 \u2014 ranking in the top outliers across all 150 providers. The model identified an unusual combination of billing features inconsistent with typical patterns in the dataset.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0137": {
+    "provider_name": "Robert Potter",
+    "specialty": "Surgery",
+    "risk_score": 10.7,
+    "estimated_exposure": 8358.294,
+    "explanation": "AUDIT SUMMARY \u2014 Robert Potter (PRV0137) | Surgery | Risk Score: 11/100\n\nFINDINGS:\n  No specific flags triggered; surfaced by combined scoring.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  },
+  "PRV0090": {
+    "provider_name": "Aimee Montoya",
+    "specialty": "Radiology",
+    "risk_score": 7.8,
+    "estimated_exposure": 15165.731,
+    "explanation": "AUDIT SUMMARY \u2014 Aimee Montoya (PRV0090) | Radiology | Risk Score: 8/100\n\nFINDINGS:\n  No specific flags triggered; surfaced by combined scoring.\n\nNOTE: This is synthetic data. All findings are flagged for human auditor review only. No automated action should be taken."
+  }
+}
