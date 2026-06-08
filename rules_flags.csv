@@ -58,4 +58,4 @@ PRV0089,Lisa Archer,Family Medicine,impossible_day,"Billed 1,535 service-minutes
 PRV0077,Angela Lopez,Family Medicine,duplicate_billing,48 duplicate claim events (same provider + patient + code + date billed >1 time),5440.02
 PRV0127,Michelle Evans,Cardiology,duplicate_billing,1 duplicate claim events (same provider + patient + code + date billed >1 time),67.0
 PRV0133,Mary Marshall,Radiology,duplicate_billing,52 duplicate claim events (same provider + patient + code + date billed >1 time),20226.42
-PRV0142,David Douglas Jr.,Cardiology,unbundling,Billed 142 patient-dates with component codes 93010+93005 instead of bundle 93000 (ECG Complete),1427.23
+PRV0142,David Douglas Jr.,Cardiology,unbundling,Billed 142 patient-dates with component codes 93005+93010 instead of bundle 93000 (ECG Complete),1427.23
