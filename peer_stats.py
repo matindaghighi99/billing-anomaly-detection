@@ -1,7 +1,23 @@
 """Phase 3 — Peer-group benchmarking.
 
-Groups providers by specialty, computes per-provider metrics, z-scores each
-metric within its specialty peer group, and flags |z| > 3.
+Groups providers by specialty, computes per-provider metrics, then scores each
+metric within its specialty peer group using the MODIFIED z-score (median + MAD)
+rather than plain mean/std z-scores.
+
+WHY MAD INSTEAD OF PLAIN Z:
+Plain z-scores compute (x - mean) / std.  When the peer group contains even one
+extreme bad actor the mean inflates and the std balloons, compressing every other
+provider toward zero and masking moderate outliers.  The modified z-score uses
+the median and Median Absolute Deviation (MAD) instead:
+
+    modified_z = 0.6745 * (x - median) / MAD
+
+Both the median and the MAD are breakdown-point-50% estimators — half the sample
+can be arbitrarily extreme without corrupting the score.  The 0.6745 constant
+makes the scale equivalent to a std-based z-score for a normal distribution.
+
+Flags |modified_z| > 3.5  (slightly wider than the classical 3.0 threshold to
+account for heavier tails; equivalent literature cutoff is 3.5).
 
 Outputs peer_flags.csv.
 """
@@ -24,7 +40,7 @@ SPECIALTY_TOP_TIER = {
     "Surgery":         {"27447", "43239"},
 }
 
-ZSCORE_THRESHOLD = 3.0
+ZSCORE_THRESHOLD = 3.5   # slightly wider than 3.0 because MAD tails are heavier
 
 
 def load_claims() -> pd.DataFrame:
@@ -78,8 +94,22 @@ def build_provider_metrics(df: pd.DataFrame) -> pd.DataFrame:
     return agg
 
 
+def _modified_zscore(x: pd.Series) -> pd.Series:
+    """Modified z-score: 0.6745 * (x - median) / MAD.
+
+    Robust to outliers because both the median and the MAD have a 50%
+    breakdown point.  Falls back to plain z-score if MAD == 0 (constant group).
+    """
+    med = x.median()
+    mad = (x - med).abs().median()
+    if mad == 0:
+        return pd.Series(scipy_stats.zscore(x, ddof=1, nan_policy="omit"),
+                         index=x.index)
+    return 0.6745 * (x - med) / mad
+
+
 def zscore_within_specialty(metrics: pd.DataFrame) -> pd.DataFrame:
-    """Add z-score columns for each numeric metric, computed per-specialty."""
+    """Add modified-z-score columns for each numeric metric, per specialty."""
     numeric_cols = [
         "avg_billed", "claims_per_day", "top_tier_share",
         "services_per_patient", "avg_minutes",
@@ -87,7 +117,7 @@ def zscore_within_specialty(metrics: pd.DataFrame) -> pd.DataFrame:
     for col in numeric_cols:
         z_col = f"z_{col}"
         metrics[z_col] = metrics.groupby("specialty")[col].transform(
-            lambda x: scipy_stats.zscore(x, ddof=1, nan_policy="omit")
+            _modified_zscore
         )
     return metrics
 

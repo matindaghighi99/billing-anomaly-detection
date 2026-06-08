@@ -1,16 +1,19 @@
 provider_id,provider_name,specialty,risk_score,estimated_exposure,rules_score,peer_score,ml_score,ml_is_anomaly,top_reason
-PRV0025,Matthew Foster,Psychiatry,87.8,213460.58000000002,50.0,17.82,100.0,1,Rule: impossible_day | Peer z>3: claims_per_day; services_per_patient | ML anomaly score 100/100
-PRV0045,Angelica Tucker,Dermatology,81.1,37966.11,50.0,15.76,76.91,1,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; claims_per_day | ML anomaly score 77/100
-PRV0089,Lisa Archer,Family Medicine,78.4,38206.450000000004,50.0,18.62,48.96,0,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; top_tier_share
-PRV0098,Deborah Figueroa,Family Medicine,25.9,621307.48,0.0,10.0,79.51,1,Peer z>3: claims_per_day | ML anomaly score 80/100
-PRV0133,Mary Marshall,Radiology,54.5,20226.42,35.0,7.699999999999999,59.04,1,Rule: duplicate_billing | Peer z>3: services_per_patient | ML anomaly score 59/100
-PRV0112,Shannon Walker,Family Medicine,35.9,59523.74,0.0,21.799999999999997,70.33,1,Peer z>3: avg_billed; avg_minutes; services_per_patient | ML anomaly score 70/100
-PRV0008,Gina Moore,Psychiatry,39.5,37630.89,0.0,25.799999999999997,68.52,1,Peer z>3: avg_billed; avg_minutes; top_tier_share | ML anomaly score 69/100
-TRAP01,Dr. Helena Radcliffe,Radiology,22.0,411802.92,0.0,7.640000000000001,72.07,1,Peer z>3: claims_per_day | ML anomaly score 72/100
-TRAP03,Dr. Sandra Beaumont,Family Medicine,27.2,71129.18,0.0,17.72,47.49,0,Peer z>3: avg_billed; avg_minutes; top_tier_share
-PRV0077,Angela Lopez,Family Medicine,51.6,5440.02,35.0,8.46,40.93,0,Rule: duplicate_billing | Peer z>3: services_per_patient
+PRV0025,Matthew Foster,Psychiatry,88.6,213460.58000000002,50.0,18.619999999999997,100.0,1,Rule: impossible_day | Peer z>3: claims_per_day; services_per_patient | ML anomaly score 100/100
+PRV0045,Angelica Tucker,Dermatology,95.4,37966.11,50.0,30.0,76.91,1,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; claims_per_day | ML anomaly score 77/100
+PRV0089,Lisa Archer,Family Medicine,89.8,38206.450000000004,50.0,30.0,48.96,0,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; claims_per_day; top_tier_share
+PRV0006,Connie Lawrence,Surgery,49.7,141573.3,0.0,30.0,98.54,1,Peer z>3: avg_billed; avg_minutes; top_tier_share | ML anomaly score 99/100
+PRV0098,Deborah Figueroa,Family Medicine,35.9,621307.48,0.0,20.0,79.51,1,Peer z>3: claims_per_day; services_per_patient | ML anomaly score 80/100
+PRV0133,Mary Marshall,Radiology,66.8,20226.42,35.0,20.0,59.04,1,Rule: duplicate_billing | Peer z>3: claims_per_day; services_per_patient | ML anomaly score 59/100
+PRV0112,Shannon Walker,Family Medicine,44.1,59523.74,0.0,30.0,70.33,1,Peer z>3: avg_billed; avg_minutes; claims_per_day; services_per_patient | ML anomaly score 70/100
+TRAP03,Dr. Sandra Beaumont,Family Medicine,39.5,71129.18,0.0,30.0,47.49,0,Peer z>3: avg_billed; avg_minutes; claims_per_day; top_tier_share
+PRV0008,Gina Moore,Psychiatry,43.7,37630.89,0.0,30.0,68.52,1,Peer z>3: avg_billed; avg_minutes; top_tier_share | ML anomaly score 69/100
+TRAP01,Dr. Helena Radcliffe,Radiology,24.4,411802.92,0.0,10.0,72.07,1,Peer z>3: claims_per_day | ML anomaly score 72/100
+PRV0077,Angela Lopez,Family Medicine,59.6,5440.02,35.0,16.42,40.93,0,Rule: duplicate_billing | Peer z>3: claims_per_day; services_per_patient
 PRV0142,David Douglas Jr.,Cardiology,77.8,1427.23,30.0,30.0,89.27,1,Rule: unbundling | Peer z>3: avg_billed; avg_minutes; claims_per_day; services_per_patient | ML anomaly score 89/100
-PRV0006,Connie Lawrence,Surgery,19.7,14157.33,0.0,0.0,98.54,1,ML anomaly score 99/100
+PRV0017,Holly Wood,Radiology,11.8,133516.59,0.0,6.14,28.07,0,Peer z>3: claims_per_day
+PRV0064,Donald Wright,Psychiatry,13.5,35903.62,0.0,6.92,32.93,0,Peer z>3: top_tier_share
+TRAP02,Dr. James Colquhoun,Family Medicine,22.3,5297.06,0.0,10.0,61.34,1,Peer z>3: claims_per_day | ML anomaly score 61/100
 PRV0104,Christine Wright,Surgery,12.7,8662.023,0.0,0.0,63.61,1,ML anomaly score 64/100
 PRV0132,Dustin Jordan,Surgery,12.9,7916.647000000001,0.0,0.0,64.36,1,ML anomaly score 64/100
 PRV0012,Jamie Arnold,Surgery,12.2,8410.123,0.0,0.0,60.95,1,ML anomaly score 61/100
@@ -31,7 +34,6 @@ PRV0122,Kenneth Scott,Radiology,6.0,13702.259,0.0,0.0,29.75,0,no flags
 PRV0148,Stephanie Salazar,Radiology,5.8,14164.825,0.0,0.0,29.17,0,no flags
 PRV0096,Anna Henderson,Radiology,5.6,14284.415,0.0,0.0,28.19,0,no flags
 PRV0114,Crystal Johnson,Radiology,5.6,14169.370000000003,0.0,0.0,28.2,0,no flags
-PRV0017,Holly Wood,Radiology,5.6,13351.659,0.0,0.0,28.07,0,no flags
 PRV0020,Carla Gray,Radiology,5.4,12486.664,0.0,0.0,26.93,0,no flags
 PRV0065,Jessica Callahan,Radiology,5.2,13183.845000000001,0.0,0.0,25.8,0,no flags
 PRV0067,Tracy House,Radiology,4.9,13722.457999999999,0.0,0.0,24.4,0,no flags
@@ -47,7 +49,6 @@ PRV0003,Angie Henderson,Dermatology,7.1,3711.0080000000003,0.0,0.0,35.66,0,no fl
 PRV0083,Michael Evans,Dermatology,7.9,2906.686,0.0,0.0,39.68,0,no flags
 PRV0042,Fred Smith,Dermatology,7.0,3350.124,0.0,0.0,34.74,0,no flags
 PRV0014,Michele Williams,Dermatology,7.2,3160.308,0.0,0.0,36.26,0,no flags
-PRV0064,Donald Wright,Psychiatry,6.6,3590.3620000000005,0.0,0.0,32.93,0,no flags
 PRV0046,Philip Cannon,Dermatology,6.8,3296.9620000000004,0.0,0.0,34.21,0,no flags
 PRV0116,Diana May,Dermatology,6.8,3250.5400000000004,0.0,0.0,34.0,0,no flags
 PRV0106,Marc Moore,Psychiatry,6.1,3210.1200000000003,0.0,0.0,30.29,0,no flags
@@ -79,7 +80,6 @@ PRV0053,Crystal Robinson,Psychiatry,3.6,3498.4220000000005,0.0,0.0,18.07,0,no fl
 PRV0105,Richard Henson,Psychiatry,3.8,3143.3700000000003,0.0,0.0,18.97,0,no flags
 PRV0061,Victoria Garcia,Psychiatry,3.5,3661.329,0.0,0.0,17.38,0,no flags
 PRV0119,Victor Baker,Cardiology,4.2,2474.318,0.0,0.0,20.83,0,no flags
-TRAP02,Dr. James Colquhoun,Family Medicine,12.3,529.706,0.0,0.0,61.34,1,ML anomaly score 61/100
 PRV0102,Cameron Parker,Psychiatry,3.3,3640.978,0.0,0.0,16.67,0,no flags
 PRV0057,Timothy Duncan,Cardiology,3.6,3054.164,0.0,0.0,17.97,0,no flags
 PRV0007,Abigail Shaffer,Psychiatry,3.4,3379.542,0.0,0.0,17.15,0,no flags
