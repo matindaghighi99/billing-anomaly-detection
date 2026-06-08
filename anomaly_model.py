@@ -1,18 +1,35 @@
-"""Phase 4 — Unsupervised anomaly detection with IsolationForest.
+"""Phase 4 -- Unsupervised anomaly detection (ENSEMBLE: IF + LOF + OC-SVM).
 
-Builds a per-provider feature vector from billing behaviour metrics (including
-cross-specialty code diversity), fits a scikit-learn IsolationForest, and
-outputs an anomaly score per provider.  The model is intentionally
-specialty-agnostic so it can surface the 'novel' biller whose out-of-specialty
-code mix doesn't trigger any hand-written rule.
+PHASE 5 CHANGES:
+  Previously only IsolationForest.  Now three detectors run in parallel and
+  their outputs are aggregated into a CONSENSUS score.
 
-Outputs ml_scores.csv.
+  IsolationForest (IF)  -- Global outlier tree-ensemble; fast, good at
+                           volume/cost extremes.
+  Local Outlier Factor (LOF)  -- Density-based; detects providers whose local
+                                  neighbourhood is unusually sparse.  Better at
+                                  finding moderate outliers missed by IF.
+  One-Class SVM (OC-SVM)  -- Boundary-based; finds providers outside the
+                              "normal" hypersphere.  Adds a third independent
+                              decision surface.
+
+  CONSENSUS SCORING:
+  Each detector predicts anomaly (1) or normal (0).  The ensemble score
+  combines the three normalised decision scores:
+    consensus_score = 0.5 * IF_score + 0.3 * LOF_score + 0.2 * OCSVM_score
+
+  The ml_is_anomaly flag requires agreement from at least 2 of 3 detectors,
+  raising precision and reducing false positives on legitimate outliers.
+
+Outputs ml_scores.csv with per-detector and ensemble columns.
 """
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import RobustScaler
+from sklearn.svm import OneClassSVM
 
 SEED       = 42
 INPUT_CSV  = "claims.csv"
@@ -116,35 +133,76 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     return features
 
 
-def fit_isolation_forest(features: pd.DataFrame) -> pd.DataFrame:
+def _normalise(scores: np.ndarray) -> np.ndarray:
+    """Invert-and-scale anomaly scores to 0-100 (100 = most anomalous)."""
+    inverted = -scores
+    lo, hi   = inverted.min(), inverted.max()
+    return (inverted - lo) / (hi - lo + 1e-9) * 100
+
+
+def fit_ensemble(features: pd.DataFrame) -> pd.DataFrame:
+    """Fit IF + LOF + OC-SVM, return per-provider consensus scores."""
     provider_ids = features.index.tolist()
     X = features.values.astype(float)
 
-    scaler = RobustScaler()
+    scaler   = RobustScaler()
     X_scaled = scaler.fit_transform(X)
 
-    model = IsolationForest(
-        n_estimators=300,
-        max_samples="auto",
-        contamination=0.10,      # ~10% expected anomalies
-        random_state=SEED,
-        n_jobs=-1,
+    CONTAM = 0.10
+
+    # ── Isolation Forest ─────────────────────────────────────────────────────
+    iforest = IsolationForest(
+        n_estimators=300, max_samples="auto",
+        contamination=CONTAM, random_state=SEED, n_jobs=-1,
     )
-    model.fit(X_scaled)
+    iforest.fit(X_scaled)
+    if_raw    = iforest.decision_function(X_scaled)
+    if_scores = _normalise(if_raw)
+    if_labels = (iforest.predict(X_scaled) == -1).astype(int)
 
-    # decision_function: lower (more negative) = more anomalous
-    raw_scores = model.decision_function(X_scaled)
+    # ── Local Outlier Factor ──────────────────────────────────────────────────
+    lof = LocalOutlierFactor(
+        n_neighbors=min(20, len(X_scaled) - 1),
+        contamination=CONTAM,
+        novelty=False,
+    )
+    lof_labels = (lof.fit_predict(X_scaled) == -1).astype(int)
+    # negative_outlier_factor_: more negative => more anomalous
+    lof_scores = _normalise(lof.negative_outlier_factor_)
 
-    # Invert and normalise to 0–100 (100 = most anomalous)
-    inverted   = -raw_scores
-    lo, hi     = inverted.min(), inverted.max()
-    norm_scores = (inverted - lo) / (hi - lo + 1e-9) * 100
+    # ── One-Class SVM ─────────────────────────────────────────────────────────
+    # nu ~ contamination fraction; use rbf kernel, auto-scaled
+    ocsvm = OneClassSVM(nu=CONTAM, kernel="rbf", gamma="auto")
+    ocsvm.fit(X_scaled)
+    ocsvm_raw    = ocsvm.decision_function(X_scaled)
+    ocsvm_scores = _normalise(ocsvm_raw)
+    ocsvm_labels = (ocsvm.predict(X_scaled) == -1).astype(int)
+
+    # ── Consensus ────────────────────────────────────────────────────────────
+    # Weighted average of normalised scores
+    ensemble_scores = (
+        0.50 * if_scores +
+        0.30 * lof_scores +
+        0.20 * ocsvm_scores
+    )
+
+    # Majority vote (>= 2 of 3 detectors) for binary flag
+    vote_sum = if_labels + lof_labels + ocsvm_labels
+    consensus_flag = (vote_sum >= 2).astype(int)
 
     return pd.DataFrame({
-        "provider_id": provider_ids,
-        "ml_raw_score": raw_scores.round(4),
-        "ml_score":     norm_scores.round(2),
-        "ml_is_anomaly": (model.predict(X_scaled) == -1).astype(int),
+        "provider_id":        provider_ids,
+        # Ensemble
+        "ml_score":           ensemble_scores.round(2),
+        "ml_is_anomaly":      consensus_flag,
+        "vote_count":         vote_sum,
+        # Per-detector
+        "if_score":           if_scores.round(2),
+        "if_flag":            if_labels,
+        "lof_score":          lof_scores.round(2),
+        "lof_flag":           lof_labels,
+        "ocsvm_score":        ocsvm_scores.round(2),
+        "ocsvm_flag":         ocsvm_labels,
     })
 
 
@@ -152,32 +210,37 @@ def run_anomaly_model(df: pd.DataFrame = None):
     if df is None:
         df = load_claims()
     features = build_feature_matrix(df)
-    scores   = fit_isolation_forest(features)
-    # Attach provider name + specialty
-    meta = df[["provider_id","provider_name","specialty"]].drop_duplicates("provider_id")
-    scores = scores.merge(meta, on="provider_id")
+    scores   = fit_ensemble(features)
+    meta     = df[["provider_id","provider_name","specialty"]].drop_duplicates("provider_id")
+    scores   = scores.merge(meta, on="provider_id")
     scores.to_csv(OUTPUT_CSV, index=False)
     return scores
 
 
 def main():
-    print("Phase 4 - Isolation Forest Anomaly Detection")
+    print("Phase 4 - Ensemble Anomaly Detection (IF + LOF + OC-SVM)")
     print("=" * 60)
     df     = load_claims()
     scores = run_anomaly_model(df)
 
-    n_anomaly = scores["ml_is_anomaly"].sum()
+    n_any      = scores["ml_is_anomaly"].sum()
+    n_all3     = (scores["vote_count"] == 3).sum()
+    n_two      = (scores["vote_count"] == 2).sum()
     print(f"  Providers scored   : {len(scores)}")
-    print(f"  Flagged as anomaly : {n_anomaly} (contamination=10%)")
+    print(f"  Consensus flag (>=2/3) : {n_any}")
+    print(f"    All 3 agree        : {n_all3}")
+    print(f"    Exactly 2 agree    : {n_two}")
     print()
-    print(f"  Top 15 most anomalous providers:")
-    print(f"  {'Provider':<12} {'Specialty':<18} {'ML Score':>10}  {'Anomaly?':>9}")
-    print("  " + "-" * 52)
-    top15 = scores.nlargest(15, "ml_score")
-    for _, row in top15.iterrows():
+    print(f"  Top 15 ensemble anomaly scores:")
+    print(f"  {'Provider':<12} {'Specialty':<18} {'Ensemble':>9}  {'IF':>7}  {'LOF':>7}  "
+          f"{'OC-SVM':>7}  {'Votes':>5}  Flag")
+    print("  " + "-" * 74)
+    for _, row in scores.nlargest(15, "ml_score").iterrows():
         flag = "YES" if row["ml_is_anomaly"] else "no"
-        print(f"  {row['provider_id']:<12} {row['specialty']:<18} {row['ml_score']:>10.2f}  {flag:>9}")
-
+        print(f"  {row['provider_id']:<12} {row['specialty']:<18} "
+              f"{row['ml_score']:>9.2f}  {row['if_score']:>7.2f}  "
+              f"{row['lof_score']:>7.2f}  {row['ocsvm_score']:>7.2f}  "
+              f"{int(row['vote_count']):>5}  {flag}")
     print(f"\n  Saved to: {OUTPUT_CSV}")
 
 
