@@ -1,0 +1,154 @@
+provider_id,provider_name,specialty,cohort_key,practice_setting,kl_divergence,cosine_distance,drift_flag,estimated_exposure
+PRV0045,Angelica Tucker,Dermatology,Dermatology | full_time,full_time,7.057522,0.347957,True,71068.06
+PRV0112,Shannon Walker,Family Medicine,Family Medicine | full_time,full_time,4.215237,0.070621,True,59523.74
+PRV0142,David Douglas Jr.,Cardiology,Cardiology | full_time,full_time,0.908873,0.56678,True,30137.84
+PRV0006,Connie Lawrence,Surgery,Surgery | full_time,full_time,0.452906,0.248252,True,141573.3
+PRV0008,Gina Moore,Psychiatry,Psychiatry | full_time,full_time,0.323615,0.163542,True,37630.89
+PRV0089,Lisa Archer,Family Medicine,Family Medicine | full_time,full_time,0.268249,0.195402,True,76214.07
+TRAP03,Dr. Sandra Beaumont,Family Medicine,Family Medicine | full_time,full_time,0.250263,0.183446,True,71129.18
+PRV0093,Denise Jacobs,Cardiology,Cardiology | full_time,full_time,0.030977,0.017091,False,25861.88
+PRV0027,Justin Baker,Cardiology,Cardiology | full_time,full_time,0.022716,0.011619,False,23462.81
+PRV0062,Gerald Hensley,Cardiology,Cardiology | full_time,full_time,0.020915,0.011413,False,25184.52
+PRV0016,Brian Ramirez,Family Medicine,Family Medicine | full_time,full_time,0.017923,0.014753,False,37940.45
+PRV0136,Jose Schultz,Family Medicine,Family Medicine | full_time,full_time,0.017851,0.017007,False,34524.58
+PRV0150,Stephanie Manning,Family Medicine,Family Medicine | full_time,full_time,0.015537,0.005391,False,34362.35
+PRV0119,Victor Baker,Cardiology,Cardiology | full_time,full_time,0.015102,0.012502,False,24743.18
+PRV0147,Victoria Larson,Cardiology,Cardiology | full_time,full_time,0.014135,0.007579,False,27098.34
+PRV0126,Erin Edwards,Cardiology,Cardiology | full_time,full_time,0.014108,0.008139,False,24909.61
+PRV0019,Lisa Jackson,Dermatology,Dermatology | full_time,full_time,0.013156,0.011864,False,33455.27
+PRV0039,Elizabeth Fowler,Family Medicine,Family Medicine | full_time,full_time,0.013072,0.006001,False,40047.74
+PRV0032,James Ferrell,Surgery,Surgery | full_time,full_time,0.012701,0.013162,False,68272.47
+PRV0097,Aaron Wise,Cardiology,Cardiology | full_time,full_time,0.012489,0.005642,False,26628.5
+PRV0101,Sandra Aguilar,Dermatology,Dermatology | full_time,full_time,0.012397,0.011757,False,30155.86
+PRV0124,Michelle Harmon,Cardiology,Cardiology | full_time,full_time,0.012312,0.008317,False,25251.45
+PRV0073,Brittney Phillips,Dermatology,Dermatology | full_time,full_time,0.01182,0.011543,False,35429.36
+PRV0104,Christine Wright,Surgery,Surgery | full_time,full_time,0.0118,0.012563,False,86620.23
+PRV0082,Mike Allen,Cardiology,Cardiology | full_time,full_time,0.011586,0.005076,False,22856.04
+PRV0014,Michele Williams,Dermatology,Dermatology | full_time,full_time,0.011572,0.01237,False,31603.08
+PRV0043,Sherry Decker,Psychiatry,Psychiatry | full_time,full_time,0.011337,0.002754,False,35106.16
+PRV0064,Donald Wright,Psychiatry,Psychiatry | full_time,full_time,0.010644,0.007957,False,35903.62
+PRV0084,Paul Jones,Family Medicine,Family Medicine | full_time,full_time,0.010269,0.006367,False,32326.74
+PRV0077,Angela Lopez,Family Medicine,Family Medicine | full_time,full_time,0.010117,0.003792,False,42396.54
+PRV0051,Jessica Holmes,Family Medicine,Family Medicine | full_time,full_time,0.010069,0.004194,False,36371.9
+PRV0036,Jeffrey Chavez,Family Medicine,Family Medicine | full_time,full_time,0.009965,0.004066,False,38073.27
+PRV0141,Cheyenne Horton,Cardiology,Cardiology | full_time,full_time,0.009894,0.006999,False,28202.12
+PRV0037,Sherri Baker,Family Medicine,Family Medicine | full_time,full_time,0.009874,0.005224,False,34868.06
+PRV0123,April Frost,Family Medicine,Family Medicine | full_time,full_time,0.009522,0.004548,False,33211.74
+PRV0139,David Alvarez,Psychiatry,Psychiatry | full_time,full_time,0.009427,0.002997,False,37518.01
+PRV0028,Stephanie Ross,Family Medicine,Family Medicine | full_time,full_time,0.009383,0.010343,False,33462.65
+PRV0100,Stephen Mckee,Surgery,Surgery | full_time,full_time,0.008893,0.008458,False,77613.9
+PRV0024,Tommy Walter,Dermatology,Dermatology | full_time,full_time,0.008804,0.009212,False,38086.95
+PRV0132,Dustin Jordan,Surgery,Surgery | full_time,full_time,0.008334,0.008323,False,79166.47
+PRV0120,Jeffrey Chandler,Radiology,Radiology | full_time,full_time,0.008247,0.008155,False,133742.37
+PRV0088,Christopher Bass,Cardiology,Cardiology | full_time,full_time,0.008132,0.004738,False,25739.47
+PRV0009,Gabrielle Davis,Family Medicine,Family Medicine | full_time,full_time,0.007724,0.007469,False,33687.11
+PRV0125,Helen Jones,Family Medicine,Family Medicine | full_time,full_time,0.007578,0.002828,False,33953.51
+PRV0110,Sharon Cochran,Dermatology,Dermatology | full_time,full_time,0.00728,0.006804,False,36792.16
+PRV0026,Judy Baker,Family Medicine,Family Medicine | full_time,full_time,0.007135,0.001543,False,33367.75
+PRV0080,Lisa Barnes,Psychiatry,Psychiatry | full_time,full_time,0.007112,0.002338,False,37152.94
+PRV0095,John Whitehead,Cardiology,Cardiology | full_time,full_time,0.007027,0.005317,False,22953.96
+PRV0022,Patty Perez,Cardiology,Cardiology | full_time,full_time,0.006907,0.003353,False,29154.32
+PRV0015,Dylan Miller,Cardiology,Cardiology | full_time,full_time,0.0069,0.004983,False,22302.27
+PRV0010,Ryan Munoz,Cardiology,Cardiology | full_time,full_time,0.00675,0.004772,False,24291.81
+PRV0012,Jamie Arnold,Surgery,Surgery | full_time,full_time,0.006677,0.006759,False,84101.23
+PRV0134,Daniel Kennedy,Cardiology,Cardiology | full_time,full_time,0.006525,0.004775,False,26743.11
+PRV0078,Megan Young,Psychiatry,Psychiatry | full_time,full_time,0.006513,0.002202,False,31721.39
+PRV0116,Diana May,Dermatology,Dermatology | full_time,full_time,0.006312,0.005885,False,32505.4
+PRV0035,Debra Davidson,Cardiology,Cardiology | full_time,full_time,0.00624,0.005753,False,30028.19
+PRV0117,William Herrera,Psychiatry,Psychiatry | full_time,full_time,0.006051,0.002052,False,36810.9
+PRV0108,Sierra Johnson,Family Medicine,Family Medicine | full_time,full_time,0.006046,0.005554,False,33700.61
+PRV0072,Whitney Peters,Cardiology,Cardiology | full_time,full_time,0.005876,0.002854,False,26475.58
+PRV0040,Brittany Farmer,Psychiatry,Psychiatry | full_time,full_time,0.005864,0.003884,False,35195.97
+PRV0143,Patricia Rodriguez,Surgery,Surgery | full_time,full_time,0.00581,0.005759,False,82034.76
+PRV0127,Michelle Evans,Cardiology,Cardiology | full_time,full_time,0.005784,0.002765,False,24620.26
+PRV0034,Nathan Maldonado,Cardiology,Cardiology | full_time,full_time,0.005726,0.003889,False,25496.06
+PRV0074,Lauren Daniels,Family Medicine,Family Medicine | full_time,full_time,0.005474,0.001129,False,30436.42
+PRV0068,Carol Tucker,Cardiology,Cardiology | full_time,full_time,0.00539,0.004079,False,25315.78
+PRV0149,Kathy Rivas,Cardiology,Cardiology | full_time,full_time,0.005349,0.002764,False,27321.73
+PRV0091,Matthew Mcmillan,Family Medicine,Family Medicine | full_time,full_time,0.005255,0.002817,False,35785.13
+PRV0106,Marc Moore,Psychiatry,Psychiatry | full_time,full_time,0.005164,0.005298,False,32101.2
+PRV0030,Anthony Rodriguez,Psychiatry,Psychiatry | full_time,full_time,0.004777,0.003007,False,35692.13
+PRV0070,William Baker,Cardiology,Cardiology | full_time,full_time,0.004682,0.002237,False,28362.97
+PRV0050,Eric Carney,Family Medicine,Family Medicine | full_time,full_time,0.004656,0.003596,False,31350.6
+PRV0111,Richard Rodriguez,Cardiology,Cardiology | full_time,full_time,0.004588,0.00342,False,30845.8
+PRV0131,Elizabeth Kelley,Family Medicine,Family Medicine | full_time,full_time,0.004497,0.002662,False,36708.27
+PRV0118,Ashley Waller,Psychiatry,Psychiatry | full_time,full_time,0.004399,0.001839,False,33162.49
+PRV0049,Joshua Blair,Psychiatry,Psychiatry | full_time,full_time,0.004181,0.002384,False,35667.54
+PRV0047,John Pierce,Cardiology,Cardiology | full_time,full_time,0.004047,0.003227,False,24663.32
+PRV0092,Brian Rodriguez,Psychiatry,Psychiatry | full_time,full_time,0.003966,0.001677,False,35158.67
+PRV0002,Noah Rhodes,Cardiology,Cardiology | full_time,full_time,0.003961,0.003242,False,29279.12
+PRV0007,Abigail Shaffer,Psychiatry,Psychiatry | full_time,full_time,0.003917,0.001321,False,33795.42
+PRV0029,Zachary Hicks,Family Medicine,Family Medicine | full_time,full_time,0.003895,0.002342,False,33741.49
+PRV0079,Steve Sanchez,Radiology,Radiology | full_time,full_time,0.003663,0.003611,False,126458.01
+PRV0041,Paula Moreno,Cardiology,Cardiology | full_time,full_time,0.003569,0.002329,False,26321.07
+PRV0103,Rebecca Valencia,Family Medicine,Family Medicine | full_time,full_time,0.003266,0.001038,False,39483.61
+PRV0113,Julia Torres,Cardiology,Cardiology | full_time,full_time,0.003215,0.002384,False,29001.64
+PRV0055,Shannon Jones,Psychiatry,Psychiatry | full_time,full_time,0.003078,0.000909,False,36873.09
+PRV0069,James Brown,Family Medicine,Family Medicine | full_time,full_time,0.003067,0.000458,False,37836.8
+PRV0107,Sharon Cherry,Cardiology,Cardiology | full_time,full_time,0.003064,0.002026,False,29742.7
+PRV0048,Shane Henderson,Family Medicine,Family Medicine | full_time,full_time,0.003026,0.000817,False,36176.98
+PRV0146,Joyce Solis,Family Medicine,Family Medicine | full_time,full_time,0.002962,0.001875,False,39609.04
+PRV0057,Timothy Duncan,Cardiology,Cardiology | full_time,full_time,0.002798,0.002133,False,30541.64
+PRV0033,Tricia Valencia,Cardiology,Cardiology | full_time,full_time,0.002686,0.00207,False,28017.44
+PRV0128,Jason Powell,Family Medicine,Family Medicine | full_time,full_time,0.002674,0.001613,False,35442.81
+PRV0042,Fred Smith,Dermatology,Dermatology | full_time,full_time,0.002551,0.002044,False,33501.24
+PRV0023,Ethan Adams,Surgery,Surgery | full_time,full_time,0.002431,0.002357,False,81700.52
+PRV0083,Michael Evans,Dermatology,Dermatology | full_time,full_time,0.002415,0.00217,False,29066.86
+PRV0076,Sarah Moore,Family Medicine,Family Medicine | full_time,full_time,0.002392,0.000825,False,30680.96
+PRV0081,Kelly Donovan,Psychiatry,Psychiatry | full_time,full_time,0.002345,0.002377,False,36287.1
+PRV0135,Rebecca Jackson,Radiology,Radiology | full_time,full_time,0.002328,0.002289,False,120322.12
+PRV0059,Brent Jordan,Family Medicine,Family Medicine | full_time,full_time,0.002322,0.000892,False,40179.39
+PRV0099,Jessica Smith,Family Medicine,Family Medicine | full_time,full_time,0.002308,0.000793,False,37456.95
+PRV0061,Victoria Garcia,Psychiatry,Psychiatry | full_time,full_time,0.002163,0.000971,False,36613.29
+PRV0003,Angie Henderson,Dermatology,Dermatology | full_time,full_time,0.002145,0.00212,False,37110.08
+PRV0129,Cameron Fisher,Family Medicine,Family Medicine | full_time,full_time,0.002007,0.001496,False,32252.71
+PRV0001,Allison Hill,Psychiatry,Psychiatry | full_time,full_time,0.001953,0.000463,False,39016.3
+PRV0060,John Daniel,Family Medicine,Family Medicine | full_time,full_time,0.001919,0.001309,False,36899.85
+PRV0115,Garrett Lin,Family Medicine,Family Medicine | full_time,full_time,0.001847,0.000791,False,35794.06
+PRV0013,Lisa Hensley,Radiology,Radiology | full_time,full_time,0.001714,0.001631,False,122706.05
+PRV0018,Derek Zuniga,Family Medicine,Family Medicine | full_time,full_time,0.00168,0.001638,False,36583.52
+PRV0085,Zachary Ferrell,Family Medicine,Family Medicine | full_time,full_time,0.001673,0.001397,False,37209.44
+PRV0121,Larry Dixon,Radiology,Radiology | full_time,full_time,0.001653,0.001574,False,138720.41
+PRV0046,Philip Cannon,Dermatology,Dermatology | full_time,full_time,0.001649,0.001787,False,32969.62
+PRV0005,Cristian Santos,Family Medicine,Family Medicine | full_time,full_time,0.001595,0.001109,False,34840.39
+PRV0031,Rebecca Henderson,Psychiatry,Psychiatry | full_time,full_time,0.001542,0.000755,False,41688.42
+PRV0145,Amber Wright,Cardiology,Cardiology | full_time,full_time,0.001455,0.001049,False,26328.71
+PRV0122,Kenneth Scott,Radiology,Radiology | full_time,full_time,0.001434,0.001367,False,137022.59
+PRV0038,Cassandra Gaines,Cardiology,Cardiology | full_time,full_time,0.00134,0.000664,False,26477.92
+PRV0109,Evelyn Galvan,Family Medicine,Family Medicine | full_time,full_time,0.001224,0.000957,False,36339.62
+PRV0053,Crystal Robinson,Psychiatry,Psychiatry | full_time,full_time,0.001071,0.000999,False,34984.22
+PRV0066,Amber Kidd,Radiology,Radiology | full_time,full_time,0.001044,0.000998,False,123285.36
+PRV0075,Amy Silva,Family Medicine,Family Medicine | full_time,full_time,0.00102,0.000275,False,38202.9
+PRV0054,Mark Perez,Psychiatry,Psychiatry | full_time,full_time,0.000978,0.00031,False,30725.63
+PRV0044,Anthony Humphrey,Cardiology,Cardiology | full_time,full_time,0.000919,0.000695,False,30611.37
+TRAP01,Dr. Helena Radcliffe,Radiology,Radiology | full_time,full_time,0.000848,0.000813,False,411802.92
+PRV0071,Jordan Henderson,Family Medicine,Family Medicine | full_time,full_time,0.000838,0.000398,False,36355.88
+PRV0021,Margaret Hawkins DDS,Psychiatry,Psychiatry | full_time,full_time,0.000805,0.000232,False,32438.17
+PRV0144,Christopher Rubio,Radiology,Radiology | full_time,full_time,0.000728,0.000712,False,119727.13
+PRV0086,Daniel Baker,Family Medicine,Family Medicine | full_time,full_time,0.000715,0.00017,False,35543.08
+PRV0020,Carla Gray,Radiology,Radiology | full_time,full_time,0.000706,0.000691,False,124866.64
+PRV0138,Courtney Gonzalez,Cardiology,Cardiology | full_time,full_time,0.000699,0.000691,False,29787.51
+PRV0114,Crystal Johnson,Radiology,Radiology | full_time,full_time,0.000679,0.000664,False,141693.7
+PRV0148,Stephanie Salazar,Radiology,Radiology | full_time,full_time,0.000679,0.000664,False,141648.25
+PRV0102,Cameron Parker,Psychiatry,Psychiatry | full_time,full_time,0.000666,0.0004,False,36409.78
+PRV0056,Michael Lewis,Psychiatry,Psychiatry | full_time,full_time,0.000594,0.000224,False,38583.49
+PRV0052,Danny Morgan,Family Medicine,Family Medicine | full_time,full_time,0.00058,0.000482,False,35456.87
+PRV0140,Angel Perry,Family Medicine,Family Medicine | full_time,full_time,0.000574,0.000382,False,38453.59
+PRV0090,Aimee Montoya,Radiology,Radiology | full_time,full_time,0.000473,0.000462,False,151657.31
+PRV0004,Daniel Wagner,Psychiatry,Psychiatry | full_time,full_time,0.000467,0.000402,False,38410.32
+PRV0011,Monica Herrera,Cardiology,Cardiology | full_time,full_time,0.00046,0.000248,False,27323.89
+PRV0137,Robert Potter,Surgery,Surgery | full_time,full_time,0.000431,0.000424,False,83582.94
+PRV0087,Shirley Suarez,Psychiatry,Psychiatry | full_time,full_time,0.000402,0.000108,False,30797.27
+PRV0094,Christina Walters,Cardiology,Cardiology | full_time,full_time,0.000221,0.000101,False,26766.56
+PRV0096,Anna Henderson,Radiology,Radiology | full_time,full_time,0.000211,0.000203,False,142844.15
+PRV0067,Tracy House,Radiology,Radiology | full_time,full_time,0.000194,0.000187,False,137224.58
+PRV0017,Holly Wood,Radiology,Radiology | full_time,full_time,0.000115,0.000112,False,133516.59
+PRV0105,Richard Henson,Psychiatry,Psychiatry | full_time,full_time,8.9e-05,9.1e-05,False,31433.7
+PRV0130,Megan Orr,Radiology,Radiology | full_time,full_time,6.5e-05,6.2e-05,False,133304.26
+PRV0098,Deborah Figueroa,Family Medicine,Family Medicine | full_time,full_time,6.2e-05,1.2e-05,False,621307.48
+PRV0025,Matthew Foster,Psychiatry,Psychiatry | full_time,full_time,4.6e-05,2.5e-05,False,862334.71
+PRV0063,Connor West,Radiology,Radiology | full_time,full_time,1.5e-05,1.4e-05,False,133307.35
+PRV0065,Jessica Callahan,Radiology,Radiology | full_time,full_time,1.4e-05,1.4e-05,False,131838.45
+PRV0133,Mary Marshall,Radiology,Radiology | full_time,full_time,1e-06,1e-06,False,157777.67
+PRV0058,Richard Aguirre,Radiology,Radiology | full_time,full_time,0.0,0.0,False,140384.07
+TRAP02,Dr. James Colquhoun,Family Medicine,Family Medicine | part_time,part_time,0.0,0.0,False,5297.06

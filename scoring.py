@@ -1,35 +1,40 @@
-"""Phase 5 — Multi-layer risk scoring.
+"""Phase 5 -- Multi-layer risk scoring.
 
-Combines three evidence layers into a single 0-100 risk score per provider,
+Combines four evidence layers into a single 0-100 risk score per provider,
 then weights the ranking by estimated dollar exposure so the highest-priority
 audit targets appear first.
 
 Weights (pre-normalisation):
-  Rules layer  : 0-50 pts  (highest confidence — binary violations)
-  Peer stats   : 0-30 pts  (statistical outliers within specialty)
-  ML anomaly   : 0-20 pts  (unsupervised; catches novel patterns)
+  Rules layer    : 0-50 pts  (highest confidence -- binary violations)
+  Peer stats     : 0-25 pts  (statistical outliers within cohort)
+  ML anomaly     : 0-15 pts  (unsupervised; catches novel patterns)
+  Code-mix drift : 0-10 pts  (KL / cosine drift from cohort)
 
 Outputs risk_scores.csv.
 """
 
+import os
+
 import numpy as np
 import pandas as pd
 
-RULES_CSV   = "rules_flags.csv"
-PEER_CSV    = "peer_flags.csv"
-ML_CSV      = "ml_scores.csv"
-CLAIMS_CSV  = "claims.csv"
-OUTPUT_CSV  = "risk_scores.csv"
+RULES_CSV    = "rules_flags.csv"
+PEER_CSV     = "peer_flags.csv"
+ML_CSV       = "ml_scores.csv"
+CODEMIX_CSV  = "provider_codemix.csv"
+CLAIMS_CSV   = "claims.csv"
+OUTPUT_CSV   = "risk_scores.csv"
 
 # Points per rule type
 RULE_POINTS = {
-    "impossible_day":   40,
-    "duplicate_billing":35,
-    "unbundling":       30,
+    "impossible_day":    40,
+    "duplicate_billing": 35,
+    "unbundling":        30,
 }
 
-PEER_MAX_PTS = 30   # cap for peer-stats contribution
-ML_MAX_PTS   = 20   # cap for ML contribution
+PEER_MAX_PTS    = 25   # cap for peer-stats contribution (reduced to make room)
+ML_MAX_PTS      = 15   # cap for ML contribution
+CODEMIX_MAX_PTS = 10   # cap for code-mix drift contribution
 
 
 def load_claims_meta(path=CLAIMS_CSV) -> pd.DataFrame:
@@ -69,18 +74,17 @@ def rules_component() -> pd.DataFrame:
 
 
 def peer_component() -> pd.DataFrame:
-    """0-30 pts based on how many metrics breach |z|>3 and by how much."""
-    pdf = pd.read_csv(PEER_CSV,
-                      dtype={"provider_id": str})
+    """0-25 pts based on how many metrics breach |z|>3.5 and by how much."""
+    pdf = pd.read_csv(PEER_CSV, dtype={"provider_id": str})
     if pdf.empty:
         return pd.DataFrame(columns=["provider_id","peer_score","peer_exposure","peer_reasons"])
 
-    pdf["metric_pts"] = pdf["z_score"].abs().apply(lambda z: min((z - 3) * 2 + 5, 10))
+    pdf["metric_pts"] = pdf["z_score"].abs().apply(lambda z: min((z - 3.5) * 2 + 5, 10))
 
     agg = (
         pdf.groupby("provider_id")
            .agg(
-               peer_score  =("metric_pts",          "sum"),
+               peer_score   =("metric_pts",          "sum"),
                peer_exposure=("estimated_exposure",  "first"),
                peer_reasons =("metric",              lambda x: "; ".join(sorted(set(x)))),
            )
@@ -91,36 +95,58 @@ def peer_component() -> pd.DataFrame:
 
 
 def ml_component() -> pd.DataFrame:
-    """0-20 pts from IsolationForest normalised score."""
+    """0-15 pts from IsolationForest normalised score."""
     mdf = pd.read_csv(ML_CSV, dtype={"provider_id": str})
     mdf["ml_score_pts"] = (mdf["ml_score"] / 100 * ML_MAX_PTS).round(2)
     return mdf[["provider_id","ml_score","ml_score_pts","ml_is_anomaly"]]
 
 
+def codemix_component() -> pd.DataFrame:
+    """0-10 pts from KL/cosine code-mix drift.  Skipped if file absent."""
+    if not os.path.exists(CODEMIX_CSV):
+        return pd.DataFrame(columns=["provider_id","codemix_score","codemix_flag",
+                                     "kl_divergence","cosine_distance"])
+    cdf = pd.read_csv(CODEMIX_CSV, dtype={"provider_id": str})
+    # Normalise KL to 0-10 pts (cap at KL=1.0 => 10 pts)
+    cdf["codemix_score"] = (cdf["kl_divergence"].clip(upper=1.0) * CODEMIX_MAX_PTS).round(2)
+    cdf["codemix_flag"]  = cdf["drift_flag"].astype(int)
+    return cdf[["provider_id","codemix_score","codemix_flag",
+                "kl_divergence","cosine_distance"]]
+
+
 def build_risk_scores() -> pd.DataFrame:
-    meta   = load_claims_meta()
-    rules  = rules_component()
-    peer   = peer_component()
-    ml     = ml_component()
+    meta    = load_claims_meta()
+    rules   = rules_component()
+    peer    = peer_component()
+    ml      = ml_component()
+    codemix = codemix_component()
 
-    df = meta.merge(rules, on="provider_id", how="left")
-    df = df.merge(peer,   on="provider_id", how="left")
-    df = df.merge(ml,     on="provider_id", how="left")
+    df = meta.merge(rules,   on="provider_id", how="left")
+    df = df.merge(peer,      on="provider_id", how="left")
+    df = df.merge(ml,        on="provider_id", how="left")
+    df = df.merge(codemix,   on="provider_id", how="left")
 
-    df["rules_score"]   = df["rules_score"].fillna(0)
-    df["peer_score"]    = df["peer_score"].fillna(0)
-    df["ml_score_pts"]  = df["ml_score_pts"].fillna(0)
-    df["ml_score"]      = df["ml_score"].fillna(0)
-    df["ml_is_anomaly"] = df["ml_is_anomaly"].fillna(0).astype(int)
+    df["rules_score"]    = df["rules_score"].fillna(0)
+    df["peer_score"]     = df["peer_score"].fillna(0)
+    df["ml_score_pts"]   = df["ml_score_pts"].fillna(0)
+    df["ml_score"]       = df["ml_score"].fillna(0)
+    df["ml_is_anomaly"]  = df["ml_is_anomaly"].fillna(0).astype(int)
+    df["codemix_score"]  = df["codemix_score"].fillna(0)
+    df["codemix_flag"]   = df["codemix_flag"].fillna(0).astype(int)
+    df["kl_divergence"]  = df["kl_divergence"].fillna(0)
+    df["cosine_distance"]= df["cosine_distance"].fillna(0)
 
     # Combined 0-100 risk score
-    df["risk_score"] = (df["rules_score"] + df["peer_score"] + df["ml_score_pts"]).clip(upper=100).round(1)
+    df["risk_score"] = (
+        df["rules_score"] + df["peer_score"] +
+        df["ml_score_pts"] + df["codemix_score"]
+    ).clip(upper=100).round(1)
 
     # Estimated exposure: rules exposure where available, else fraction of total billed
     df["estimated_exposure"] = (
         df["rules_exposure"]
           .fillna(df["peer_exposure"])
-          .fillna(df["total_billed"] * 0.10)   # 10% heuristic for ML-only hits
+          .fillna(df["total_billed"] * 0.10)
     )
 
     # Dollar-weighted rank score (used only for ordering)
@@ -135,19 +161,21 @@ def build_risk_scores() -> pd.DataFrame:
             reasons.append(f"Peer z>3: {row['peer_reasons']}")
         if row["ml_is_anomaly"]:
             reasons.append(f"ML anomaly score {row['ml_score']:.0f}/100")
+        if row["codemix_flag"]:
+            reasons.append(f"Code-mix drift KL={row['kl_divergence']:.3f}")
         return " | ".join(reasons) if reasons else "no flags"
 
     df["top_reason"] = df.apply(top_reason, axis=1)
 
-    # Only keep providers with any signal
     flagged = df[df["risk_score"] > 0].copy()
     flagged = flagged.sort_values("_rank_score", ascending=False)
 
     out_cols = [
         "provider_id","provider_name","specialty",
         "risk_score","estimated_exposure",
-        "rules_score","peer_score","ml_score",
-        "ml_is_anomaly","top_reason",
+        "rules_score","peer_score","ml_score","ml_is_anomaly",
+        "codemix_score","codemix_flag","kl_divergence","cosine_distance",
+        "top_reason",
     ]
     result = flagged[out_cols].reset_index(drop=True)
     result.to_csv(OUTPUT_CSV, index=False)
