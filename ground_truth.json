@@ -32,5 +32,19 @@
     "PRV0112",
     "PRV0133",
     "PRV0142"
-  ]
+  ],
+  "clean_providers": {
+    "TRAP01": {
+      "description": "Legitimate high-volume radiologist (busy hospital reader)",
+      "type": "high_volume_clean"
+    },
+    "TRAP02": {
+      "description": "Part-time locum physician (low volume, sporadic schedule)",
+      "type": "part_time_clean"
+    },
+    "TRAP03": {
+      "description": "Sub-threshold provider (long days but always <1440 min)",
+      "type": "sub_threshold_clean"
+    }
+  }
 }

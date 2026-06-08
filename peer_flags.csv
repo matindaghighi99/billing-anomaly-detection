@@ -1,23 +1,32 @@
-provider_id,provider_name,specialty,metric,provider_value,peer_median,z_score,estimated_exposure
-PRV0008,Gina Moore,Psychiatry,avg_billed,175.0274,159.168,4.88,37630.89
-PRV0008,Gina Moore,Psychiatry,top_tier_share,0.8791,0.4978,4.88,37630.89
-PRV0008,Gina Moore,Psychiatry,avg_minutes,57.5349,50.5055,4.64,37630.89
-PRV0025,Matthew Foster,Psychiatry,claims_per_day,25.3084,1.1706,5.1,862334.71
-PRV0025,Matthew Foster,Psychiatry,services_per_patient,1.0543,1.0,4.81,862334.71
-PRV0045,Angelica Tucker,Dermatology,avg_billed,142.9941,111.3969,3.11,71068.06
-PRV0045,Angelica Tucker,Dermatology,claims_per_day,2.4604,1.5635,3.12,71068.06
-PRV0045,Angelica Tucker,Dermatology,avg_minutes,25.3622,17.2365,3.15,71068.06
-PRV0077,Angela Lopez,Family Medicine,services_per_patient,1.1599,1.0033,4.62,42396.54
-PRV0089,Lisa Archer,Family Medicine,avg_billed,148.2764,118.9356,3.63,76214.07
-PRV0089,Lisa Archer,Family Medicine,top_tier_share,0.4494,0.142,5.74,76214.07
-PRV0089,Lisa Archer,Family Medicine,avg_minutes,28.7743,22.3997,3.7,76214.07
-PRV0098,Deborah Figueroa,Family Medicine,claims_per_day,25.2754,1.58,6.4,621307.48
-PRV0112,Shannon Walker,Family Medicine,avg_billed,157.0547,118.9356,4.77,59523.74
-PRV0112,Shannon Walker,Family Medicine,services_per_patient,1.1381,1.0033,3.95,59523.74
-PRV0112,Shannon Walker,Family Medicine,avg_minutes,30.3826,22.3997,4.69,59523.74
-PRV0133,Mary Marshall,Radiology,claims_per_day,2.0357,1.7778,3.41,157777.67
-PRV0133,Mary Marshall,Radiology,services_per_patient,1.1499,1.003,4.23,157777.67
-PRV0142,David Douglas Jr.,Cardiology,avg_billed,67.7255,98.8645,-5.01,30137.84
-PRV0142,David Douglas Jr.,Cardiology,claims_per_day,2.2475,1.4085,5.82,30137.84
-PRV0142,David Douglas Jr.,Cardiology,services_per_patient,1.4686,1.0,6.0,30137.84
-PRV0142,David Douglas Jr.,Cardiology,avg_minutes,14.8539,22.3194,-5.38,30137.84
+provider_id,provider_name,specialty,cohort_key,practice_setting,metric,provider_value,peer_median,z_score,estimated_exposure
+PRV0006,Connie Lawrence,Surgery,Surgery | full_time,full_time,avg_billed,718.6462,420.4866,9.78,141573.3
+PRV0006,Connie Lawrence,Surgery,Surgery | full_time,full_time,top_tier_share,0.9239,0.4949,5.68,141573.3
+PRV0006,Connie Lawrence,Surgery,Surgery | full_time,full_time,avg_minutes,69.0355,47.1939,11.06,141573.3
+PRV0008,Gina Moore,Psychiatry,Psychiatry | full_time,full_time,avg_billed,175.0274,159.168,16.83,37630.89
+PRV0008,Gina Moore,Psychiatry,Psychiatry | full_time,full_time,top_tier_share,0.8791,0.4978,20.34,37630.89
+PRV0008,Gina Moore,Psychiatry,Psychiatry | full_time,full_time,avg_minutes,57.5349,50.5055,11.24,37630.89
+PRV0025,Matthew Foster,Psychiatry,Psychiatry | full_time,full_time,claims_per_day,25.3084,1.1706,729.15,862334.71
+PRV0025,Matthew Foster,Psychiatry,Psychiatry | full_time,full_time,services_per_patient,1.0543,1.0,4.81,862334.71
+PRV0045,Angelica Tucker,Dermatology,Dermatology | full_time,full_time,avg_billed,142.9941,111.3969,10.48,71068.06
+PRV0045,Angelica Tucker,Dermatology,Dermatology | full_time,full_time,claims_per_day,2.4604,1.5635,19.6,71068.06
+PRV0045,Angelica Tucker,Dermatology,Dermatology | full_time,full_time,avg_minutes,25.3622,17.2365,17.94,71068.06
+PRV0064,Donald Wright,Psychiatry,Psychiatry | full_time,full_time,top_tier_share,0.5721,0.4978,3.96,35903.62
+PRV0077,Angela Lopez,Family Medicine,Family Medicine | full_time,full_time,claims_per_day,1.7961,1.5812,3.81,42396.54
+PRV0077,Angela Lopez,Family Medicine,Family Medicine | full_time,full_time,services_per_patient,1.1599,1.0033,32.27,42396.54
+PRV0089,Lisa Archer,Family Medicine,Family Medicine | full_time,full_time,avg_billed,148.2764,119.0817,9.36,76214.07
+PRV0089,Lisa Archer,Family Medicine,Family Medicine | full_time,full_time,claims_per_day,2.4476,1.5812,15.38,76214.07
+PRV0089,Lisa Archer,Family Medicine,Family Medicine | full_time,full_time,top_tier_share,0.4494,0.1427,13.98,76214.07
+PRV0089,Lisa Archer,Family Medicine,Family Medicine | full_time,full_time,avg_minutes,28.7743,22.4189,10.73,76214.07
+PRV0098,Deborah Figueroa,Family Medicine,Family Medicine | full_time,full_time,claims_per_day,25.2754,1.5812,420.59,621307.48
+PRV0098,Deborah Figueroa,Family Medicine,Family Medicine | full_time,full_time,services_per_patient,1.0585,1.0033,11.37,621307.48
+PRV0112,Shannon Walker,Family Medicine,Family Medicine | full_time,full_time,avg_billed,157.0547,119.0817,12.17,59523.74
+PRV0112,Shannon Walker,Family Medicine,Family Medicine | full_time,full_time,claims_per_day,1.9536,1.5812,6.61,59523.74
+PRV0112,Shannon Walker,Family Medicine,Family Medicine | full_time,full_time,services_per_patient,1.1381,1.0033,27.79,59523.74
+PRV0112,Shannon Walker,Family Medicine,Family Medicine | full_time,full_time,avg_minutes,30.3826,22.4189,13.45,59523.74
+PRV0133,Mary Marshall,Radiology,Radiology | full_time,full_time,services_per_patient,1.1499,1.0032,35.49,157777.67
+PRV0142,David Douglas Jr.,Cardiology,Cardiology | full_time,full_time,claims_per_day,2.2475,1.4085,21.49,30137.84
+PRV0142,David Douglas Jr.,Cardiology,Cardiology | full_time,full_time,services_per_patient,1.4686,1.0,6.0,30137.84
+TRAP03,Dr. Sandra Beaumont,Family Medicine,Family Medicine | full_time,full_time,avg_billed,146.9611,119.0817,8.93,71129.18
+TRAP03,Dr. Sandra Beaumont,Family Medicine,Family Medicine | full_time,full_time,claims_per_day,2.4444,1.5812,15.32,71129.18
+TRAP03,Dr. Sandra Beaumont,Family Medicine,Family Medicine | full_time,full_time,top_tier_share,0.438,0.1427,13.46,71129.18
+TRAP03,Dr. Sandra Beaumont,Family Medicine,Family Medicine | full_time,full_time,avg_minutes,28.5331,22.4189,10.32,71129.18

@@ -18,8 +18,9 @@ ML_CSV      = "ml_scores.csv"
 METRICS_CSV = "provider_metrics.csv"
 EXPLS_JSON  = "explanations.json"
 CLAIMS_CSV  = "claims.csv"
+SHAP_CSV    = "shap_explanations.csv"
 
-RISK_THRESHOLD = 5   # minimum risk score to appear in worklist
+RISK_THRESHOLD = 10   # minimum risk score to appear in worklist (Phase 6)
 
 st.set_page_config(
     page_title="Billing Anomaly Audit Dashboard",
@@ -93,6 +94,12 @@ def load_explanations():
         return {}
     with open(EXPLS_JSON) as f:
         return json.load(f)
+
+@st.cache_data
+def load_shap_explanations():
+    if not os.path.exists(SHAP_CSV):
+        return pd.DataFrame()
+    return pd.read_csv(SHAP_CSV, dtype={"provider_id": str})
 
 @st.cache_data
 def load_claims_sample():
@@ -193,7 +200,8 @@ def monthly_claims_chart(provider_id: str, claims_df: pd.DataFrame):
 
 # ── Signal badges ─────────────────────────────────────────────────────────────
 
-def signal_badges(pid: str, rules_df, peer_df, ml_df) -> str:
+def signal_badges(pid: str, rules_df, peer_df, ml_df,
+                  worklist_row=None) -> str:
     badges = []
     if not rules_df.empty:
         rules_hit = rules_df[rules_df["provider_id"] == pid]["rule"].unique()
@@ -209,6 +217,15 @@ def signal_badges(pid: str, rules_df, peer_df, ml_df) -> str:
         if not ml_row.empty and ml_row.iloc[0]["ml_is_anomaly"]:
             score = ml_row.iloc[0]["ml_score"]
             badges.append(f'<span class="signal-chip chip-ml">ML Anomaly ({score:.0f}/100)</span>')
+    if worklist_row is not None:
+        if worklist_row.get("codemix_flag", 0):
+            kl = worklist_row.get("kl_divergence", 0)
+            badges.append(f'<span class="signal-chip chip-peer">Code-Mix Drift (KL={kl:.3f})</span>')
+        if worklist_row.get("temporal_flag", 0):
+            badges.append('<span class="signal-chip chip-peer">Temporal Change-Point</span>')
+        fb = worklist_row.get("feedback_score", 0)
+        if fb and float(fb) > 0:
+            badges.append(f'<span class="signal-chip chip-ml">Feedback Model ({float(fb):.1f} pts)</span>')
     return " ".join(badges) if badges else "<em>No specific signal</em>"
 
 
@@ -295,6 +312,8 @@ def main():
         "provider_name":      "Name",
         "specialty":          "Specialty",
         "risk_score":         "Risk Score",
+        "confidence":         "Confidence",
+        "expected_recovery":  "Exp. Recovery ($)",
         "estimated_exposure": "Est. Exposure ($)",
         "top_reason":         "Top Reason",
     }
@@ -303,7 +322,9 @@ def main():
     st.dataframe(
         table.style
              .background_gradient(subset=["Risk Score"], cmap="YlOrRd")
-             .format({"Est. Exposure ($)": "${:,.0f}", "Risk Score": "{:.1f}"}),
+             .format({"Est. Exposure ($)": "${:,.0f}",
+                      "Exp. Recovery ($)": "${:,.0f}",
+                      "Risk Score": "{:.1f}"}),
         use_container_width=True,
         height=min(600, 40 + len(table) * 35),
     )
@@ -330,22 +351,77 @@ def main():
             worklist, score_map,
         )
 
+    # ── Model Card ────────────────────────────────────────────────────────────
+    st.markdown("---")
+    with st.expander("Model Card", expanded=False):
+        st.markdown("""
+**System name:** Physician Billing Anomaly Detection Demo
+**Version:** Phase 11 (all upgrades)
+**Purpose:** Decision-SUPPORT tool for human billing auditors. Surfaces providers whose billing patterns are statistically anomalous for human review. Makes no automated decisions.
+
+---
+
+#### Detection Layers
+
+| Layer | Method | Max pts | Notes |
+|---|---|---|---|
+| Rules | Deterministic: impossible day, duplicate billing, unbundling | 50 | HIGH confidence; binary violations |
+| Peer stats | MAD modified z-score within specialty + practice-setting cohort | 25 | One-sided (over-billing only); Radiology threshold raised |
+| ML ensemble | IsolationForest (50%) + LOF (30%) + OC-SVM (20%), majority vote | 15 | Consensus flag requires >= 2/3 detectors |
+| Code-mix drift | KL divergence + cosine distance vs specialty cohort median | 10 | Catches unusual code pattern shifts |
+| Temporal | CUSUM change-point on monthly volume + spike detection | 5 | Catches sudden onset patterns |
+| Feedback | Semi-supervised XGBoost on auditor-confirmed dispositions | 10 | Active only when >= 6 labels exist |
+
+**Total max score:** 100 (clipped)
+
+---
+
+#### Confidence Tiers & Expected Recovery
+
+| Tier | Criteria | Recovery likelihood |
+|---|---|---|
+| HIGH | Rule violation (any) | 70% |
+| MEDIUM | >= 2 stat signals, or 1 + ML anomaly | 40% |
+| LOW | Single weak signal | 15% |
+
+**Expected recovery** = estimated exposure x likelihood. Worklist is ranked by risk_score x log(1 + expected_recovery/1000).
+
+---
+
+#### Known Limitations & Bias Audit
+
+- **TRAP03 (sub-threshold marathoner):** Flagged as false positive (peer stats). Long individual days are statistically unusual even when clinically explainable. Auditor judgement required.
+- **Fairness audit (Phase 9):** No statistically significant over-flagging by specialty or clinic detected (chi-square p > 0.05 for all groups).
+- **Feedback model:** Trained on a small seed of 11 dispositions; classification confidence improves with more auditor labels.
+- **All data is SYNTHETIC.** This system is a demo only.
+
+---
+
+#### Explainability
+
+SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. Top-3 driving features shown in the Explanation tab. Full SHAP matrix saved to `shap_values.csv`.
+""")
+
 
 def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                              worklist, score_map):
     prow = worklist[worklist["provider_id"] == pid].iloc[0]
 
     st.markdown(f"### {prow['provider_name']} &nbsp; `{pid}`")
+    confidence = prow.get("confidence", "N/A")
+    exp_rec    = prow.get("expected_recovery", prow.get("estimated_exposure", 0))
     st.markdown(
         f"**Specialty:** {prow['specialty']} &nbsp;&nbsp; "
         f"**Risk Score:** `{prow['risk_score']:.0f}/100` &nbsp;&nbsp; "
+        f"**Confidence:** `{confidence}` &nbsp;&nbsp; "
+        f"**Expected Recovery:** `${exp_rec:,.2f}` &nbsp;&nbsp; "
         f"**Estimated Exposure:** `${prow['estimated_exposure']:,.2f}`",
         unsafe_allow_html=True,
     )
 
     # Signal badges
     st.markdown("**Signals fired:**", unsafe_allow_html=True)
-    st.markdown(signal_badges(pid, rules, peer, ml), unsafe_allow_html=True)
+    st.markdown(signal_badges(pid, rules, peer, ml, prow), unsafe_allow_html=True)
 
     tab1, tab2, tab3, tab4 = st.tabs(
         ["Rule Evidence", "Peer Comparison", "Monthly Volume", "Explanation"]
@@ -400,16 +476,38 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
 
     # ── Tab 4: Explanation ────────────────────────────────────────────────────
     with tab4:
+        # SHAP feature drivers (loaded lazily from pre-computed CSV)
+        shap_df = load_shap_explanations()
+        if not shap_df.empty:
+            shap_row = shap_df[shap_df["provider_id"] == pid]
+            if not shap_row.empty:
+                st.markdown("**SHAP feature drivers (IsolationForest):**")
+                feats = shap_row.iloc[0]["top_features"].split(";")
+                vals  = [shap_row.iloc[0].get(f"shap_top{i}_val", 0)
+                         for i in range(1, len(feats) + 1)]
+                shap_disp = pd.DataFrame({
+                    "Feature":        [f.strip() for f in feats[:3]],
+                    "SHAP value":     [round(v, 4) for v in vals[:3]],
+                })
+                st.dataframe(shap_disp, hide_index=True, use_container_width=False)
+                st.caption("Higher SHAP value = stronger driver toward anomaly classification.")
+                st.markdown("---")
+
         if pid in expls:
             st.text_area(
                 "Audit explanation (template-based; set ANTHROPIC_API_KEY for AI-enriched):",
                 value=expls[pid]["explanation"],
-                height=280,
+                height=300,
                 key=f"expl_{pid}",
             )
         else:
-            st.info("Explanation not generated for this provider. "
-                    "Run explain.py for the top-N providers.")
+            st.info("Full explanation not pre-generated for this provider.")
+            if st.button("Generate explanation now", key=f"gen_expl_{pid}"):
+                with st.spinner("Running explain.py..."):
+                    from explain import build_explanations
+                    build_explanations()
+                    st.cache_data.clear()
+                st.rerun()
 
 
 if __name__ == "__main__":
