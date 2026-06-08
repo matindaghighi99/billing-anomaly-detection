@@ -1,153 +1,154 @@
-provider_id,provider_name,specialty,risk_score,estimated_exposure,rules_score,peer_score,ml_score,ml_is_anomaly,codemix_score,codemix_flag,kl_divergence,cosine_distance,top_reason
-PRV0025,Matthew Foster,Psychiatry,82.6,213460.58000000002,50.0,17.619999999999997,100.0,1,0.0,0,4.6e-05,2.5e-05,Rule: impossible_day | Peer z>3: claims_per_day; services_per_patient | ML anomaly score 100/100
-PRV0045,Angelica Tucker,Dermatology,96.5,37966.11,50.0,25.0,76.91,1,10.0,1,7.057522,0.347957,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; claims_per_day | ML anomaly score 77/100 | Code-mix drift KL=7.058
-PRV0089,Lisa Archer,Family Medicine,85.0,38206.450000000004,50.0,25.0,48.96,0,2.68,1,0.268249,0.195402,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; claims_per_day; top_tier_share | Code-mix drift KL=0.268
-PRV0006,Connie Lawrence,Surgery,44.3,141573.3,0.0,25.0,98.54,1,4.53,1,0.452906,0.248252,Peer z>3: avg_billed; avg_minutes; top_tier_share | ML anomaly score 99/100 | Code-mix drift KL=0.453
-PRV0098,Deborah Figueroa,Family Medicine,31.9,621307.48,0.0,20.0,79.51,1,0.0,0,6.2e-05,1.2e-05,Peer z>3: claims_per_day; services_per_patient | ML anomaly score 80/100
-PRV0112,Shannon Walker,Family Medicine,45.6,59523.74,0.0,25.0,70.33,1,10.0,1,4.215237,0.070621,Peer z>3: avg_billed; avg_minutes; claims_per_day; services_per_patient | ML anomaly score 70/100 | Code-mix drift KL=4.215
-PRV0133,Mary Marshall,Radiology,53.9,20226.42,35.0,10.0,59.04,1,0.0,0,1e-06,1e-06,Rule: duplicate_billing | Peer z>3: services_per_patient | ML anomaly score 59/100
-TRAP03,Dr. Sandra Beaumont,Family Medicine,34.6,71129.18,0.0,25.0,47.49,0,2.5,1,0.250263,0.183446,Peer z>3: avg_billed; avg_minutes; claims_per_day; top_tier_share | Code-mix drift KL=0.250
-PRV0008,Gina Moore,Psychiatry,38.5,37630.89,0.0,25.0,68.52,1,3.24,1,0.323615,0.163542,Peer z>3: avg_billed; avg_minutes; top_tier_share | ML anomaly score 69/100 | Code-mix drift KL=0.324
-PRV0077,Angela Lopez,Family Medicine,56.9,5440.02,35.0,15.620000000000001,40.93,0,0.1,0,0.010117,0.003792,Rule: duplicate_billing | Peer z>3: claims_per_day; services_per_patient
-PRV0142,David Douglas Jr.,Cardiology,72.5,1427.23,30.0,20.0,89.27,1,9.09,1,0.908873,0.56678,Rule: unbundling | Peer z>3: claims_per_day; services_per_patient | ML anomaly score 89/100 | Code-mix drift KL=0.909
-TRAP01,Dr. Helena Radcliffe,Radiology,10.8,41180.292,0.0,0.0,72.07,1,0.01,0,0.000848,0.000813,ML anomaly score 72/100
-PRV0064,Donald Wright,Psychiatry,11.0,35903.62,0.0,5.92,32.93,0,0.11,0,0.010644,0.007957,Peer z>3: top_tier_share
-PRV0104,Christine Wright,Surgery,9.7,8662.023,0.0,0.0,63.61,1,0.12,0,0.0118,0.012563,ML anomaly score 64/100
-PRV0132,Dustin Jordan,Surgery,9.7,7916.647000000001,0.0,0.0,64.36,1,0.08,0,0.008334,0.008323,ML anomaly score 64/100
-PRV0012,Jamie Arnold,Surgery,9.2,8410.123,0.0,0.0,60.95,1,0.07,0,0.006677,0.006759,ML anomaly score 61/100
-PRV0032,James Ferrell,Surgery,9.7,6827.247,0.0,0.0,63.86,1,0.13,0,0.012701,0.013162,ML anomaly score 64/100
-PRV0100,Stephen Mckee,Surgery,8.8,7761.389999999999,0.0,0.0,57.94,1,0.09,0,0.008893,0.008458,ML anomaly score 58/100
-PRV0143,Patricia Rodriguez,Surgery,8.5,8203.476,0.0,0.0,56.16,1,0.06,0,0.00581,0.005759,ML anomaly score 56/100
-PRV0137,Robert Potter,Surgery,8.0,8358.294,0.0,0.0,53.36,0,0.0,0,0.000431,0.000424,no flags
-PRV0120,Jeffrey Chandler,Radiology,6.7,13374.237000000001,0.0,0.0,44.4,0,0.08,0,0.008247,0.008155,no flags
-PRV0023,Ethan Adams,Surgery,8.0,8170.052000000001,0.0,0.0,53.51,0,0.02,0,0.002431,0.002357,no flags
-PRV0079,Steve Sanchez,Radiology,5.2,12645.801,0.0,0.0,34.6,0,0.04,0,0.003663,0.003611,no flags
-PRV0135,Rebecca Jackson,Radiology,5.2,12032.212,0.0,0.0,34.83,0,0.02,0,0.002328,0.002289,no flags
-PRV0013,Lisa Hensley,Radiology,5.1,12270.605000000001,0.0,0.0,33.7,0,0.02,0,0.001714,0.001631,no flags
-PRV0121,Larry Dixon,Radiology,4.8,13872.041000000001,0.0,0.0,31.64,0,0.02,0,0.001653,0.001574,no flags
-PRV0090,Aimee Montoya,Radiology,4.6,15165.731,0.0,0.0,30.79,0,0.0,0,0.000473,0.000462,no flags
-PRV0144,Christopher Rubio,Radiology,4.9,11972.713000000002,0.0,0.0,32.56,0,0.01,0,0.000728,0.000712,no flags
-PRV0066,Amber Kidd,Radiology,4.7,12328.536,0.0,0.0,31.34,0,0.01,0,0.001044,0.000998,no flags
-PRV0122,Kenneth Scott,Radiology,4.5,13702.259,0.0,0.0,29.75,0,0.01,0,0.001434,0.001367,no flags
-PRV0148,Stephanie Salazar,Radiology,4.4,14164.825,0.0,0.0,29.17,0,0.01,0,0.000679,0.000664,no flags
-PRV0096,Anna Henderson,Radiology,4.2,14284.415,0.0,0.0,28.19,0,0.0,0,0.000211,0.000203,no flags
-PRV0114,Crystal Johnson,Radiology,4.2,14169.370000000003,0.0,0.0,28.2,0,0.01,0,0.000679,0.000664,no flags
-PRV0017,Holly Wood,Radiology,4.2,13351.659,0.0,0.0,28.07,0,0.0,0,0.000115,0.000112,no flags
-PRV0020,Carla Gray,Radiology,4.0,12486.664,0.0,0.0,26.93,0,0.01,0,0.000706,0.000691,no flags
-PRV0065,Jessica Callahan,Radiology,3.9,13183.845000000001,0.0,0.0,25.8,0,0.0,0,1.4e-05,1.4e-05,no flags
-PRV0067,Tracy House,Radiology,3.7,13722.457999999999,0.0,0.0,24.4,0,0.0,0,0.000194,0.000187,no flags
-PRV0058,Richard Aguirre,Radiology,3.6,14038.407000000001,0.0,0.0,23.95,0,0.0,0,0.0,0.0,no flags
-PRV0073,Brittney Phillips,Dermatology,6.3,3542.936,0.0,0.0,41.04,0,0.12,0,0.01182,0.011543,no flags
-PRV0024,Tommy Walter,Dermatology,6.0,3808.6949999999997,0.0,0.0,39.44,0,0.09,0,0.008804,0.009212,no flags
-PRV0063,Connor West,Radiology,3.5,13330.735,0.0,0.0,23.15,0,0.0,0,1.5e-05,1.4e-05,no flags
-PRV0130,Megan Orr,Radiology,3.4,13330.426000000001,0.0,0.0,22.58,0,0.0,0,6.5e-05,6.2e-05,no flags
-PRV0101,Sandra Aguilar,Dermatology,6.5,3015.5860000000002,0.0,0.0,42.41,0,0.12,0,0.012397,0.011757,no flags
-PRV0110,Sharon Cochran,Dermatology,5.6,3679.2160000000003,0.0,0.0,36.67,0,0.07,0,0.00728,0.006804,no flags
-PRV0019,Lisa Jackson,Dermatology,5.8,3345.527,0.0,0.0,37.5,0,0.13,0,0.013156,0.011864,no flags
-PRV0003,Angie Henderson,Dermatology,5.4,3711.0080000000003,0.0,0.0,35.66,0,0.02,0,0.002145,0.00212,no flags
-PRV0083,Michael Evans,Dermatology,6.0,2906.686,0.0,0.0,39.68,0,0.02,0,0.002415,0.00217,no flags
-PRV0014,Michele Williams,Dermatology,5.6,3160.308,0.0,0.0,36.26,0,0.12,0,0.011572,0.01237,no flags
-PRV0042,Fred Smith,Dermatology,5.2,3350.124,0.0,0.0,34.74,0,0.03,0,0.002551,0.002044,no flags
-PRV0116,Diana May,Dermatology,5.2,3250.5400000000004,0.0,0.0,34.0,0,0.06,0,0.006312,0.005885,no flags
-PRV0046,Philip Cannon,Dermatology,5.1,3296.9620000000004,0.0,0.0,34.21,0,0.02,0,0.001649,0.001787,no flags
-PRV0043,Sherry Decker,Psychiatry,4.4,3510.6160000000004,0.0,0.0,28.45,0,0.11,0,0.011337,0.002754,no flags
-PRV0106,Marc Moore,Psychiatry,4.6,3210.1200000000003,0.0,0.0,30.29,0,0.05,0,0.005164,0.005298,no flags
-PRV0139,David Alvarez,Psychiatry,4.2,3751.8010000000004,0.0,0.0,27.38,0,0.09,0,0.009427,0.002997,no flags
-PRV0031,Rebecca Henderson,Psychiatry,3.8,4168.842,0.0,0.0,25.47,0,0.02,0,0.001542,0.000755,no flags
-PRV0027,Justin Baker,Cardiology,5.1,2346.2810000000004,0.0,0.0,32.41,0,0.23,0,0.022716,0.011619,no flags
-PRV0093,Denise Jacobs,Cardiology,4.8,2586.188,0.0,0.0,30.23,0,0.31,0,0.030977,0.017091,no flags
-PRV0001,Allison Hill,Psychiatry,3.7,3901.6300000000006,0.0,0.0,24.25,0,0.02,0,0.001953,0.000463,no flags
-PRV0055,Shannon Jones,Psychiatry,3.8,3687.3089999999997,0.0,0.0,25.5,0,0.03,0,0.003078,0.000909,no flags
-PRV0081,Kelly Donovan,Psychiatry,3.6,3628.71,0.0,0.0,24.19,0,0.02,0,0.002345,0.002377,no flags
-PRV0040,Brittany Farmer,Psychiatry,3.6,3519.597,0.0,0.0,23.79,0,0.06,0,0.005864,0.003884,no flags
-PRV0078,Megan Young,Psychiatry,3.8,3172.139,0.0,0.0,24.77,0,0.07,0,0.006513,0.002202,no flags
-PRV0080,Lisa Barnes,Psychiatry,3.5,3715.2940000000003,0.0,0.0,22.78,0,0.07,0,0.007112,0.002338,no flags
-PRV0118,Ashley Waller,Psychiatry,3.6,3316.249,0.0,0.0,23.84,0,0.04,0,0.004399,0.001839,no flags
-PRV0049,Joshua Blair,Psychiatry,3.3,3566.7540000000004,0.0,0.0,21.91,0,0.04,0,0.004181,0.002384,no flags
-PRV0092,Brian Rodriguez,Psychiatry,3.3,3515.867,0.0,0.0,21.56,0,0.04,0,0.003966,0.001677,no flags
-PRV0117,William Herrera,Psychiatry,3.2,3681.09,0.0,0.0,20.86,0,0.06,0,0.006051,0.002052,no flags
-PRV0021,Margaret Hawkins DDS,Psychiatry,3.4,3243.817,0.0,0.0,22.82,0,0.01,0,0.000805,0.000232,no flags
-PRV0004,Daniel Wagner,Psychiatry,3.1,3841.032,0.0,0.0,20.9,0,0.0,0,0.000467,0.000402,no flags
-PRV0030,Anthony Rodriguez,Psychiatry,3.2,3569.2129999999997,0.0,0.0,21.06,0,0.05,0,0.004777,0.003007,no flags
-PRV0054,Mark Perez,Psychiatry,3.4,3072.563,0.0,0.0,22.79,0,0.01,0,0.000978,0.00031,no flags
-PRV0087,Shirley Suarez,Psychiatry,3.3,3079.7270000000003,0.0,0.0,22.0,0,0.0,0,0.000402,0.000108,no flags
-PRV0056,Michael Lewis,Psychiatry,2.9,3858.349,0.0,0.0,19.43,0,0.01,0,0.000594,0.000224,no flags
-PRV0082,Mike Allen,Cardiology,3.8,2285.6040000000003,0.0,0.0,24.18,0,0.12,0,0.011586,0.005076,no flags
-PRV0147,Victoria Larson,Cardiology,3.3,2709.8340000000003,0.0,0.0,20.81,0,0.14,0,0.014135,0.007579,no flags
-PRV0126,Erin Edwards,Cardiology,3.4,2490.9610000000002,0.0,0.0,21.89,0,0.14,0,0.014108,0.008139,no flags
-PRV0119,Victor Baker,Cardiology,3.3,2474.318,0.0,0.0,20.83,0,0.15,0,0.015102,0.012502,no flags
-PRV0053,Crystal Robinson,Psychiatry,2.7,3498.4220000000005,0.0,0.0,18.07,0,0.01,0,0.001071,0.000999,no flags
-PRV0061,Victoria Garcia,Psychiatry,2.6,3661.329,0.0,0.0,17.38,0,0.02,0,0.002163,0.000971,no flags
-PRV0105,Richard Henson,Psychiatry,2.8,3143.3700000000003,0.0,0.0,18.97,0,0.0,0,8.9e-05,9.1e-05,no flags
-TRAP02,Dr. James Colquhoun,Family Medicine,9.2,529.706,0.0,0.0,61.34,1,0.0,0,0.0,0.0,ML anomaly score 61/100
-PRV0007,Abigail Shaffer,Psychiatry,2.6,3379.542,0.0,0.0,17.15,0,0.04,0,0.003917,0.001321,no flags
-PRV0102,Cameron Parker,Psychiatry,2.5,3640.978,0.0,0.0,16.67,0,0.01,0,0.000666,0.0004,no flags
-PRV0057,Timothy Duncan,Cardiology,2.7,3054.164,0.0,0.0,17.97,0,0.03,0,0.002798,0.002133,no flags
-PRV0015,Dylan Miller,Cardiology,3.0,2230.2270000000003,0.0,0.0,19.48,0,0.07,0,0.0069,0.004983,no flags
-PRV0124,Michelle Harmon,Cardiology,2.7,2525.1450000000004,0.0,0.0,17.01,0,0.12,0,0.012312,0.008317,no flags
-PRV0097,Aaron Wise,Cardiology,2.6,2662.8500000000004,0.0,0.0,16.31,0,0.12,0,0.012489,0.005642,no flags
-PRV0044,Anthony Humphrey,Cardiology,2.4,3061.137,0.0,0.0,15.78,0,0.01,0,0.000919,0.000695,no flags
-PRV0062,Gerald Hensley,Cardiology,2.6,2518.452,0.0,0.0,15.86,0,0.21,0,0.020915,0.011413,no flags
-PRV0072,Whitney Peters,Cardiology,2.5,2647.5580000000004,0.0,0.0,16.09,0,0.06,0,0.005876,0.002854,no flags
-PRV0095,John Whitehead,Cardiology,2.6,2295.396,0.0,0.0,16.68,0,0.07,0,0.007027,0.005317,no flags
-PRV0111,Richard Rodriguez,Cardiology,2.2,3084.58,0.0,0.0,14.33,0,0.05,0,0.004588,0.00342,no flags
-PRV0141,Cheyenne Horton,Cardiology,2.3,2820.212,0.0,0.0,14.48,0,0.1,0,0.009894,0.006999,no flags
-PRV0150,Stephanie Manning,Family Medicine,2.0,3436.235,0.0,0.0,12.26,0,0.16,0,0.015537,0.005391,no flags
-PRV0010,Ryan Munoz,Cardiology,2.4,2429.181,0.0,0.0,15.33,0,0.07,0,0.00675,0.004772,no flags
-PRV0035,Debra Davidson,Cardiology,2.1,3002.819,0.0,0.0,13.8,0,0.06,0,0.00624,0.005753,no flags
-PRV0002,Noah Rhodes,Cardiology,2.1,2927.9120000000003,0.0,0.0,13.46,0,0.04,0,0.003961,0.003242,no flags
-PRV0022,Patty Perez,Cardiology,2.1,2915.4320000000002,0.0,0.0,13.28,0,0.07,0,0.006907,0.003353,no flags
-PRV0107,Sharon Cherry,Cardiology,2.0,2974.2700000000004,0.0,0.0,13.1,0,0.03,0,0.003064,0.002026,no flags
-PRV0070,William Baker,Cardiology,1.9,2836.2970000000005,0.0,0.0,12.3,0,0.05,0,0.004682,0.002237,no flags
-PRV0127,Michelle Evans,Cardiology,38.8,67.0,35.0,0.0,25.16,0,0.06,0,0.005784,0.002765,Rule: duplicate_billing
-PRV0138,Courtney Gonzalez,Cardiology,1.8,2978.751,0.0,0.0,12.18,0,0.01,0,0.000699,0.000691,no flags
-PRV0084,Paul Jones,Family Medicine,1.7,3232.6740000000004,0.0,0.0,10.5,0,0.1,0,0.010269,0.006367,no flags
-PRV0113,Julia Torres,Cardiology,1.8,2900.164,0.0,0.0,11.5,0,0.03,0,0.003215,0.002384,no flags
-PRV0088,Christopher Bass,Cardiology,1.9,2573.947,0.0,0.0,12.43,0,0.08,0,0.008132,0.004738,no flags
-PRV0136,Jose Schultz,Family Medicine,1.6,3452.4580000000005,0.0,0.0,9.71,0,0.18,0,0.017851,0.017007,no flags
-PRV0034,Nathan Maldonado,Cardiology,1.8,2549.606,0.0,0.0,11.59,0,0.06,0,0.005726,0.003889,no flags
-PRV0068,Carol Tucker,Cardiology,1.8,2531.578,0.0,0.0,12.01,0,0.05,0,0.00539,0.004079,no flags
-PRV0033,Tricia Valencia,Cardiology,1.7,2801.744,0.0,0.0,10.98,0,0.03,0,0.002686,0.00207,no flags
-PRV0134,Daniel Kennedy,Cardiology,1.7,2674.311,0.0,0.0,10.68,0,0.07,0,0.006525,0.004775,no flags
-PRV0047,John Pierce,Cardiology,1.6,2466.3320000000003,0.0,0.0,10.74,0,0.04,0,0.004047,0.003227,no flags
-PRV0041,Paula Moreno,Cardiology,1.5,2632.107,0.0,0.0,9.49,0,0.04,0,0.003569,0.002329,no flags
-PRV0039,Elizabeth Fowler,Family Medicine,1.2,4004.774,0.0,0.0,7.44,0,0.13,0,0.013072,0.006001,no flags
-PRV0028,Stephanie Ross,Family Medicine,1.3,3346.2650000000003,0.0,0.0,8.09,0,0.09,0,0.009383,0.010343,no flags
-PRV0123,April Frost,Family Medicine,1.3,3321.174,0.0,0.0,7.83,0,0.1,0,0.009522,0.004548,no flags
-PRV0016,Brian Ramirez,Family Medicine,1.2,3794.045,0.0,0.0,7.0,0,0.18,0,0.017923,0.014753,no flags
-PRV0011,Monica Herrera,Cardiology,1.4,2732.389,0.0,0.0,9.08,0,0.0,0,0.00046,0.000248,no flags
-PRV0149,Kathy Rivas,Cardiology,1.4,2732.1730000000002,0.0,0.0,9.2,0,0.05,0,0.005349,0.002764,no flags
-PRV0145,Amber Wright,Cardiology,1.4,2632.871,0.0,0.0,9.39,0,0.01,0,0.001455,0.001049,no flags
-PRV0103,Rebecca Valencia,Family Medicine,1.0,3948.3610000000003,0.0,0.0,6.28,0,0.03,0,0.003266,0.001038,no flags
-PRV0051,Jessica Holmes,Family Medicine,1.0,3637.1900000000005,0.0,0.0,5.72,0,0.1,0,0.010069,0.004194,no flags
-PRV0009,Gabrielle Davis,Family Medicine,1.0,3368.7110000000002,0.0,0.0,6.14,0,0.08,0,0.007724,0.007469,no flags
-PRV0038,Cassandra Gaines,Cardiology,1.1,2647.792,0.0,0.0,7.53,0,0.01,0,0.00134,0.000664,no flags
-PRV0037,Sherri Baker,Family Medicine,0.9,3486.806,0.0,0.0,5.22,0,0.1,0,0.009874,0.005224,no flags
-PRV0026,Judy Baker,Family Medicine,0.9,3336.775,0.0,0.0,5.67,0,0.07,0,0.007135,0.001543,no flags
-PRV0094,Christina Walters,Cardiology,1.0,2676.6560000000004,0.0,0.0,6.79,0,0.0,0,0.000221,0.000101,no flags
-PRV0076,Sarah Moore,Family Medicine,0.9,3068.096,0.0,0.0,5.68,0,0.02,0,0.002392,0.000825,no flags
-PRV0074,Lauren Daniels,Family Medicine,0.9,3043.642,0.0,0.0,5.67,0,0.05,0,0.005474,0.001129,no flags
-PRV0108,Sierra Johnson,Family Medicine,0.8,3370.061,0.0,0.0,4.88,0,0.06,0,0.006046,0.005554,no flags
-PRV0059,Brent Jordan,Family Medicine,0.6,4017.9390000000003,0.0,0.0,3.56,0,0.02,0,0.002322,0.000892,no flags
-PRV0036,Jeffrey Chavez,Family Medicine,0.6,3807.3269999999998,0.0,0.0,3.56,0,0.1,0,0.009965,0.004066,no flags
-PRV0125,Helen Jones,Family Medicine,0.6,3395.3510000000006,0.0,0.0,3.68,0,0.08,0,0.007578,0.002828,no flags
-PRV0048,Shane Henderson,Family Medicine,0.5,3617.6980000000003,0.0,0.0,3.14,0,0.03,0,0.003026,0.000817,no flags
-PRV0128,Jason Powell,Family Medicine,0.5,3544.281,0.0,0.0,3.01,0,0.03,0,0.002674,0.001613,no flags
-PRV0050,Eric Carney,Family Medicine,0.5,3135.06,0.0,0.0,3.11,0,0.05,0,0.004656,0.003596,no flags
-PRV0146,Joyce Solis,Family Medicine,0.4,3960.9040000000005,0.0,0.0,2.58,0,0.03,0,0.002962,0.001875,no flags
-PRV0115,Garrett Lin,Family Medicine,0.4,3579.406,0.0,0.0,2.34,0,0.02,0,0.001847,0.000791,no flags
-PRV0029,Zachary Hicks,Family Medicine,0.4,3374.149,0.0,0.0,2.62,0,0.04,0,0.003895,0.002342,no flags
-PRV0140,Angel Perry,Family Medicine,0.3,3845.359,0.0,0.0,1.78,0,0.01,0,0.000574,0.000382,no flags
-PRV0085,Zachary Ferrell,Family Medicine,0.3,3720.9440000000004,0.0,0.0,1.81,0,0.02,0,0.001673,0.001397,no flags
-PRV0131,Elizabeth Kelley,Family Medicine,0.3,3670.8269999999998,0.0,0.0,1.8,0,0.04,0,0.004497,0.002662,no flags
-PRV0109,Evelyn Galvan,Family Medicine,0.3,3633.9620000000004,0.0,0.0,1.84,0,0.01,0,0.001224,0.000957,no flags
-PRV0075,Amy Silva,Family Medicine,0.2,3820.2900000000004,0.0,0.0,1.42,0,0.01,0,0.00102,0.000275,no flags
-PRV0069,James Brown,Family Medicine,0.2,3783.6800000000003,0.0,0.0,0.78,0,0.03,0,0.003067,0.000458,no flags
-PRV0099,Jessica Smith,Family Medicine,0.2,3745.6949999999997,0.0,0.0,0.87,0,0.02,0,0.002308,0.000793,no flags
-PRV0060,John Daniel,Family Medicine,0.2,3689.985,0.0,0.0,0.97,0,0.02,0,0.001919,0.001309,no flags
-PRV0018,Derek Zuniga,Family Medicine,0.2,3658.352,0.0,0.0,1.12,0,0.02,0,0.00168,0.001638,no flags
-PRV0091,Matthew Mcmillan,Family Medicine,0.2,3578.513,0.0,0.0,1.06,0,0.05,0,0.005255,0.002817,no flags
-PRV0005,Cristian Santos,Family Medicine,0.2,3484.039,0.0,0.0,1.0,0,0.02,0,0.001595,0.001109,no flags
-PRV0129,Cameron Fisher,Family Medicine,0.2,3225.271,0.0,0.0,1.0,0,0.02,0,0.002007,0.001496,no flags
-PRV0071,Jordan Henderson,Family Medicine,0.1,3635.5879999999997,0.0,0.0,0.39,0,0.01,0,0.000838,0.000398,no flags
-PRV0086,Daniel Baker,Family Medicine,0.1,3554.3080000000004,0.0,0.0,0.77,0,0.01,0,0.000715,0.00017,no flags
+provider_id,provider_name,specialty,risk_score,estimated_exposure,rules_score,peer_score,ml_score,ml_is_anomaly,codemix_score,codemix_flag,kl_divergence,cosine_distance,temporal_score,temporal_flag,top_reason
+PRV0025,Matthew Foster,Psychiatry,83.0,213460.58000000002,50.0,17.619999999999997,100.0,1,0.0,0,4.6e-05,2.5e-05,0.41,0,Rule: impossible_day | Peer z>3: claims_per_day; services_per_patient | ML anomaly score 100/100
+PRV0045,Angelica Tucker,Dermatology,98.9,37966.11,50.0,25.0,76.91,1,10.0,1,7.057522,0.347957,2.38,0,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; claims_per_day | ML anomaly score 77/100 | Code-mix drift KL=7.058
+PRV0089,Lisa Archer,Family Medicine,87.8,38206.450000000004,50.0,25.0,48.96,0,2.68,1,0.268249,0.195402,2.75,1,Rule: impossible_day | Peer z>3: avg_billed; avg_minutes; claims_per_day; top_tier_share | Code-mix drift KL=0.268 | Temporal change-point
+PRV0006,Connie Lawrence,Surgery,44.8,141573.3,0.0,25.0,98.54,1,4.53,1,0.452906,0.248252,0.52,0,Peer z>3: avg_billed; avg_minutes; top_tier_share | ML anomaly score 99/100 | Code-mix drift KL=0.453
+PRV0098,Deborah Figueroa,Family Medicine,32.5,621307.48,0.0,20.0,79.51,1,0.0,0,6.2e-05,1.2e-05,0.61,0,Peer z>3: claims_per_day; services_per_patient | ML anomaly score 80/100
+PRV0112,Shannon Walker,Family Medicine,46.1,59523.74,0.0,25.0,70.33,1,10.0,1,4.215237,0.070621,0.52,0,Peer z>3: avg_billed; avg_minutes; claims_per_day; services_per_patient | ML anomaly score 70/100 | Code-mix drift KL=4.215
+PRV0133,Mary Marshall,Radiology,54.5,20226.42,35.0,10.0,59.04,1,0.0,0,1e-06,1e-06,0.66,0,Rule: duplicate_billing | Peer z>3: services_per_patient | ML anomaly score 59/100
+TRAP03,Dr. Sandra Beaumont,Family Medicine,36.4,71129.18,0.0,25.0,47.49,0,2.5,1,0.250263,0.183446,1.74,0,Peer z>3: avg_billed; avg_minutes; claims_per_day; top_tier_share | Code-mix drift KL=0.250
+PRV0008,Gina Moore,Psychiatry,39.1,37630.89,0.0,25.0,68.52,1,3.24,1,0.323615,0.163542,0.59,0,Peer z>3: avg_billed; avg_minutes; top_tier_share | ML anomaly score 69/100 | Code-mix drift KL=0.324
+PRV0077,Angela Lopez,Family Medicine,57.4,5440.02,35.0,15.620000000000001,40.93,0,0.1,0,0.010117,0.003792,0.56,0,Rule: duplicate_billing | Peer z>3: claims_per_day; services_per_patient
+PRV0142,David Douglas Jr.,Cardiology,72.9,1427.23,30.0,20.0,89.27,1,9.09,1,0.908873,0.56678,0.44,0,Rule: unbundling | Peer z>3: claims_per_day; services_per_patient | ML anomaly score 89/100 | Code-mix drift KL=0.909
+PRV0064,Donald Wright,Psychiatry,11.5,35903.62,0.0,5.92,32.93,0,0.11,0,0.010644,0.007957,0.51,0,Peer z>3: top_tier_share
+TRAP01,Dr. Helena Radcliffe,Radiology,11.0,41180.292,0.0,0.0,72.07,1,0.01,0,0.000848,0.000813,0.2,0,ML anomaly score 72/100
+PRV0104,Christine Wright,Surgery,10.2,8662.023,0.0,0.0,63.61,1,0.12,0,0.0118,0.012563,0.54,0,ML anomaly score 64/100
+PRV0132,Dustin Jordan,Surgery,10.2,7916.647000000001,0.0,0.0,64.36,1,0.08,0,0.008334,0.008323,0.42,0,ML anomaly score 64/100
+PRV0012,Jamie Arnold,Surgery,9.6,8410.123,0.0,0.0,60.95,1,0.07,0,0.006677,0.006759,0.38,0,ML anomaly score 61/100
+PRV0032,James Ferrell,Surgery,10.2,6827.247,0.0,0.0,63.86,1,0.13,0,0.012701,0.013162,0.48,0,ML anomaly score 64/100
+PRV0100,Stephen Mckee,Surgery,9.3,7761.389999999999,0.0,0.0,57.94,1,0.09,0,0.008893,0.008458,0.53,0,ML anomaly score 58/100
+PRV0143,Patricia Rodriguez,Surgery,9.0,8203.476,0.0,0.0,56.16,1,0.06,0,0.00581,0.005759,0.56,0,ML anomaly score 56/100
+PRV0120,Jeffrey Chandler,Radiology,7.3,13374.237000000001,0.0,0.0,44.4,0,0.08,0,0.008247,0.008155,0.55,0,no flags
+PRV0137,Robert Potter,Surgery,8.5,8358.294,0.0,0.0,53.36,0,0.0,0,0.000431,0.000424,0.53,0,no flags
+PRV0023,Ethan Adams,Surgery,8.2,8170.052000000001,0.0,0.0,53.51,0,0.02,0,0.002431,0.002357,0.17,0,no flags
+PRV0079,Steve Sanchez,Radiology,5.8,12645.801,0.0,0.0,34.6,0,0.04,0,0.003663,0.003611,0.55,0,no flags
+PRV0114,Crystal Johnson,Radiology,5.4,14169.370000000003,0.0,0.0,28.2,0,0.01,0,0.000679,0.000664,1.16,0,no flags
+PRV0135,Rebecca Jackson,Radiology,5.7,12032.212,0.0,0.0,34.83,0,0.02,0,0.002328,0.002289,0.43,0,no flags
+PRV0144,Christopher Rubio,Radiology,5.7,11972.713000000002,0.0,0.0,32.56,0,0.01,0,0.000728,0.000712,0.79,0,no flags
+PRV0066,Amber Kidd,Radiology,5.6,12328.536,0.0,0.0,31.34,0,0.01,0,0.001044,0.000998,0.87,0,no flags
+PRV0013,Lisa Hensley,Radiology,5.5,12270.605000000001,0.0,0.0,33.7,0,0.02,0,0.001714,0.001631,0.38,0,no flags
+PRV0090,Aimee Montoya,Radiology,5.1,15165.731,0.0,0.0,30.79,0,0.0,0,0.000473,0.000462,0.48,0,no flags
+PRV0121,Larry Dixon,Radiology,5.2,13872.041000000001,0.0,0.0,31.64,0,0.02,0,0.001653,0.001574,0.39,0,no flags
+PRV0096,Anna Henderson,Radiology,4.8,14284.415,0.0,0.0,28.19,0,0.0,0,0.000211,0.000203,0.61,0,no flags
+PRV0017,Holly Wood,Radiology,4.9,13351.659,0.0,0.0,28.07,0,0.0,0,0.000115,0.000112,0.7,0,no flags
+PRV0148,Stephanie Salazar,Radiology,4.7,14164.825,0.0,0.0,29.17,0,0.01,0,0.000679,0.000664,0.32,0,no flags
+PRV0122,Kenneth Scott,Radiology,4.7,13702.259,0.0,0.0,29.75,0,0.01,0,0.001434,0.001367,0.27,0,no flags
+PRV0020,Carla Gray,Radiology,4.7,12486.664,0.0,0.0,26.93,0,0.01,0,0.000706,0.000691,0.65,0,no flags
+PRV0065,Jessica Callahan,Radiology,4.4,13183.845000000001,0.0,0.0,25.8,0,0.0,0,1.4e-05,1.4e-05,0.54,0,no flags
+PRV0067,Tracy House,Radiology,4.2,13722.457999999999,0.0,0.0,24.4,0,0.0,0,0.000194,0.000187,0.58,0,no flags
+PRV0058,Richard Aguirre,Radiology,4.1,14038.407000000001,0.0,0.0,23.95,0,0.0,0,0.0,0.0,0.48,0,no flags
+PRV0073,Brittney Phillips,Dermatology,7.0,3542.936,0.0,0.0,41.04,0,0.12,0,0.01182,0.011543,0.69,0,no flags
+PRV0130,Megan Orr,Radiology,3.9,13330.426000000001,0.0,0.0,22.58,0,0.0,0,6.5e-05,6.2e-05,0.5,0,no flags
+PRV0063,Connor West,Radiology,3.8,13330.735,0.0,0.0,23.15,0,0.0,0,1.5e-05,1.4e-05,0.28,0,no flags
+PRV0101,Sandra Aguilar,Dermatology,7.2,3015.5860000000002,0.0,0.0,42.41,0,0.12,0,0.012397,0.011757,0.67,0,no flags
+PRV0024,Tommy Walter,Dermatology,6.3,3808.6949999999997,0.0,0.0,39.44,0,0.09,0,0.008804,0.009212,0.29,0,no flags
+PRV0110,Sharon Cochran,Dermatology,6.2,3679.2160000000003,0.0,0.0,36.67,0,0.07,0,0.00728,0.006804,0.6,0,no flags
+PRV0019,Lisa Jackson,Dermatology,6.3,3345.527,0.0,0.0,37.5,0,0.13,0,0.013156,0.011864,0.57,0,no flags
+PRV0003,Angie Henderson,Dermatology,5.8,3711.0080000000003,0.0,0.0,35.66,0,0.02,0,0.002145,0.00212,0.45,0,no flags
+PRV0014,Michele Williams,Dermatology,6.0,3160.308,0.0,0.0,36.26,0,0.12,0,0.011572,0.01237,0.41,0,no flags
+PRV0083,Michael Evans,Dermatology,6.2,2906.686,0.0,0.0,39.68,0,0.02,0,0.002415,0.00217,0.24,0,no flags
+PRV0116,Diana May,Dermatology,5.8,3250.5400000000004,0.0,0.0,34.0,0,0.06,0,0.006312,0.005885,0.66,0,no flags
+PRV0042,Fred Smith,Dermatology,5.6,3350.124,0.0,0.0,34.74,0,0.03,0,0.002551,0.002044,0.34,0,no flags
+PRV0046,Philip Cannon,Dermatology,5.6,3296.9620000000004,0.0,0.0,34.21,0,0.02,0,0.001649,0.001787,0.45,0,no flags
+PRV0043,Sherry Decker,Psychiatry,5.0,3510.6160000000004,0.0,0.0,28.45,0,0.11,0,0.011337,0.002754,0.66,0,no flags
+PRV0106,Marc Moore,Psychiatry,5.0,3210.1200000000003,0.0,0.0,30.29,0,0.05,0,0.005164,0.005298,0.46,0,no flags
+PRV0139,David Alvarez,Psychiatry,4.6,3751.8010000000004,0.0,0.0,27.38,0,0.09,0,0.009427,0.002997,0.42,0,no flags
+PRV0031,Rebecca Henderson,Psychiatry,4.2,4168.842,0.0,0.0,25.47,0,0.02,0,0.001542,0.000755,0.35,0,no flags
+PRV0093,Denise Jacobs,Cardiology,5.4,2586.188,0.0,0.0,30.23,0,0.31,0,0.030977,0.017091,0.56,0,no flags
+PRV0027,Justin Baker,Cardiology,5.7,2346.2810000000004,0.0,0.0,32.41,0,0.23,0,0.022716,0.011619,0.62,0,no flags
+PRV0055,Shannon Jones,Psychiatry,4.4,3687.3089999999997,0.0,0.0,25.5,0,0.03,0,0.003078,0.000909,0.56,0,no flags
+PRV0078,Megan Young,Psychiatry,4.7,3172.139,0.0,0.0,24.77,0,0.07,0,0.006513,0.002202,0.88,0,no flags
+PRV0001,Allison Hill,Psychiatry,4.1,3901.6300000000006,0.0,0.0,24.25,0,0.02,0,0.001953,0.000463,0.4,0,no flags
+PRV0030,Anthony Rodriguez,Psychiatry,4.2,3569.2129999999997,0.0,0.0,21.06,0,0.05,0,0.004777,0.003007,1.0,0,no flags
+PRV0080,Lisa Barnes,Psychiatry,4.0,3715.2940000000003,0.0,0.0,22.78,0,0.07,0,0.007112,0.002338,0.5,0,no flags
+PRV0040,Brittany Farmer,Psychiatry,4.1,3519.597,0.0,0.0,23.79,0,0.06,0,0.005864,0.003884,0.44,0,no flags
+PRV0118,Ashley Waller,Psychiatry,4.2,3316.249,0.0,0.0,23.84,0,0.04,0,0.004399,0.001839,0.58,0,no flags
+PRV0081,Kelly Donovan,Psychiatry,4.0,3628.71,0.0,0.0,24.19,0,0.02,0,0.002345,0.002377,0.35,0,no flags
+PRV0049,Joshua Blair,Psychiatry,4.0,3566.7540000000004,0.0,0.0,21.91,0,0.04,0,0.004181,0.002384,0.7,0,no flags
+PRV0117,William Herrera,Psychiatry,3.7,3681.09,0.0,0.0,20.86,0,0.06,0,0.006051,0.002052,0.54,0,no flags
+PRV0056,Michael Lewis,Psychiatry,3.6,3858.349,0.0,0.0,19.43,0,0.01,0,0.000594,0.000224,0.64,0,no flags
+PRV0021,Margaret Hawkins DDS,Psychiatry,3.9,3243.817,0.0,0.0,22.82,0,0.01,0,0.000805,0.000232,0.47,0,no flags
+PRV0054,Mark Perez,Psychiatry,4.0,3072.563,0.0,0.0,22.79,0,0.01,0,0.000978,0.00031,0.52,0,no flags
+PRV0004,Daniel Wagner,Psychiatry,3.5,3841.032,0.0,0.0,20.9,0,0.0,0,0.000467,0.000402,0.36,0,no flags
+PRV0147,Victoria Larson,Cardiology,4.2,2709.8340000000003,0.0,0.0,20.81,0,0.14,0,0.014135,0.007579,0.95,0,no flags
+PRV0092,Brian Rodriguez,Psychiatry,3.6,3515.867,0.0,0.0,21.56,0,0.04,0,0.003966,0.001677,0.28,0,no flags
+PRV0007,Abigail Shaffer,Psychiatry,3.6,3379.542,0.0,0.0,17.15,0,0.04,0,0.003917,0.001321,0.96,0,no flags
+PRV0105,Richard Henson,Psychiatry,3.7,3143.3700000000003,0.0,0.0,18.97,0,0.0,0,8.9e-05,9.1e-05,0.85,0,no flags
+PRV0087,Shirley Suarez,Psychiatry,3.7,3079.7270000000003,0.0,0.0,22.0,0,0.0,0,0.000402,0.000108,0.44,0,no flags
+PRV0126,Erin Edwards,Cardiology,4.0,2490.9610000000002,0.0,0.0,21.89,0,0.14,0,0.014108,0.008139,0.56,0,no flags
+PRV0082,Mike Allen,Cardiology,4.2,2285.6040000000003,0.0,0.0,24.18,0,0.12,0,0.011586,0.005076,0.44,0,no flags
+PRV0062,Gerald Hensley,Cardiology,3.9,2518.452,0.0,0.0,15.86,0,0.21,0,0.020915,0.011413,1.33,0,no flags
+TRAP02,Dr. James Colquhoun,Family Medicine,11.3,529.706,0.0,0.0,61.34,1,0.0,0,0.0,0.0,2.14,0,ML anomaly score 61/100
+PRV0053,Crystal Robinson,Psychiatry,3.1,3498.4220000000005,0.0,0.0,18.07,0,0.01,0,0.001071,0.000999,0.39,0,no flags
+PRV0061,Victoria Garcia,Psychiatry,3.0,3661.329,0.0,0.0,17.38,0,0.02,0,0.002163,0.000971,0.38,0,no flags
+PRV0044,Anthony Humphrey,Cardiology,3.2,3061.137,0.0,0.0,15.78,0,0.01,0,0.000919,0.000695,0.77,0,no flags
+PRV0102,Cameron Parker,Psychiatry,2.9,3640.978,0.0,0.0,16.67,0,0.01,0,0.000666,0.0004,0.38,0,no flags
+PRV0119,Victor Baker,Cardiology,3.5,2474.318,0.0,0.0,20.83,0,0.15,0,0.015102,0.012502,0.19,0,no flags
+PRV0150,Stephanie Manning,Family Medicine,2.9,3436.235,0.0,0.0,12.26,0,0.16,0,0.015537,0.005391,0.88,0,no flags
+PRV0141,Cheyenne Horton,Cardiology,3.2,2820.212,0.0,0.0,14.48,0,0.1,0,0.009894,0.006999,0.95,0,no flags
+PRV0015,Dylan Miller,Cardiology,3.6,2230.2270000000003,0.0,0.0,19.48,0,0.07,0,0.0069,0.004983,0.61,0,no flags
+PRV0057,Timothy Duncan,Cardiology,3.0,3054.164,0.0,0.0,17.97,0,0.03,0,0.002798,0.002133,0.28,0,no flags
+PRV0124,Michelle Harmon,Cardiology,3.2,2525.1450000000004,0.0,0.0,17.01,0,0.12,0,0.012312,0.008317,0.56,0,no flags
+PRV0097,Aaron Wise,Cardiology,3.0,2662.8500000000004,0.0,0.0,16.31,0,0.12,0,0.012489,0.005642,0.45,0,no flags
+PRV0072,Whitney Peters,Cardiology,3.0,2647.5580000000004,0.0,0.0,16.09,0,0.06,0,0.005876,0.002854,0.49,0,no flags
+PRV0095,John Whitehead,Cardiology,3.2,2295.396,0.0,0.0,16.68,0,0.07,0,0.007027,0.005317,0.59,0,no flags
+PRV0107,Sharon Cherry,Cardiology,2.6,2974.2700000000004,0.0,0.0,13.1,0,0.03,0,0.003064,0.002026,0.66,0,no flags
+PRV0010,Ryan Munoz,Cardiology,2.9,2429.181,0.0,0.0,15.33,0,0.07,0,0.00675,0.004772,0.58,0,no flags
+PRV0002,Noah Rhodes,Cardiology,2.6,2927.9120000000003,0.0,0.0,13.46,0,0.04,0,0.003961,0.003242,0.53,0,no flags
+PRV0022,Patty Perez,Cardiology,2.6,2915.4320000000002,0.0,0.0,13.28,0,0.07,0,0.006907,0.003353,0.49,0,no flags
+PRV0111,Richard Rodriguez,Cardiology,2.4,3084.58,0.0,0.0,14.33,0,0.05,0,0.004588,0.00342,0.25,0,no flags
+PRV0035,Debra Davidson,Cardiology,2.4,3002.819,0.0,0.0,13.8,0,0.06,0,0.00624,0.005753,0.24,0,no flags
+PRV0138,Courtney Gonzalez,Cardiology,2.4,2978.751,0.0,0.0,12.18,0,0.01,0,0.000699,0.000691,0.55,0,no flags
+PRV0149,Kathy Rivas,Cardiology,2.5,2732.1730000000002,0.0,0.0,9.2,0,0.05,0,0.005349,0.002764,1.1,0,no flags
+PRV0136,Jose Schultz,Family Medicine,2.2,3452.4580000000005,0.0,0.0,9.71,0,0.18,0,0.017851,0.017007,0.52,0,no flags
+PRV0070,William Baker,Cardiology,2.4,2836.2970000000005,0.0,0.0,12.3,0,0.05,0,0.004682,0.002237,0.49,0,no flags
+PRV0084,Paul Jones,Family Medicine,2.2,3232.6740000000004,0.0,0.0,10.5,0,0.1,0,0.010269,0.006367,0.53,0,no flags
+PRV0018,Derek Zuniga,Family Medicine,2.0,3658.352,0.0,0.0,1.12,0,0.02,0,0.00168,0.001638,1.76,0,no flags
+PRV0088,Christopher Bass,Cardiology,2.4,2573.947,0.0,0.0,12.43,0,0.08,0,0.008132,0.004738,0.51,0,no flags
+PRV0068,Carol Tucker,Cardiology,2.3,2531.578,0.0,0.0,12.01,0,0.05,0,0.00539,0.004079,0.42,0,no flags
+PRV0039,Elizabeth Fowler,Family Medicine,1.8,4004.774,0.0,0.0,7.44,0,0.13,0,0.013072,0.006001,0.54,0,no flags
+PRV0047,John Pierce,Cardiology,2.3,2466.3320000000003,0.0,0.0,10.74,0,0.04,0,0.004047,0.003227,0.63,0,no flags
+PRV0041,Paula Moreno,Cardiology,2.2,2632.107,0.0,0.0,9.49,0,0.04,0,0.003569,0.002329,0.71,0,no flags
+PRV0033,Tricia Valencia,Cardiology,2.1,2801.744,0.0,0.0,10.98,0,0.03,0,0.002686,0.00207,0.44,0,no flags
+PRV0034,Nathan Maldonado,Cardiology,2.2,2549.606,0.0,0.0,11.59,0,0.06,0,0.005726,0.003889,0.44,0,no flags
+PRV0134,Daniel Kennedy,Cardiology,2.1,2674.311,0.0,0.0,10.68,0,0.07,0,0.006525,0.004775,0.45,0,no flags
+PRV0113,Julia Torres,Cardiology,2.0,2900.164,0.0,0.0,11.5,0,0.03,0,0.003215,0.002384,0.23,0,no flags
+PRV0145,Amber Wright,Cardiology,2.1,2632.871,0.0,0.0,9.39,0,0.01,0,0.001455,0.001049,0.67,0,no flags
+PRV0037,Sherri Baker,Family Medicine,1.8,3486.806,0.0,0.0,5.22,0,0.1,0,0.009874,0.005224,0.96,0,no flags
+PRV0016,Brian Ramirez,Family Medicine,1.7,3794.045,0.0,0.0,7.0,0,0.18,0,0.017923,0.014753,0.5,0,no flags
+PRV0123,April Frost,Family Medicine,1.8,3321.174,0.0,0.0,7.83,0,0.1,0,0.009522,0.004548,0.55,0,no flags
+PRV0038,Cassandra Gaines,Cardiology,2.0,2647.792,0.0,0.0,7.53,0,0.01,0,0.00134,0.000664,0.82,0,no flags
+PRV0127,Michelle Evans,Cardiology,39.4,67.0,35.0,0.0,25.16,0,0.06,0,0.005784,0.002765,0.57,0,Rule: duplicate_billing
+PRV0009,Gabrielle Davis,Family Medicine,1.7,3368.7110000000002,0.0,0.0,6.14,0,0.08,0,0.007724,0.007469,0.67,0,no flags
+PRV0011,Monica Herrera,Cardiology,1.9,2732.389,0.0,0.0,9.08,0,0.0,0,0.00046,0.000248,0.57,0,no flags
+PRV0028,Stephanie Ross,Family Medicine,1.7,3346.2650000000003,0.0,0.0,8.09,0,0.09,0,0.009383,0.010343,0.37,0,no flags
+PRV0051,Jessica Holmes,Family Medicine,1.6,3637.1900000000005,0.0,0.0,5.72,0,0.1,0,0.010069,0.004194,0.6,0,no flags
+PRV0074,Lauren Daniels,Family Medicine,1.6,3043.642,0.0,0.0,5.67,0,0.05,0,0.005474,0.001129,0.74,0,no flags
+PRV0103,Rebecca Valencia,Family Medicine,1.3,3948.3610000000003,0.0,0.0,6.28,0,0.03,0,0.003266,0.001038,0.36,0,no flags
+PRV0026,Judy Baker,Family Medicine,1.4,3336.775,0.0,0.0,5.67,0,0.07,0,0.007135,0.001543,0.51,0,no flags
+PRV0131,Elizabeth Kelley,Family Medicine,1.3,3670.8269999999998,0.0,0.0,1.8,0,0.04,0,0.004497,0.002662,1.01,0,no flags
+PRV0076,Sarah Moore,Family Medicine,1.4,3068.096,0.0,0.0,5.68,0,0.02,0,0.002392,0.000825,0.54,0,no flags
+PRV0108,Sierra Johnson,Family Medicine,1.3,3370.061,0.0,0.0,4.88,0,0.06,0,0.006046,0.005554,0.52,0,no flags
+PRV0094,Christina Walters,Cardiology,1.4,2676.6560000000004,0.0,0.0,6.79,0,0.0,0,0.000221,0.000101,0.43,0,no flags
+PRV0125,Helen Jones,Family Medicine,1.2,3395.3510000000006,0.0,0.0,3.68,0,0.08,0,0.007578,0.002828,0.58,0,no flags
+PRV0115,Garrett Lin,Family Medicine,1.1,3579.406,0.0,0.0,2.34,0,0.02,0,0.001847,0.000791,0.69,0,no flags
+PRV0146,Joyce Solis,Family Medicine,1.0,3960.9040000000005,0.0,0.0,2.58,0,0.03,0,0.002962,0.001875,0.53,0,no flags
+PRV0036,Jeffrey Chavez,Family Medicine,1.0,3807.3269999999998,0.0,0.0,3.56,0,0.1,0,0.009965,0.004066,0.35,0,no flags
+PRV0069,James Brown,Family Medicine,1.0,3783.6800000000003,0.0,0.0,0.78,0,0.03,0,0.003067,0.000458,0.87,0,no flags
+PRV0128,Jason Powell,Family Medicine,1.0,3544.281,0.0,0.0,3.01,0,0.03,0,0.002674,0.001613,0.53,0,no flags
+PRV0059,Brent Jordan,Family Medicine,0.9,4017.9390000000003,0.0,0.0,3.56,0,0.02,0,0.002322,0.000892,0.32,0,no flags
+PRV0085,Zachary Ferrell,Family Medicine,0.9,3720.9440000000004,0.0,0.0,1.81,0,0.02,0,0.001673,0.001397,0.58,0,no flags
+PRV0109,Evelyn Galvan,Family Medicine,0.9,3633.9620000000004,0.0,0.0,1.84,0,0.01,0,0.001224,0.000957,0.62,0,no flags
+PRV0048,Shane Henderson,Family Medicine,0.9,3617.6980000000003,0.0,0.0,3.14,0,0.03,0,0.003026,0.000817,0.39,0,no flags
+PRV0052,Danny Morgan,Family Medicine,0.9,3545.6870000000004,0.0,0.0,0.0,0,0.01,0,0.00058,0.000482,0.9,0,no flags
+PRV0050,Eric Carney,Family Medicine,0.9,3135.06,0.0,0.0,3.11,0,0.05,0,0.004656,0.003596,0.4,0,no flags
+PRV0140,Angel Perry,Family Medicine,0.8,3845.359,0.0,0.0,1.78,0,0.01,0,0.000574,0.000382,0.51,0,no flags
+PRV0029,Zachary Hicks,Family Medicine,0.8,3374.149,0.0,0.0,2.62,0,0.04,0,0.003895,0.002342,0.33,0,no flags
+PRV0129,Cameron Fisher,Family Medicine,0.8,3225.271,0.0,0.0,1.0,0,0.02,0,0.002007,0.001496,0.62,0,no flags
+PRV0075,Amy Silva,Family Medicine,0.7,3820.2900000000004,0.0,0.0,1.42,0,0.01,0,0.00102,0.000275,0.45,0,no flags
+PRV0086,Daniel Baker,Family Medicine,0.7,3554.3080000000004,0.0,0.0,0.77,0,0.01,0,0.000715,0.00017,0.57,0,no flags
+PRV0005,Cristian Santos,Family Medicine,0.7,3484.039,0.0,0.0,1.0,0,0.02,0,0.001595,0.001109,0.53,0,no flags
+PRV0099,Jessica Smith,Family Medicine,0.6,3745.6949999999997,0.0,0.0,0.87,0,0.02,0,0.002308,0.000793,0.43,0,no flags
+PRV0060,John Daniel,Family Medicine,0.6,3689.985,0.0,0.0,0.97,0,0.02,0,0.001919,0.001309,0.38,0,no flags
+PRV0091,Matthew Mcmillan,Family Medicine,0.6,3578.513,0.0,0.0,1.06,0,0.05,0,0.005255,0.002817,0.42,0,no flags
+PRV0071,Jordan Henderson,Family Medicine,0.4,3635.5879999999997,0.0,0.0,0.39,0,0.01,0,0.000838,0.000398,0.37,0,no flags

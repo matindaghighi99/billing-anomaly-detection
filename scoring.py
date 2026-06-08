@@ -21,9 +21,10 @@ import pandas as pd
 RULES_CSV    = "rules_flags.csv"
 PEER_CSV     = "peer_flags.csv"
 ML_CSV       = "ml_scores.csv"
-CODEMIX_CSV  = "provider_codemix.csv"
-CLAIMS_CSV   = "claims.csv"
-OUTPUT_CSV   = "risk_scores.csv"
+CODEMIX_CSV   = "provider_codemix.csv"
+TEMPORAL_CSV  = "provider_temporal.csv"
+CLAIMS_CSV    = "claims.csv"
+OUTPUT_CSV    = "risk_scores.csv"
 
 # Points per rule type
 RULE_POINTS = {
@@ -32,9 +33,10 @@ RULE_POINTS = {
     "unbundling":        30,
 }
 
-PEER_MAX_PTS    = 25   # cap for peer-stats contribution (reduced to make room)
-ML_MAX_PTS      = 15   # cap for ML contribution
-CODEMIX_MAX_PTS = 10   # cap for code-mix drift contribution
+PEER_MAX_PTS     = 25   # cap for peer-stats contribution
+ML_MAX_PTS       = 15   # cap for ML contribution
+CODEMIX_MAX_PTS  = 10   # cap for code-mix drift contribution
+TEMPORAL_MAX_PTS =  5   # cap for temporal change-point contribution
 
 
 def load_claims_meta(path=CLAIMS_CSV) -> pd.DataFrame:
@@ -101,6 +103,22 @@ def ml_component() -> pd.DataFrame:
     return mdf[["provider_id","ml_score","ml_score_pts","ml_is_anomaly"]]
 
 
+def temporal_component() -> pd.DataFrame:
+    """0-5 pts from CUSUM change-point / spike detection.  Skipped if absent."""
+    if not os.path.exists(TEMPORAL_CSV):
+        return pd.DataFrame(columns=["provider_id","temporal_score","temporal_flag"])
+    tdf = pd.read_csv(TEMPORAL_CSV, dtype={"provider_id": str})
+    # Normalise CUSUM score (cap at 6.0 => full 5 pts)
+    tdf["temporal_score"] = (
+        tdf["cusum_score"].clip(upper=6.0) / 6.0 * TEMPORAL_MAX_PTS
+    ).round(2)
+    # Extra point for spike
+    tdf["temporal_score"] += tdf["spike_flag"].astype(float) * 1.0
+    tdf["temporal_score"]  = tdf["temporal_score"].clip(upper=TEMPORAL_MAX_PTS).round(2)
+    tdf["temporal_flag"]   = tdf["temporal_flag"].astype(int)
+    return tdf[["provider_id","temporal_score","temporal_flag"]]
+
+
 def codemix_component() -> pd.DataFrame:
     """0-10 pts from KL/cosine code-mix drift.  Skipped if file absent."""
     if not os.path.exists(CODEMIX_CSV):
@@ -115,31 +133,35 @@ def codemix_component() -> pd.DataFrame:
 
 
 def build_risk_scores() -> pd.DataFrame:
-    meta    = load_claims_meta()
-    rules   = rules_component()
-    peer    = peer_component()
-    ml      = ml_component()
-    codemix = codemix_component()
+    meta     = load_claims_meta()
+    rules    = rules_component()
+    peer     = peer_component()
+    ml       = ml_component()
+    codemix  = codemix_component()
+    temporal = temporal_component()
 
-    df = meta.merge(rules,   on="provider_id", how="left")
-    df = df.merge(peer,      on="provider_id", how="left")
-    df = df.merge(ml,        on="provider_id", how="left")
-    df = df.merge(codemix,   on="provider_id", how="left")
+    df = meta.merge(rules,    on="provider_id", how="left")
+    df = df.merge(peer,       on="provider_id", how="left")
+    df = df.merge(ml,         on="provider_id", how="left")
+    df = df.merge(codemix,    on="provider_id", how="left")
+    df = df.merge(temporal,   on="provider_id", how="left")
 
-    df["rules_score"]    = df["rules_score"].fillna(0)
-    df["peer_score"]     = df["peer_score"].fillna(0)
-    df["ml_score_pts"]   = df["ml_score_pts"].fillna(0)
-    df["ml_score"]       = df["ml_score"].fillna(0)
-    df["ml_is_anomaly"]  = df["ml_is_anomaly"].fillna(0).astype(int)
-    df["codemix_score"]  = df["codemix_score"].fillna(0)
-    df["codemix_flag"]   = df["codemix_flag"].fillna(0).astype(int)
-    df["kl_divergence"]  = df["kl_divergence"].fillna(0)
-    df["cosine_distance"]= df["cosine_distance"].fillna(0)
+    df["rules_score"]     = df["rules_score"].fillna(0)
+    df["peer_score"]      = df["peer_score"].fillna(0)
+    df["ml_score_pts"]    = df["ml_score_pts"].fillna(0)
+    df["ml_score"]        = df["ml_score"].fillna(0)
+    df["ml_is_anomaly"]   = df["ml_is_anomaly"].fillna(0).astype(int)
+    df["codemix_score"]   = df["codemix_score"].fillna(0)
+    df["codemix_flag"]    = df["codemix_flag"].fillna(0).astype(int)
+    df["kl_divergence"]   = df["kl_divergence"].fillna(0)
+    df["cosine_distance"] = df["cosine_distance"].fillna(0)
+    df["temporal_score"]  = df["temporal_score"].fillna(0)
+    df["temporal_flag"]   = df["temporal_flag"].fillna(0).astype(int)
 
     # Combined 0-100 risk score
     df["risk_score"] = (
         df["rules_score"] + df["peer_score"] +
-        df["ml_score_pts"] + df["codemix_score"]
+        df["ml_score_pts"] + df["codemix_score"] + df["temporal_score"]
     ).clip(upper=100).round(1)
 
     # Estimated exposure: rules exposure where available, else fraction of total billed
@@ -163,6 +185,8 @@ def build_risk_scores() -> pd.DataFrame:
             reasons.append(f"ML anomaly score {row['ml_score']:.0f}/100")
         if row["codemix_flag"]:
             reasons.append(f"Code-mix drift KL={row['kl_divergence']:.3f}")
+        if row["temporal_flag"]:
+            reasons.append(f"Temporal change-point")
         return " | ".join(reasons) if reasons else "no flags"
 
     df["top_reason"] = df.apply(top_reason, axis=1)
@@ -175,6 +199,7 @@ def build_risk_scores() -> pd.DataFrame:
         "risk_score","estimated_exposure",
         "rules_score","peer_score","ml_score","ml_is_anomaly",
         "codemix_score","codemix_flag","kl_divergence","cosine_distance",
+        "temporal_score","temporal_flag",
         "top_reason",
     ]
     result = flagged[out_cols].reset_index(drop=True)
