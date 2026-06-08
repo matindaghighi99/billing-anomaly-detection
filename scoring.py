@@ -38,6 +38,27 @@ ML_MAX_PTS       = 15   # cap for ML contribution
 CODEMIX_MAX_PTS  = 10   # cap for code-mix drift contribution
 TEMPORAL_MAX_PTS =  5   # cap for temporal change-point contribution
 
+# ── Phase 6: confidence tiers and expected-recovery scoring ──────────────────
+#
+# Confidence is assigned per-flag based on the strongest signal present:
+#   HIGH   -- deterministic rule violation (binary, defensible in audit)
+#   MEDIUM -- multiple statistical/structural signals but no bright-line rule
+#   LOW    -- single weak signal (ML-only or single marginal peer stat)
+#
+# Expected recovery = estimated_exposure x recovery_likelihood
+#
+# Providers below MIN_SCORE_THRESHOLD are suppressed from the ranked worklist;
+# this eliminates very-low-confidence flags that would otherwise crowd out
+# actionable cases.
+
+CONFIDENCE_LIKELIHOOD = {
+    "HIGH":   0.70,
+    "MEDIUM": 0.40,
+    "LOW":    0.15,
+}
+
+MIN_SCORE_THRESHOLD = 10   # suppress below this; only HIGH-confidence misses possible
+
 
 def load_claims_meta(path=CLAIMS_CSV) -> pd.DataFrame:
     """Return per-provider total-billed (used as fallback exposure estimate)."""
@@ -191,12 +212,38 @@ def build_risk_scores() -> pd.DataFrame:
 
     df["top_reason"] = df.apply(top_reason, axis=1)
 
-    flagged = df[df["risk_score"] > 0].copy()
+    # ── Phase 6: confidence tier ──────────────────────────────────────────────
+    def assign_confidence(row) -> str:
+        if row["rules_score"] > 0:
+            return "HIGH"
+        n_stat_signals = (
+            int(row["peer_score"] > 0) +
+            int(row["codemix_flag"]) +
+            int(row["temporal_flag"])
+        )
+        if n_stat_signals >= 2 or (n_stat_signals == 1 and row["ml_is_anomaly"]):
+            return "MEDIUM"
+        return "LOW"
+
+    df["confidence"] = df.apply(assign_confidence, axis=1)
+
+    # ── Expected recovery = exposure x likelihood ─────────────────────────────
+    df["expected_recovery"] = df.apply(
+        lambda r: round(r["estimated_exposure"] *
+                        CONFIDENCE_LIKELIHOOD[r["confidence"]], 2),
+        axis=1,
+    )
+
+    # ── Dollar-weighted rank score using expected recovery (not raw exposure) ─
+    df["_rank_score"] = df["risk_score"] * np.log1p(df["expected_recovery"] / 1_000)
+
+    # ── Suppress very-low-confidence flags (reduces FP noise) ─────────────────
+    flagged = df[df["risk_score"] >= MIN_SCORE_THRESHOLD].copy()
     flagged = flagged.sort_values("_rank_score", ascending=False)
 
     out_cols = [
         "provider_id","provider_name","specialty",
-        "risk_score","estimated_exposure",
+        "risk_score","confidence","estimated_exposure","expected_recovery",
         "rules_score","peer_score","ml_score","ml_is_anomaly",
         "codemix_score","codemix_flag","kl_divergence","cosine_distance",
         "temporal_score","temporal_flag",

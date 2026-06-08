@@ -19,7 +19,7 @@ METRICS_CSV = "provider_metrics.csv"
 EXPLS_JSON  = "explanations.json"
 CLAIMS_CSV  = "claims.csv"
 
-RISK_THRESHOLD = 5   # minimum risk score to appear in worklist
+RISK_THRESHOLD = 10   # minimum risk score to appear in worklist (Phase 6)
 
 st.set_page_config(
     page_title="Billing Anomaly Audit Dashboard",
@@ -295,6 +295,8 @@ def main():
         "provider_name":      "Name",
         "specialty":          "Specialty",
         "risk_score":         "Risk Score",
+        "confidence":         "Confidence",
+        "expected_recovery":  "Exp. Recovery ($)",
         "estimated_exposure": "Est. Exposure ($)",
         "top_reason":         "Top Reason",
     }
@@ -303,7 +305,9 @@ def main():
     st.dataframe(
         table.style
              .background_gradient(subset=["Risk Score"], cmap="YlOrRd")
-             .format({"Est. Exposure ($)": "${:,.0f}", "Risk Score": "{:.1f}"}),
+             .format({"Est. Exposure ($)": "${:,.0f}",
+                      "Exp. Recovery ($)": "${:,.0f}",
+                      "Risk Score": "{:.1f}"}),
         use_container_width=True,
         height=min(600, 40 + len(table) * 35),
     )
@@ -336,9 +340,13 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     prow = worklist[worklist["provider_id"] == pid].iloc[0]
 
     st.markdown(f"### {prow['provider_name']} &nbsp; `{pid}`")
+    confidence = prow.get("confidence", "N/A")
+    exp_rec    = prow.get("expected_recovery", prow.get("estimated_exposure", 0))
     st.markdown(
         f"**Specialty:** {prow['specialty']} &nbsp;&nbsp; "
         f"**Risk Score:** `{prow['risk_score']:.0f}/100` &nbsp;&nbsp; "
+        f"**Confidence:** `{confidence}` &nbsp;&nbsp; "
+        f"**Expected Recovery:** `${exp_rec:,.2f}` &nbsp;&nbsp; "
         f"**Estimated Exposure:** `${prow['estimated_exposure']:,.2f}`",
         unsafe_allow_html=True,
     )

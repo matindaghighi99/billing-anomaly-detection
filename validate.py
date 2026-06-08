@@ -27,7 +27,7 @@ BASELINE_JSON      = "validate_baseline.json"
 # A bad actor "counts as detected" when it ranks within this many providers
 CAUGHT_WITHIN_RANK = 20
 # Minimum risk score to count as a flag (mirrors app.py RISK_THRESHOLD)
-RISK_SCORE_FP_CUTOFF = 5
+RISK_SCORE_FP_CUTOFF = 10   # Phase 6: matches MIN_SCORE_THRESHOLD in scoring.py
 
 
 # ── Data loading ──────────────────────────────────────────────────────────────
@@ -183,7 +183,7 @@ def _print_report(result, baseline=None):
         print()
         print("  BEFORE vs. AFTER")
         print(f"  (baseline from {baseline.get('timestamp','?')[:10]})")
-        print(f"  {'Metric':<32} {'Baseline':>10}  {'Now':>10}  {'Δ':>8}")
+        print(f"  {'Metric':<32} {'Baseline':>10}  {'Now':>10}  {'Delta':>8}")
         print("  " + "-" * 64)
 
         METRICS = [
