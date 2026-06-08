@@ -23,6 +23,7 @@ PEER_CSV     = "peer_flags.csv"
 ML_CSV       = "ml_scores.csv"
 CODEMIX_CSV   = "provider_codemix.csv"
 TEMPORAL_CSV  = "provider_temporal.csv"
+FEEDBACK_CSV  = "feedback_scores.csv"
 CLAIMS_CSV    = "claims.csv"
 OUTPUT_CSV    = "risk_scores.csv"
 
@@ -153,6 +154,14 @@ def codemix_component() -> pd.DataFrame:
                 "kl_divergence","cosine_distance"]]
 
 
+def feedback_component() -> pd.DataFrame:
+    """0-10 pts from semi-supervised feedback model.  Skipped if absent."""
+    if not os.path.exists(FEEDBACK_CSV):
+        return pd.DataFrame(columns=["provider_id", "feedback_score", "feedback_label"])
+    fdf = pd.read_csv(FEEDBACK_CSV, dtype={"provider_id": str})
+    return fdf[["provider_id", "feedback_score", "feedback_label"]]
+
+
 def build_risk_scores() -> pd.DataFrame:
     meta     = load_claims_meta()
     rules    = rules_component()
@@ -160,12 +169,14 @@ def build_risk_scores() -> pd.DataFrame:
     ml       = ml_component()
     codemix  = codemix_component()
     temporal = temporal_component()
+    feedback = feedback_component()
 
     df = meta.merge(rules,    on="provider_id", how="left")
     df = df.merge(peer,       on="provider_id", how="left")
     df = df.merge(ml,         on="provider_id", how="left")
     df = df.merge(codemix,    on="provider_id", how="left")
     df = df.merge(temporal,   on="provider_id", how="left")
+    df = df.merge(feedback,   on="provider_id", how="left")
 
     df["rules_score"]     = df["rules_score"].fillna(0)
     df["peer_score"]      = df["peer_score"].fillna(0)
@@ -178,11 +189,14 @@ def build_risk_scores() -> pd.DataFrame:
     df["cosine_distance"] = df["cosine_distance"].fillna(0)
     df["temporal_score"]  = df["temporal_score"].fillna(0)
     df["temporal_flag"]   = df["temporal_flag"].fillna(0).astype(int)
+    df["feedback_score"]  = df["feedback_score"].fillna(0)
+    df["feedback_label"]  = df["feedback_label"].fillna(0).astype(int)
 
     # Combined 0-100 risk score
     df["risk_score"] = (
         df["rules_score"] + df["peer_score"] +
-        df["ml_score_pts"] + df["codemix_score"] + df["temporal_score"]
+        df["ml_score_pts"] + df["codemix_score"] + df["temporal_score"] +
+        df["feedback_score"]
     ).clip(upper=100).round(1)
 
     # Estimated exposure: rules exposure where available, else fraction of total billed
@@ -208,6 +222,8 @@ def build_risk_scores() -> pd.DataFrame:
             reasons.append(f"Code-mix drift KL={row['kl_divergence']:.3f}")
         if row["temporal_flag"]:
             reasons.append(f"Temporal change-point")
+        if row["feedback_label"]:
+            reasons.append(f"Feedback model confirmed")
         return " | ".join(reasons) if reasons else "no flags"
 
     df["top_reason"] = df.apply(top_reason, axis=1)
@@ -247,6 +263,7 @@ def build_risk_scores() -> pd.DataFrame:
         "rules_score","peer_score","ml_score","ml_is_anomaly",
         "codemix_score","codemix_flag","kl_divergence","cosine_distance",
         "temporal_score","temporal_flag",
+        "feedback_score","feedback_label",
         "top_reason",
     ]
     result = flagged[out_cols].reset_index(drop=True)
