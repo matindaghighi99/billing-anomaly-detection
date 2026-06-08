@@ -1,0 +1,25 @@
+dimension,group,n_providers,n_flagged,flag_rate,mean_risk_score,n_confirmed_bad,precision_proxy,chi2_p_value,alert
+specialty,Cardiology,38,2,0.0526,3.21,1,0.5,0.7381,False
+specialty,Dermatology,12,1,0.0833,8.33,1,1.0,1.0,False
+specialty,Family Medicine,45,5,0.1111,6.28,4,0.8,0.5218,False
+specialty,Psychiatry,28,2,0.0714,4.57,2,1.0,1.0,False
+specialty,Radiology,21,1,0.0476,2.89,1,1.0,0.8977,False
+specialty,Surgery,9,1,0.1111,5.29,1,1.0,1.0,False
+clinic_id,CLN01,10,0,0.0,0.0,0,,0.7294,False
+clinic_id,CLN02,5,0,0.0,0.0,0,,1.0,False
+clinic_id,CLN03,13,1,0.0769,3.66,1,1.0,1.0,False
+clinic_id,CLN04,8,1,0.125,4.62,1,1.0,1.0,False
+clinic_id,CLN05,7,1,0.1429,7.64,1,1.0,1.0,False
+clinic_id,CLN06,9,0,0.0,0.0,0,,0.7925,False
+clinic_id,CLN07,11,1,0.0909,7.61,1,1.0,1.0,False
+clinic_id,CLN08,6,0,0.0,0.0,0,,1.0,False
+clinic_id,CLN09,5,0,0.0,0.0,0,,1.0,False
+clinic_id,CLN11,9,0,0.0,0.0,0,,0.7925,False
+clinic_id,CLN12,5,1,0.2,7.98,1,1.0,0.8553,False
+clinic_id,CLN14,7,0,0.0,0.0,0,,0.9438,False
+clinic_id,CLN15,9,1,0.1111,7.16,1,1.0,1.0,False
+clinic_id,CLN17,7,1,0.1429,8.66,1,1.0,1.0,False
+clinic_id,CLN18,8,2,0.25,16.04,1,0.5,0.2385,False
+clinic_id,CLN19,9,1,0.1111,11.11,1,1.0,1.0,False
+clinic_id,CLN20,11,1,0.0909,8.01,1,1.0,1.0,False
+practice_setting,full_time,152,12,0.0789,4.87,10,0.8333,1.0,False
