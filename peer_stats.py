@@ -175,12 +175,21 @@ def _modified_zscore(x: pd.Series) -> pd.Series:
 
     Robust to outliers because both the median and MAD have a 50% breakdown
     point.  Falls back to plain z-score if MAD == 0 (all values identical).
+
+    BUG FIX (hardening): when MAD == 0 and scipy.stats.zscore also returns NaN
+    (because std == 0 for all-identical values, causing 0/0), fill NaN with 0.
+    All-identical values have zero deviation from the median, so z = 0 is
+    the mathematically correct answer; NaN would cause build_flags to silently
+    skip every provider in such a cohort.
     """
     med = x.median()
     mad = (x - med).abs().median()
     if mad == 0:
-        return pd.Series(scipy_stats.zscore(x, ddof=1, nan_policy="omit"),
-                         index=x.index)
+        z_vals = scipy_stats.zscore(x, ddof=1, nan_policy="omit")
+        # When std == 0 (all-identical), scipy returns NaN; replace with 0
+        # because zero deviation from median = z-score of 0 by definition.
+        z_vals = np.where(np.isnan(z_vals), 0.0, z_vals)
+        return pd.Series(z_vals, index=x.index)
     return 0.6745 * (x - med) / mad
 
 
