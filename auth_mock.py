@@ -22,9 +22,9 @@ import streamlit as st
 # for a demo.  In production these would live in an identity provider, not here.
 # ---------------------------------------------------------------------------
 _DEMO_USERS: dict[str, dict] = {
-    "auditor1":    {"password": "demo_auditor1",    "role": "auditor",    "display": "Alex Auditor"},
-    "supervisor1": {"password": "demo_supervisor1", "role": "supervisor", "display": "Sam Supervisor"},
-    "admin1":      {"password": "demo_admin1",      "role": "admin",      "display": "Admin User"},
+    "auditor1":    {"password": "demo_auditor1",    "role": "auditor",    "display": "Alex Auditor"},    # pragma: allowlist secret
+    "supervisor1": {"password": "demo_supervisor1", "role": "supervisor", "display": "Sam Supervisor"},  # pragma: allowlist secret
+    "admin1":      {"password": "demo_admin1",      "role": "admin",      "display": "Admin User"},      # pragma: allowlist secret
 }
 
 # ---------------------------------------------------------------------------

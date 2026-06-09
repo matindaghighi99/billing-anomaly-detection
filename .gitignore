@@ -41,6 +41,8 @@ build/
 .env
 .env.*
 *.env
+# But the example template IS committed (it contains no real values)
+!.env.example
 
 # OS
 .DS_Store
