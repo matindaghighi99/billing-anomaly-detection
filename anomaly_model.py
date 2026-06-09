@@ -24,6 +24,9 @@ PHASE 5 CHANGES:
 Outputs ml_scores.csv with per-detector and ensemble columns.
 """
 
+import logging
+import warnings
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -31,8 +34,12 @@ from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import RobustScaler
 from sklearn.svm import OneClassSVM
 
+from validators import validate_claims_df
+
 SEED       = 42
 INPUT_CSV  = "claims.csv"
+
+logger = logging.getLogger(__name__)
 METRICS_CSV = "provider_metrics.csv"
 OUTPUT_CSV = "ml_scores.csv"
 
@@ -124,6 +131,14 @@ def load_claims() -> pd.DataFrame:
                               "patient_id": str, "clinic_id": str})
 
 
+_ANOMALY_REQUIRED = [
+    "claim_id", "provider_id", "provider_name", "specialty",
+    "fee_code", "service_date", "service_minutes", "amount_billed", "patient_id",
+]
+
+_EMPTY_FEATURES = pd.DataFrame()
+
+
 def build_feature_matrix(df: pd.DataFrame,
                           provider_subset: list = None) -> pd.DataFrame:
     """One row per provider with ~25 numeric features.
@@ -131,6 +146,19 @@ def build_feature_matrix(df: pd.DataFrame,
     provider_subset: optional list of provider_ids to score (two-stage funnel).
     Uses DuckDB for core aggregations when available; falls back to pandas.
     """
+    try:
+        df = validate_claims_df(df, _ANOMALY_REQUIRED, caller="anomaly_model")
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"[anomaly_model] Validation failed: {exc}") from exc
+
+    if df.empty:
+        return _EMPTY_FEATURES.copy()
+
+    # Coerce numeric columns before passing to DuckDB
+    df = df.copy()
+    df["service_minutes"] = pd.to_numeric(df["service_minutes"], errors="coerce").fillna(0)
+    df["amount_billed"]   = pd.to_numeric(df["amount_billed"],   errors="coerce").fillna(0)
+
     if provider_subset is not None:
         df = df[df["provider_id"].isin(provider_subset)].copy()
 
@@ -288,6 +316,13 @@ def fit_ensemble(features: pd.DataFrame) -> pd.DataFrame:
     })
 
 
+_EMPTY_SCORES_DF = pd.DataFrame(columns=[
+    "provider_id", "provider_name", "specialty",
+    "ml_score", "ml_is_anomaly", "vote_count",
+    "if_score", "if_flag", "lof_score", "lof_flag", "ocsvm_score", "ocsvm_flag",
+])
+
+
 def run_anomaly_model(df: pd.DataFrame = None,
                       provider_subset: list = None):
     """Score all providers (or a subset for the two-stage funnel).
@@ -298,6 +333,9 @@ def run_anomaly_model(df: pd.DataFrame = None,
     if df is None:
         df = load_claims()
     features = build_feature_matrix(df, provider_subset=provider_subset)
+    if features.empty:
+        _EMPTY_SCORES_DF.to_csv(OUTPUT_CSV, index=False)
+        return _EMPTY_SCORES_DF.copy()
     scores   = fit_ensemble(features)
     meta     = df[["provider_id","provider_name","specialty"]].drop_duplicates("provider_id")
     scores   = scores.merge(meta, on="provider_id")

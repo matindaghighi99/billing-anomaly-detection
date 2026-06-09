@@ -23,14 +23,20 @@ Outputs codemix_flags.csv (one row per flagged provider) and
 provider_codemix.csv (one row per provider, all scores).
 """
 
+import logging
 import os
+import warnings
 
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cosine as cosine_dist
 from scipy.special import rel_entr
 
+from validators import validate_claims_df
+
 INPUT_CSV         = "claims.csv"
+
+logger = logging.getLogger(__name__)
 METRICS_CSV       = "provider_metrics.csv"   # for practice_setting / cohort_key
 OUTPUT_FLAGS_CSV  = "codemix_flags.csv"
 OUTPUT_SCORES_CSV = "provider_codemix.csv"
@@ -64,7 +70,17 @@ def _cosine_distance(p: np.ndarray, q: np.ndarray) -> float:
 def build_codemix_scores(df: pd.DataFrame, metrics_df: pd.DataFrame) -> pd.DataFrame:
     """Compute per-provider KL and cosine drift scores vs. their cohort median."""
 
-    all_codes = sorted(df["fee_code"].unique())
+    _meta_required = ["provider_id", "specialty", "cohort_key",
+                      "practice_setting", "provider_name", "total_billed"]
+    missing_meta = [c for c in _meta_required if c not in metrics_df.columns]
+    if missing_meta or metrics_df.empty:
+        warnings.warn(
+            f"[codemix] metrics_df missing columns {missing_meta} or is empty; "
+            "returning empty scores.", UserWarning,
+        )
+        return _EMPTY_SCORES.copy()
+
+    all_codes = sorted(str(c) for c in df["fee_code"].unique() if pd.notna(c))
 
     # Per-provider code-frequency vector (fraction of total claims)
     code_counts = (
@@ -80,6 +96,18 @@ def build_codemix_scores(df: pd.DataFrame, metrics_df: pd.DataFrame) -> pd.DataF
                              "practice_setting", "provider_name",
                              "total_billed"]].copy()
 
+    # Drop rows with null/empty provider_id in metrics to prevent duplicate-index issues
+    prov_meta = prov_meta[
+        prov_meta["provider_id"].notna() &
+        (prov_meta["provider_id"].astype(str).str.strip() != "")
+    ]
+    prov_meta = prov_meta.drop_duplicates("provider_id")
+
+    if prov_meta.empty:
+        warnings.warn("[codemix] No valid providers in metrics_df; returning empty scores.",
+                      UserWarning)
+        return _EMPTY_SCORES.copy()
+
     # Cohort reference distribution: median frequency across providers in cohort
     prov_meta = prov_meta.set_index("provider_id")
     freq_with_cohort = code_freq.join(prov_meta[["cohort_key", "specialty"]])
@@ -94,9 +122,17 @@ def build_codemix_scores(df: pd.DataFrame, metrics_df: pd.DataFrame) -> pd.DataF
     for pid, prow in code_freq.iterrows():
         if pid not in prov_meta.index:
             continue
-        cohort   = prov_meta.loc[pid, "cohort_key"]
-        ref      = cohort_ref.loc[cohort].values if cohort in cohort_ref.index \
-                   else code_freq.mean().values
+        cohort_raw = prov_meta.loc[pid, "cohort_key"]
+        # .loc may return a Series when there are duplicate index entries — take scalar
+        if isinstance(cohort_raw, pd.Series):
+            cohort = cohort_raw.iloc[0]
+        else:
+            cohort = cohort_raw
+        try:
+            ref = cohort_ref.loc[cohort].values if cohort in cohort_ref.index \
+                  else code_freq.mean().values
+        except (TypeError, KeyError):
+            ref = code_freq.mean().values
 
         p_vec = prow.values.astype(float)
         q_vec = ref.astype(float)
@@ -104,19 +140,35 @@ def build_codemix_scores(df: pd.DataFrame, metrics_df: pd.DataFrame) -> pd.DataF
         kl  = _kl_divergence(p_vec, q_vec)
         cos = _cosine_distance(p_vec, q_vec)
 
+        def _scalar(val):
+            """Return scalar from a Series or scalar."""
+            return val.iloc[0] if isinstance(val, pd.Series) else val
+
         rows.append({
             "provider_id":        pid,
-            "provider_name":      prov_meta.loc[pid, "provider_name"],
-            "specialty":          prov_meta.loc[pid, "specialty"],
+            "provider_name":      _scalar(prov_meta.loc[pid, "provider_name"]),
+            "specialty":          _scalar(prov_meta.loc[pid, "specialty"]),
             "cohort_key":         cohort,
-            "practice_setting":   prov_meta.loc[pid, "practice_setting"],
+            "practice_setting":   _scalar(prov_meta.loc[pid, "practice_setting"]),
             "kl_divergence":      round(kl, 6),
             "cosine_distance":    round(cos, 6),
             "drift_flag":         (kl > KL_THRESHOLD) or (cos > COSINE_THRESHOLD),
-            "estimated_exposure": float(prov_meta.loc[pid, "total_billed"]),
+            "estimated_exposure": float(_scalar(prov_meta.loc[pid, "total_billed"])),
         })
 
     return pd.DataFrame(rows).sort_values("kl_divergence", ascending=False)
+
+
+_CODEMIX_REQUIRED = [
+    "claim_id", "provider_id", "fee_code", "amount_billed",
+]
+
+_EMPTY_SCORES = pd.DataFrame(columns=[
+    "provider_id", "provider_name", "specialty", "cohort_key",
+    "practice_setting", "kl_divergence", "cosine_distance",
+    "drift_flag", "estimated_exposure",
+])
+_EMPTY_FLAGS = _EMPTY_SCORES.copy()
 
 
 def run_codemix(df: pd.DataFrame = None, metrics_df: pd.DataFrame = None):
@@ -128,6 +180,31 @@ def run_codemix(df: pd.DataFrame = None, metrics_df: pd.DataFrame = None):
         if not os.path.exists(METRICS_CSV):
             raise FileNotFoundError(f"{METRICS_CSV} not found. Run peer_stats.py first.")
         metrics_df = pd.read_csv(METRICS_CSV, dtype={"provider_id": str})
+
+    # ── Validate and clean input ──────────────────────────────────────────────
+    try:
+        df = validate_claims_df(df, _CODEMIX_REQUIRED, caller="codemix")
+    except (ValueError, TypeError) as exc:
+        warnings.warn(f"[codemix] Validation failed: {exc}", UserWarning)
+        _EMPTY_SCORES.to_csv(OUTPUT_SCORES_CSV, index=False)
+        _EMPTY_FLAGS.to_csv(OUTPUT_FLAGS_CSV, index=False)
+        return _EMPTY_SCORES.copy(), _EMPTY_FLAGS.copy()
+
+    if df.empty or (metrics_df is not None and metrics_df.empty):
+        _EMPTY_SCORES.to_csv(OUTPUT_SCORES_CSV, index=False)
+        _EMPTY_FLAGS.to_csv(OUTPUT_FLAGS_CSV, index=False)
+        return _EMPTY_SCORES.copy(), _EMPTY_FLAGS.copy()
+
+    # Coerce fee_code to string so sorting and set membership work
+    df = df.copy()
+    df["fee_code"] = df["fee_code"].astype(str)
+    # Drop rows where fee_code is 'nan' (became string after astype on NaN)
+    df = df[df["fee_code"] != "nan"]
+
+    if df.empty:
+        _EMPTY_SCORES.to_csv(OUTPUT_SCORES_CSV, index=False)
+        _EMPTY_FLAGS.to_csv(OUTPUT_FLAGS_CSV, index=False)
+        return _EMPTY_SCORES.copy(), _EMPTY_FLAGS.copy()
 
     scores = build_codemix_scores(df, metrics_df)
     scores.to_csv(OUTPUT_SCORES_CSV, index=False)

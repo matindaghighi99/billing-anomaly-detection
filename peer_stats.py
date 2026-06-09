@@ -32,11 +32,18 @@ PHASE 2 CHANGES -- RISK-ADJUSTED PEER COHORTS:
 Outputs peer_flags.csv with a new 'cohort_key' column.
 """
 
+import logging
+import warnings
+
 import numpy as np
 import pandas as pd
 from scipy import stats as scipy_stats
 
+from validators import validate_claims_df
+
 INPUT_CSV   = "claims.csv"
+
+logger = logging.getLogger(__name__)
 OUTPUT_CSV  = "peer_flags.csv"
 METRICS_CSV = "provider_metrics.csv"
 
@@ -113,18 +120,43 @@ def build_provider_metrics(df: pd.DataFrame) -> pd.DataFrame:
     agg["services_per_patient"] = agg["total_claims"] / agg["unique_patients"].clip(lower=1)
 
     def top_tier_share(sub: pd.DataFrame) -> float:
-        spec = sub["specialty"].iloc[0]
+        # include_groups=False means 'specialty' is NOT in sub; look it up from df
+        pid  = sub.index[0] if hasattr(sub.index, '__len__') and len(sub.index) > 0 else None
+        if pid is None or "provider_id" not in df.columns:
+            return 0.0
+        spec_vals = df.loc[df["provider_id"] == pid, "specialty"]
+        if spec_vals.empty:
+            return 0.0
+        spec = spec_vals.iloc[0]
         top  = SPECIALTY_TOP_TIER.get(spec, set())
         if not top:
             return 0.0
-        return (sub["fee_code"].isin(top)).mean()
+        if "fee_code" not in sub.columns:
+            return 0.0
+        return float((sub["fee_code"].isin(top)).mean())
 
-    top_shares = (
-        df.groupby("provider_id")
-          .apply(top_tier_share, include_groups=False)
-          .rename("top_tier_share")
-    )
+    try:
+        top_shares_raw = (
+            df.groupby("provider_id")
+              .apply(top_tier_share, include_groups=False)
+        )
+        # Ensure it is a Series (groupby.apply may return a scalar on single group)
+        if not isinstance(top_shares_raw, pd.Series):
+            top_shares_raw = pd.Series(
+                [top_shares_raw],
+                index=df["provider_id"].unique()[:1],
+            )
+        top_shares = top_shares_raw.rename("top_tier_share")
+    except Exception as exc:
+        warnings.warn(f"[peer_stats] top_tier_share computation failed: {exc}; defaulting to 0",
+                      UserWarning)
+        top_shares = pd.Series(0.0,
+                               index=df["provider_id"].unique(),
+                               name="top_tier_share")
     agg = agg.join(top_shares, on="provider_id")
+    if "top_tier_share" not in agg.columns:
+        agg["top_tier_share"] = 0.0
+    agg["top_tier_share"] = agg["top_tier_share"].fillna(0.0)
 
     # ── Practice-setting flag ─────────────────────────────────────────────────
     agg["active_day_fraction"] = agg["billed_days"] / N_WORKING_DAYS
@@ -241,9 +273,44 @@ def build_flags(metrics: pd.DataFrame) -> pd.DataFrame:
 
 # ── Orchestration ─────────────────────────────────────────────────────────────
 
+_PEER_REQUIRED = [
+    "claim_id", "provider_id", "provider_name", "patient_id",
+    "fee_code", "service_date", "service_minutes", "amount_billed", "specialty",
+]
+
+_EMPTY_FLAGS   = pd.DataFrame(columns=[
+    "provider_id","provider_name","specialty","cohort_key","practice_setting",
+    "metric","provider_value","peer_median","z_score","estimated_exposure",
+])
+_EMPTY_METRICS = pd.DataFrame(columns=[
+    "provider_id","provider_name","specialty","total_claims","total_billed",
+    "avg_billed","avg_minutes","unique_patients","unique_codes","billed_days",
+    "claims_per_day","services_per_patient","top_tier_share",
+    "active_day_fraction","practice_setting","cohort_key",
+])
+
+
 def run_peer_stats(df: pd.DataFrame = None):
     if df is None:
         df = load_claims()
+
+    try:
+        df = validate_claims_df(df, _PEER_REQUIRED, caller="peer_stats")
+    except (ValueError, TypeError) as exc:
+        warnings.warn(f"[peer_stats] Validation failed: {exc}", UserWarning)
+        _EMPTY_METRICS.to_csv(METRICS_CSV, index=False)
+        _EMPTY_FLAGS.to_csv(OUTPUT_CSV, index=False)
+        return _EMPTY_METRICS.copy(), _EMPTY_FLAGS.copy()
+
+    if df.empty:
+        _EMPTY_METRICS.to_csv(METRICS_CSV, index=False)
+        _EMPTY_FLAGS.to_csv(OUTPUT_CSV, index=False)
+        return _EMPTY_METRICS.copy(), _EMPTY_FLAGS.copy()
+
+    # Need at least 1 provider with numeric service_minutes
+    df["service_minutes"] = pd.to_numeric(df["service_minutes"], errors="coerce").fillna(0)
+    df["amount_billed"]   = pd.to_numeric(df["amount_billed"],   errors="coerce").fillna(0)
+
     metrics = build_provider_metrics(df)
     metrics = zscore_within_cohort(metrics)
     metrics.to_csv(METRICS_CSV, index=False)

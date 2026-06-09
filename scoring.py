@@ -13,12 +13,16 @@ Weights (pre-normalisation):
 Outputs risk_scores.csv.
 """
 
+import logging
 import os
+import warnings
 
 import numpy as np
 import pandas as pd
 
 RULES_CSV    = "rules_flags.csv"
+
+logger = logging.getLogger(__name__)
 PEER_CSV     = "peer_flags.csv"
 ML_CSV       = "ml_scores.csv"
 CODEMIX_CSV   = "provider_codemix.csv"
@@ -59,6 +63,48 @@ CONFIDENCE_LIKELIHOOD = {
 }
 
 MIN_SCORE_THRESHOLD = 10   # suppress below this; only HIGH-confidence misses possible
+
+
+def validate_risk_scores_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Validate and coerce a risk_scores DataFrame read from disk.
+
+    - Warns and clips risk_score values outside [0, 100].
+    - Warns and fills NaN risk_scores with 0.
+    - Raises ValueError if the DataFrame is missing the 'risk_score' column.
+
+    Safe to call on the output of build_risk_scores() or on a CSV read externally.
+    """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError(f"Expected a pandas DataFrame, got {type(df).__name__!r}")
+    if df.empty:
+        return df.copy()
+    if "risk_score" not in df.columns:
+        raise ValueError(
+            "validate_risk_scores_df: 'risk_score' column is missing from DataFrame"
+        )
+    df = df.copy()
+    n_nan = int(df["risk_score"].isna().sum())
+    if n_nan:
+        warnings.warn(
+            f"[scoring] validate_risk_scores_df: {n_nan} NaN risk_score(s) → set to 0",
+            UserWarning,
+        )
+        df["risk_score"] = df["risk_score"].fillna(0)
+    df["risk_score"] = pd.to_numeric(df["risk_score"], errors="coerce").fillna(0)
+    n_neg  = int((df["risk_score"] < 0).sum())
+    n_over = int((df["risk_score"] > 100).sum())
+    if n_neg:
+        warnings.warn(
+            f"[scoring] validate_risk_scores_df: {n_neg} negative risk_score(s) → clipped to 0",
+            UserWarning,
+        )
+    if n_over:
+        warnings.warn(
+            f"[scoring] validate_risk_scores_df: {n_over} risk_score(s) > 100 → clipped to 100",
+            UserWarning,
+        )
+    df["risk_score"] = df["risk_score"].clip(lower=0, upper=100)
+    return df
 
 
 def load_claims_meta(path=CLAIMS_CSV) -> pd.DataFrame:
@@ -265,6 +311,41 @@ def build_risk_scores() -> pd.DataFrame:
         "top_reason",
     ]
     result = flagged[out_cols].reset_index(drop=True)
+
+    # ── Final output validation: log warnings for out-of-range scores ──────────
+    n_nan = result["risk_score"].isna().sum()
+    n_neg = (result["risk_score"].dropna() < 0).sum()
+    n_over = (result["risk_score"].dropna() > 100).sum()
+    if n_nan:
+        warnings.warn(f"[scoring] {n_nan} NaN risk_score(s) in output — setting to 0",
+                      UserWarning)
+        result["risk_score"] = result["risk_score"].fillna(0)
+    if n_neg:
+        warnings.warn(f"[scoring] {n_neg} negative risk_score(s) — clipping to 0",
+                      UserWarning)
+        result["risk_score"] = result["risk_score"].clip(lower=0)
+    if n_over:
+        warnings.warn(f"[scoring] {n_over} risk_score(s) > 100 — clipping to 100",
+                      UserWarning)
+        result["risk_score"] = result["risk_score"].clip(upper=100)
+
+    result.to_csv(OUTPUT_CSV, index=False)
+    n_nan = result["risk_score"].isna().sum()
+    n_neg = (result["risk_score"].dropna() < 0).sum()
+    n_over = (result["risk_score"].dropna() > 100).sum()
+    if n_nan:
+        warnings.warn(f"[scoring] {n_nan} NaN risk_score(s) in output — setting to 0",
+                      UserWarning)
+        result["risk_score"] = result["risk_score"].fillna(0)
+    if n_neg:
+        warnings.warn(f"[scoring] {n_neg} negative risk_score(s) — clipping to 0",
+                      UserWarning)
+        result["risk_score"] = result["risk_score"].clip(lower=0)
+    if n_over:
+        warnings.warn(f"[scoring] {n_over} risk_score(s) > 100 — clipping to 100",
+                      UserWarning)
+        result["risk_score"] = result["risk_score"].clip(upper=100)
+
     result.to_csv(OUTPUT_CSV, index=False)
 
     # Append flag_generated events to the immutable audit trail.
