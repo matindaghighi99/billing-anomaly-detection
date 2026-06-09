@@ -190,7 +190,15 @@ def render_login_screen() -> None:
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown('<div class="login-title">🏥 Billing Anomaly Audit</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="login-title">'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" '
+            'fill="none" stroke="#C0C0F8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" '
+            'style="vertical-align:middle;margin-right:6px;">'
+            '<path d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            'Billing Anomaly Audit</div>',
+            unsafe_allow_html=True,
+        )
         st.markdown('<div class="login-sub">DECISION SUPPORT ONLY — SYNTHETIC DATA</div>', unsafe_allow_html=True)
 
         with st.form("login_form", clear_on_submit=False):
@@ -206,7 +214,8 @@ def render_login_screen() -> None:
 
         st.markdown("""
 <div class="login-notice">
-  ⚠ MOCK AUTHENTICATION — demo credentials only.<br>
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C08000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
+  MOCK AUTHENTICATION — demo credentials only.<br>
   Not suitable for real healthcare data.
 </div>
 <div class="demo-creds">
