@@ -491,13 +491,19 @@ def main():
     load_risk_scores(conn)
     load_explanations(conn)
 
-    # Quick row counts
+    # Quick row counts — table names are a hardcoded whitelist; SQLite does not
+    # support parameterized identifiers, so we validate against the literal set.
+    _SUMMARY_TABLES = (
+        "clinics", "providers", "fee_schedule", "bundle_rules",
+        "claims", "rule_flags", "peer_flags", "provider_metrics",
+        "ml_scores", "risk_scores", "explanations",
+    )
     print("\n  Database summary:")
     print("  " + "-" * 40)
-    for table in ["clinics","providers","fee_schedule","bundle_rules",
-                  "claims","rule_flags","peer_flags","provider_metrics",
-                  "ml_scores","risk_scores","explanations"]:
-        n = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+    for table in _SUMMARY_TABLES:
+        if table not in _SUMMARY_TABLES:
+            raise ValueError(f"Unexpected table name: {table!r}")
+        n = conn.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]  # nosec B608 — table is a hardcoded tuple literal above, not user input
         print(f"  {table:<25}: {n:>8,} rows")
 
     conn.close()
