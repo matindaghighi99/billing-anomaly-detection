@@ -7,6 +7,9 @@ NEVER makes automated decisions — all outputs are for human review only.
 import json
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
