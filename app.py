@@ -214,7 +214,7 @@ _CHART_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="#13131F",
     font=dict(color="#AAAAC0", size=12),
-    margin=dict(l=10, r=10, t=40, b=30),
+    # margin intentionally omitted — every chart passes its own margin explicitly
 )
 
 
@@ -771,35 +771,34 @@ def main():
 
     # ═══════════════ MODEL CARD TAB ═══════════════════════════════════════════
     with tab_model:
-        # ── Role gate (UI layer) — function-level check is redundant here since
-        # this tab is read-only, but the pattern is consistent ────────────────
+        # ── Role gate — use else block, NOT st.stop(), so subsequent tabs still render
         if not _can_model:
             st.warning(
                 f"🔒 Access restricted. Role **{auth_mock.current_role()}** "
                 "cannot view the Model Card. Supervisor or Admin role required."
             )
-            st.stop()
+        else:
 
-        # ── Model registry section ────────────────────────────────────────────
-        st.markdown(
-            '<div class="section-title"><span class="section-dot"></span>'
-            'Feedback Model Registry</div>',
-            unsafe_allow_html=True,
-        )
-        try:
-            import model_registry as _mr
-            versions = _mr.list_versions()
-            if not versions:
-                st.info(
-                    "No model versions registered yet. "
-                    "Run `python feedback.py --seed-demo` to train the first version."
-                )
-            else:
-                cur = versions[-1]
-                val = cur.get
-                det = cur.get("val_detection_rate")
-                fpr = cur.get("val_false_pos_rate")
-                st.markdown(f"""
+            # ── Model registry section ───────────────────────────────────────
+            st.markdown(
+                '<div class="section-title"><span class="section-dot"></span>'
+                'Feedback Model Registry</div>',
+                unsafe_allow_html=True,
+            )
+            try:
+                import model_registry as _mr
+                versions = _mr.list_versions()
+                if not versions:
+                    st.info(
+                        "No model versions registered yet. "
+                        "Run `python feedback.py --seed-demo` to train the first version."
+                    )
+                else:
+                    cur = versions[-1]
+                    val = cur.get
+                    det = cur.get("val_detection_rate")
+                    fpr = cur.get("val_false_pos_rate")
+                    st.markdown(f"""
 <div style="background:#13131F; border:1px solid #2D2D4E; border-radius:10px; padding:18px 22px; max-width:720px; margin-bottom:12px;">
   <div style="font-size:0.75rem; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Current model version</div>
   <div style="display:flex; flex-wrap:wrap; gap:24px;">
@@ -816,25 +815,25 @@ def main():
 </div>
 """, unsafe_allow_html=True)
 
-                if len(versions) > 1:
-                    st.caption(f"{len(versions)} total versions in registry.")
-                    ver_df = pd.DataFrame([{
-                        "Version":    v["version_id"],
-                        "Trained":    v["utc_timestamp"][:19].replace("T", " "),
-                        "Model":      v["model_type"],
-                        "Labels":     v["n_total_labels"],
-                        "Det. rate":  f"{v['val_detection_rate']:.1%}" if v.get("val_detection_rate") is not None else "N/A",
-                        "FP rate":    f"{v['val_false_pos_rate']:.1%}"  if v.get("val_false_pos_rate")  is not None else "N/A",
-                        "Data hash":  v["training_data_hash"][:16] + "...",
-                    } for v in versions])
-                    st.dataframe(ver_df, hide_index=True, use_container_width=True)
-        except Exception as exc:
-            st.warning(f"Model registry unavailable: {exc}")
+                    if len(versions) > 1:
+                        st.caption(f"{len(versions)} total versions in registry.")
+                        ver_df = pd.DataFrame([{
+                            "Version":    v["version_id"],
+                            "Trained":    v["utc_timestamp"][:19].replace("T", " "),
+                            "Model":      v["model_type"],
+                            "Labels":     v["n_total_labels"],
+                            "Det. rate":  f"{v['val_detection_rate']:.1%}" if v.get("val_detection_rate") is not None else "N/A",
+                            "FP rate":    f"{v['val_false_pos_rate']:.1%}"  if v.get("val_false_pos_rate")  is not None else "N/A",
+                            "Data hash":  v["training_data_hash"][:16] + "...",
+                        } for v in versions])
+                        st.dataframe(ver_df, hide_index=True, use_container_width=True)
+            except Exception as exc:
+                st.warning(f"Model registry unavailable: {exc}")
 
-        st.markdown("---")
+            st.markdown("---")
 
-        # ── Static methodology card ───────────────────────────────────────────
-        st.markdown("""
+            # ── Static methodology card ──────────────────────────────────────
+            st.markdown("""
 <div style="max-width:780px;">
 
 ### System overview
@@ -894,80 +893,79 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
 
     # ═══════════════ AUDIT TRAIL TAB ══════════════════════════════════════════
     with tab_audit:
-        # ── Role gate (UI layer) ──────────────────────────────────────────────
+        # ── Role gate — use else block, NOT st.stop(), so subsequent tabs still render
         if not _can_audit:
             st.warning(
                 f"🔒 Access restricted. Role **{auth_mock.current_role()}** "
                 "cannot view the Audit Trail. Supervisor or Admin role required."
             )
-            st.stop()
+        else:
+            st.markdown(
+                '<div class="section-title"><span class="section-dot"></span>'
+                'Immutable Audit Trail</div>',
+                unsafe_allow_html=True,
+            )
+            st.caption(
+                "Append-only event log. Every flag, view, and auditor action is "
+                "recorded with a SHA-256 hash chain. Verify Integrity checks that "
+                "no record has been altered or deleted."
+            )
 
-        st.markdown(
-            '<div class="section-title"><span class="section-dot"></span>'
-            'Immutable Audit Trail</div>',
-            unsafe_allow_html=True,
-        )
-        st.caption(
-            "Append-only event log. Every flag, view, and auditor action is "
-            "recorded with a SHA-256 hash chain. Verify Integrity checks that "
-            "no record has been altered or deleted."
-        )
+            col_v, col_e, col_spacer = st.columns([1, 1, 4])
+            with col_v:
+                if st.button("🔍  Verify Integrity", key="audit_verify"):
+                    try:
+                        # ── Function-level gate (second line of defence) ──────
+                        auth_mock.require_permission("verify_integrity")
+                        import audit_log as _al
+                        res = _al.verify_integrity()
+                        if res["ok"]:
+                            st.success(f"✓ {res['message']}")
+                        else:
+                            st.error(f"⚠ {res['message']}")
+                    except PermissionError as pe:
+                        st.error(f"Access denied: {pe}")
+                    except Exception as exc:
+                        st.error(f"Audit log error: {exc}")
+            with col_e:
+                if st.button("📥  Export to CSV", key="audit_export"):
+                    try:
+                        # ── Function-level gate (second line of defence) ──────
+                        auth_mock.require_permission("export_audit_log")
+                        import audit_log as _al
+                        n = _al.export_to_csv()
+                        st.success(f"Exported {n} records → audit_log_export.csv")
+                    except PermissionError as pe:
+                        st.error(f"Access denied: {pe}")
+                    except Exception as exc:
+                        st.error(f"Export error: {exc}")
 
-        col_v, col_e, col_spacer = st.columns([1, 1, 4])
-        with col_v:
-            if st.button("🔍  Verify Integrity", key="audit_verify"):
-                try:
-                    # ── Function-level gate (second line of defence) ──────────
-                    auth_mock.require_permission("verify_integrity")
-                    import audit_log as _al
-                    res = _al.verify_integrity()
-                    if res["ok"]:
-                        st.success(f"✓ {res['message']}")
-                    else:
-                        st.error(f"⚠ {res['message']}")
-                except PermissionError as pe:
-                    st.error(f"Access denied: {pe}")
-                except Exception as exc:
-                    st.error(f"Audit log error: {exc}")
-        with col_e:
-            if st.button("📥  Export to CSV", key="audit_export"):
-                try:
-                    # ── Function-level gate (second line of defence) ──────────
-                    auth_mock.require_permission("export_audit_log")
-                    import audit_log as _al
-                    n = _al.export_to_csv()
-                    st.success(f"Exported {n} records → audit_log_export.csv")
-                except PermissionError as pe:
-                    st.error(f"Access denied: {pe}")
-                except Exception as exc:
-                    st.error(f"Export error: {exc}")
+            st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
 
-        st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
-
-        try:
-            import audit_log as _al
-            recent = _al.get_recent(200)
-            if not recent:
-                st.info(
-                    "No audit events recorded yet. Run `python scoring.py` to "
-                    "generate the first batch of flag_generated events."
-                )
-            else:
-                df_log = pd.DataFrame(recent)
-                # Friendly column order
-                show_cols = [c for c in
-                    ["id", "utc_timestamp", "event_type", "user", "provider_id",
-                     "model_version", "action_taken", "signals_shown", "reasoning"]
-                    if c in df_log.columns]
-                st.dataframe(
-                    df_log[show_cols],
-                    use_container_width=True,
-                    height=500,
-                    hide_index=True,
-                )
-                st.caption(f"{len(recent)} most recent events shown (newest first).")
-        except Exception as exc:
-            st.warning(f"Could not load audit log: {exc}")
+            try:
+                import audit_log as _al
+                recent = _al.get_recent(200)
+                if not recent:
+                    st.info(
+                        "No audit events recorded yet. Run `python scoring.py` to "
+                        "generate the first batch of flag_generated events."
+                    )
+                else:
+                    df_log = pd.DataFrame(recent)
+                    # Friendly column order
+                    show_cols = [c for c in
+                        ["id", "utc_timestamp", "event_type", "user", "provider_id",
+                         "model_version", "action_taken", "signals_shown", "reasoning"]
+                        if c in df_log.columns]
+                    st.dataframe(
+                        df_log[show_cols],
+                        use_container_width=True,
+                        height=500,
+                        hide_index=True,
+                    )
+                    st.caption(f"{len(recent)} most recent events shown (newest first).")
+            except Exception as exc:
+                st.warning(f"Could not load audit log: {exc}")
 
 
 # ── Provider detail ───────────────────────────────────────────────────────────
