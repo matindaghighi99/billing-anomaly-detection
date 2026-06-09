@@ -17,8 +17,8 @@ import datetime
 import hashlib
 import json
 import os
-import pickle
 
+import joblib
 import numpy as np
 
 REGISTRY_DIR  = "model_registry"
@@ -240,9 +240,8 @@ def register_model(
     }
 
     # Save artefacts
-    model_path = os.path.join(version_dir, "model.pkl")
-    with open(model_path, "wb") as fh:
-        pickle.dump(clf, fh)
+    model_path = os.path.join(version_dir, "model.joblib")
+    joblib.dump(clf, model_path)
 
     card_json_path = os.path.join(version_dir, "model_card.json")
     with open(card_json_path, "w", encoding="utf-8") as fh:
@@ -278,7 +277,7 @@ def load_version(version_id: str):
     Returns (clf, card_dict) or raises FileNotFoundError.
     """
     version_dir   = os.path.join(REGISTRY_DIR, version_id)
-    model_path    = os.path.join(version_dir, "model.pkl")
+    model_path    = os.path.join(version_dir, "model.joblib")
     card_json_path = os.path.join(version_dir, "model_card.json")
 
     if not os.path.exists(model_path):
@@ -286,8 +285,7 @@ def load_version(version_id: str):
             f"No model artefact for version {version_id!r} at {model_path}"
         )
 
-    with open(model_path, "rb") as fh:
-        clf = pickle.load(fh)
+    clf = joblib.load(model_path)
 
     card = {}
     if os.path.exists(card_json_path):

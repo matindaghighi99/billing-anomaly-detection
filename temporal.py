@@ -25,10 +25,17 @@ Both the CUSUM score and spike flag are fed into scoring.py.
 Outputs temporal_flags.csv and provider_temporal.csv.
 """
 
+import logging
+import warnings
+
 import numpy as np
 import pandas as pd
 
+from validators import validate_claims_df
+
 INPUT_CSV         = "claims.csv"
+
+logger = logging.getLogger(__name__)
 OUTPUT_FLAGS_CSV  = "temporal_flags.csv"
 OUTPUT_SCORES_CSV = "provider_temporal.csv"
 
@@ -58,6 +65,18 @@ def _cusum_max(series: np.ndarray) -> float:
 
 def build_temporal_scores(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
+    # Ensure service_date is datetime (coerce if not already)
+    if not pd.api.types.is_datetime64_any_dtype(df["service_date"]):
+        df["service_date"] = pd.to_datetime(df["service_date"], errors="coerce")
+        n_nat = df["service_date"].isna().sum()
+        if n_nat:
+            warnings.warn(
+                f"[temporal] {n_nat} non-parseable service_date value(s) dropped.",
+                UserWarning,
+            )
+        df = df.dropna(subset=["service_date"])
+    if df.empty:
+        return _EMPTY_SCORES.copy()
     df["month"] = df["service_date"].dt.to_period("M")
 
     monthly = (
@@ -114,11 +133,41 @@ def build_temporal_scores(df: pd.DataFrame) -> pd.DataFrame:
     return result.sort_values("cusum_score", ascending=False)
 
 
+_TEMPORAL_REQUIRED = [
+    "claim_id", "provider_id", "provider_name", "specialty",
+    "service_date", "amount_billed",
+]
+
+_EMPTY_SCORES = pd.DataFrame(columns=[
+    "provider_id", "provider_name", "specialty",
+    "n_active_months", "cusum_score", "cusum_flag",
+    "spike_ratio", "spike_flag", "temporal_flag", "estimated_exposure",
+])
+
+
 def run_temporal(df: pd.DataFrame = None):
     if df is None:
         df = pd.read_csv(INPUT_CSV, parse_dates=["service_date"],
                          dtype={"fee_code": str, "provider_id": str,
                                 "patient_id": str})
+
+    try:
+        df = validate_claims_df(df, _TEMPORAL_REQUIRED, caller="temporal")
+    except (ValueError, TypeError) as exc:
+        warnings.warn(f"[temporal] Validation failed: {exc}", UserWarning)
+        _EMPTY_SCORES.to_csv(OUTPUT_SCORES_CSV, index=False)
+        pd.DataFrame().to_csv(OUTPUT_FLAGS_CSV, index=False)
+        return _EMPTY_SCORES.copy(), pd.DataFrame()
+
+    if df.empty:
+        _EMPTY_SCORES.to_csv(OUTPUT_SCORES_CSV, index=False)
+        pd.DataFrame().to_csv(OUTPUT_FLAGS_CSV, index=False)
+        return _EMPTY_SCORES.copy(), pd.DataFrame()
+
+    # Coerce numeric columns so arithmetic works
+    df = df.copy()
+    df["amount_billed"] = pd.to_numeric(df["amount_billed"], errors="coerce").fillna(0)
+
     scores = build_temporal_scores(df)
     scores.to_csv(OUTPUT_SCORES_CSV, index=False)
 

@@ -9,10 +9,17 @@ Three high-confidence rules:
 Outputs rules_flags.csv (one row per flag event) and prints a summary.
 """
 
+import logging
+import warnings
+
 import pandas as pd
+
+from validators import validate_claims_df
 
 INPUT_CSV  = "claims.csv"
 OUTPUT_CSV = "rules_flags.csv"
+
+logger = logging.getLogger(__name__)
 
 BUNDLE_RULES = [
     {
@@ -154,9 +161,34 @@ def check_unbundling(df: pd.DataFrame) -> pd.DataFrame:
 
 # ── Main ─────────────────────────────────────────────────────────────────────
 
+_RULES_REQUIRED = [
+    "claim_id", "provider_id", "provider_name", "patient_id",
+    "fee_code", "service_date", "service_minutes", "amount_billed", "specialty",
+]
+
+_EMPTY_FLAGS = pd.DataFrame(columns=[
+    "provider_id", "provider_name", "specialty",
+    "rule", "evidence", "estimated_exposure",
+])
+
+
 def run_rules(df: pd.DataFrame = None) -> pd.DataFrame:
     if df is None:
         df = load_claims()
+
+    try:
+        df = validate_claims_df(df, _RULES_REQUIRED, caller="rules")
+    except (ValueError, TypeError) as exc:
+        warnings.warn(f"[rules] Validation failed: {exc}", UserWarning)
+        _EMPTY_FLAGS.to_csv(OUTPUT_CSV, index=False)
+        return _EMPTY_FLAGS.copy()
+
+    if df.empty:
+        _EMPTY_FLAGS.to_csv(OUTPUT_CSV, index=False)
+        return _EMPTY_FLAGS.copy()
+
+    # Coerce service_minutes to numeric so rule 1 arithmetic works
+    df["service_minutes"] = pd.to_numeric(df["service_minutes"], errors="coerce").fillna(0)
 
     parts = [
         check_impossible_days(df),
