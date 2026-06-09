@@ -54,7 +54,7 @@ st.markdown("""
   .kpi-card {
     background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
     border: 1px solid #2D2D4E; border-radius: 12px;
-    padding: 22px 24px; position: relative; overflow: hidden;
+    padding: 22px 24px; position: relative;
     transition: border-color 0.2s;
   }
   .kpi-card:hover { border-color: #4A4A7A; }
@@ -64,11 +64,15 @@ st.markdown("""
   }
   .kpi-icon { font-size: 1.5rem; margin-bottom: 10px; opacity: 0.85; }
   .kpi-label {
-    font-size: 0.7rem; color: #7878A8; text-transform: uppercase;
+    font-size: 0.7rem; color: #9090B8; text-transform: uppercase;
     letter-spacing: 1.2px; margin-bottom: 8px; font-weight: 500;
   }
-  .kpi-value { font-size: 2.1rem; font-weight: 700; color: #E8E8FF; line-height: 1.1; }
-  .kpi-sub   { font-size: 0.73rem; color: #5A5A8A; margin-top: 8px; }
+  /* clamp scales value text across sidebar-open/closed layouts without wrapping */
+  .kpi-value {
+    font-size: clamp(1.2rem, 1.4vw, 1.9rem); font-weight: 700;
+    color: #E8E8FF; line-height: 1.1; white-space: nowrap; overflow: visible;
+  }
+  .kpi-sub   { font-size: 0.73rem; color: #7878A0; margin-top: 8px; }
 
   /* ── section headings ── */
   .section-title {
@@ -143,6 +147,11 @@ st.markdown("""
   ::-webkit-scrollbar-track { background: #0E1117; }
   ::-webkit-scrollbar-thumb { background: #2A2A4A; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #3A3A6A; }
+
+  /* ── reduced-motion: disable decorative transitions ── */
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-card { transition: none; }
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -250,10 +259,10 @@ def peer_comparison_chart(provider_id: str, metrics_df: pd.DataFrame,
         **_CHART_LAYOUT,
         title=dict(text=f"<b>{specialty}</b> — Provider vs Peer Median", font=dict(size=13)),
         xaxis=dict(
-            title="Ratio to Peer Median", gridcolor="#1E1E36",
+            title="Ratio to Peer Median", gridcolor="#181828",
             zerolinecolor="#2A2A4A",
         ),
-        yaxis=dict(gridcolor="#1E1E36"),
+        yaxis=dict(gridcolor="#181828"),
         height=300,
         margin=dict(l=10, r=100, t=44, b=30),
         showlegend=False,
@@ -290,8 +299,8 @@ def monthly_claims_chart(provider_id: str, claims_df: pd.DataFrame):
         **_CHART_LAYOUT,
         title=dict(text="<b>Monthly Billing Volume</b>", font=dict(size=13)),
         height=260,
-        xaxis=dict(gridcolor="#1E1E36"),
-        yaxis=dict(title="Claims", gridcolor="#1E1E36"),
+        xaxis=dict(gridcolor="#181828"),
+        yaxis=dict(title="Claims", gridcolor="#181828"),
         yaxis2=dict(title="Billed ($)", overlaying="y", side="right"),
         margin=dict(l=10, r=70, t=44, b=30),
         legend=dict(orientation="h", y=-0.25, font=dict(size=11)),
@@ -350,7 +359,7 @@ def exposure_by_specialty_chart(worklist: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text="<b>Estimated Exposure by Specialty</b>", font=dict(size=13)),
-        xaxis=dict(title="Estimated Exposure ($)", gridcolor="#1E1E36"),
+        xaxis=dict(title="Estimated Exposure ($)", gridcolor="#181828"),
         yaxis=dict(gridcolor="rgba(0,0,0,0)"),
         height=300,
         margin=dict(l=10, r=90, t=44, b=30),
@@ -396,8 +405,8 @@ def score_distribution_chart(worklist: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text="<b>Risk Score Distribution</b>", font=dict(size=13)),
-        xaxis=dict(title="Risk Score", gridcolor="#1E1E36"),
-        yaxis=dict(title="Providers",  gridcolor="#1E1E36"),
+        xaxis=dict(title="Risk Score", gridcolor="#181828"),
+        yaxis=dict(title="Providers",  gridcolor="#181828"),
         height=280,
         margin=dict(l=10, r=10, t=44, b=30),
         bargap=0.06,
@@ -419,7 +428,7 @@ def shap_bar_chart(features: list, values: list) -> go.Figure:
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text="<b>SHAP Feature Attribution</b>", font=dict(size=13)),
-        xaxis=dict(title="SHAP value (anomaly contribution)", gridcolor="#1E1E36"),
+        xaxis=dict(title="SHAP value (anomaly contribution)", gridcolor="#181828"),
         yaxis=dict(gridcolor="rgba(0,0,0,0)"),
         height=220,
         margin=dict(l=10, r=80, t=44, b=30),
@@ -465,7 +474,7 @@ def render_sidebar(scores: pd.DataFrame):
         <div style="text-align:center; padding: 10px 0 18px;">
           <div style="font-size:2rem;">🏥</div>
           <div style="font-size:1.0rem; font-weight:700; color:#C0C0F0; margin-top:6px;">Billing Anomaly<br>Audit System</div>
-          <div style="font-size:0.7rem; color:#5050A0; margin-top:4px; letter-spacing:0.8px;">DECISION SUPPORT ONLY</div>
+          <div style="font-size:0.7rem; color:#8080B8; margin-top:4px; letter-spacing:0.8px;">DECISION SUPPORT ONLY</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -547,7 +556,7 @@ def render_sidebar(scores: pd.DataFrame):
             st.cache_data.clear()
             st.rerun()
 
-        st.markdown('<div style="font-size:0.65rem; color:#333355; text-align:center; margin-top:20px;">SYNTHETIC DATA ONLY<br>All providers and claims are fictional.</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.65rem; color:#6060A0; text-align:center; margin-top:20px;">SYNTHETIC DATA ONLY<br>All providers and claims are fictional.</div>', unsafe_allow_html=True)
 
     return sel_spec, sel_conf, min_score
 
