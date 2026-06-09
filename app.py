@@ -12,6 +12,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+import auth_mock
+
 SCORES_CSV  = "risk_scores.csv"
 RULES_CSV   = "rules_flags.csv"
 PEER_CSV    = "peer_flags.csv"
@@ -504,10 +506,37 @@ def render_sidebar(scores: pd.DataFrame):
         """, unsafe_allow_html=True)
 
         st.markdown("---")
-        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AUDITOR</div>', unsafe_allow_html=True)
+
+        # ── Logged-in user + role badge ───────────────────────────────────
+        _role    = auth_mock.current_role() or "?"
+        _display = auth_mock.current_display_name()
+        _role_colors = {
+            "auditor":    ("#4A4AFF", "#1A1A5A"),
+            "supervisor": ("#FF9F40", "#4A2A00"),
+            "admin":      ("#FF5A5A", "#4A0000"),
+        }
+        _rc, _bg = _role_colors.get(_role, ("#888", "#222"))
+        st.markdown(f"""
+<div style="background:{_bg}; border:1px solid {_rc}44; border-radius:8px;
+     padding:8px 12px; margin-bottom:8px;">
+  <div style="font-size:0.68rem; color:#6A6A9A; text-transform:uppercase;
+       letter-spacing:0.8px; margin-bottom:3px;">SIGNED IN AS</div>
+  <div style="font-size:0.88rem; font-weight:600; color:#D0D0F0;">{_display}</div>
+  <div style="font-size:0.7rem; color:{_rc}; margin-top:2px; font-family:monospace;
+       text-transform:uppercase; letter-spacing:0.5px;">{_role}</div>
+</div>
+""", unsafe_allow_html=True)
+
+        if st.button("🚪  Sign Out", use_container_width=True, key="btn_logout"):
+            auth_mock.logout()   # clears ALL session state, then st.rerun()
+
+        st.markdown("---")
+        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AUDITOR ID</div>', unsafe_allow_html=True)
+        # Auditor ID is pre-filled from the logged-in username; allow override for
+        # cases where a shared account acts on behalf of another named auditor.
         auditor_id = st.text_input(
             "Your ID (for audit log)",
-            value=st.session_state.get("auditor_id", "auditor"),
+            value=st.session_state.get("auditor_id", auth_mock.current_user() or "auditor"),
             key="sb_auditor_id",
             label_visibility="collapsed",
         )
@@ -526,6 +555,10 @@ def render_sidebar(scores: pd.DataFrame):
 # ── Main app ──────────────────────────────────────────────────────────────────
 
 def main():
+    # ── Authentication gate ───────────────────────────────────────────────────
+    if not auth_mock.is_authenticated():
+        auth_mock.render_login_screen()   # calls st.stop() if not yet logged in
+
     scores  = load_scores()
     rules   = load_rules()
     peer    = load_peer()
@@ -596,6 +629,9 @@ def main():
     tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
         ["📋  Worklist", "📊  Analytics", "📖  Model Card", "🔒  Audit Trail"]
     )
+    # Role labels for the access-denied banners below
+    _can_model = auth_mock.has_permission("view_model_card")
+    _can_audit = auth_mock.has_permission("view_audit_trail")
 
     # ═══════════════ WORKLIST TAB ═════════════════════════════════════════════
     with tab_wl:
@@ -735,6 +771,14 @@ def main():
 
     # ═══════════════ MODEL CARD TAB ═══════════════════════════════════════════
     with tab_model:
+        # ── Role gate (UI layer) — function-level check is redundant here since
+        # this tab is read-only, but the pattern is consistent ────────────────
+        if not _can_model:
+            st.warning(
+                f"🔒 Access restricted. Role **{auth_mock.current_role()}** "
+                "cannot view the Model Card. Supervisor or Admin role required."
+            )
+            st.stop()
 
         # ── Model registry section ────────────────────────────────────────────
         st.markdown(
@@ -850,6 +894,14 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
 
     # ═══════════════ AUDIT TRAIL TAB ══════════════════════════════════════════
     with tab_audit:
+        # ── Role gate (UI layer) ──────────────────────────────────────────────
+        if not _can_audit:
+            st.warning(
+                f"🔒 Access restricted. Role **{auth_mock.current_role()}** "
+                "cannot view the Audit Trail. Supervisor or Admin role required."
+            )
+            st.stop()
+
         st.markdown(
             '<div class="section-title"><span class="section-dot"></span>'
             'Immutable Audit Trail</div>',
@@ -865,20 +917,28 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
         with col_v:
             if st.button("🔍  Verify Integrity", key="audit_verify"):
                 try:
+                    # ── Function-level gate (second line of defence) ──────────
+                    auth_mock.require_permission("verify_integrity")
                     import audit_log as _al
                     res = _al.verify_integrity()
                     if res["ok"]:
                         st.success(f"✓ {res['message']}")
                     else:
                         st.error(f"⚠ {res['message']}")
+                except PermissionError as pe:
+                    st.error(f"Access denied: {pe}")
                 except Exception as exc:
                     st.error(f"Audit log error: {exc}")
         with col_e:
             if st.button("📥  Export to CSV", key="audit_export"):
                 try:
+                    # ── Function-level gate (second line of defence) ──────────
+                    auth_mock.require_permission("export_audit_log")
                     import audit_log as _al
                     n = _al.export_to_csv()
                     st.success(f"Exported {n} records → audit_log_export.csv")
+                except PermissionError as pe:
+                    st.error(f"Access denied: {pe}")
                 except Exception as exc:
                     st.error(f"Export error: {exc}")
 
@@ -979,6 +1039,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     with btn_c:
         if st.button("✓  Confirm", key=f"btn_confirm_{pid}", type="primary"):
             try:
+                auth_mock.require_permission("take_action")   # function-level gate
                 import audit_log as _al
                 from feedback import record_disposition
                 _al.append_event(
@@ -993,12 +1054,15 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                                    notes=f"Confirmed via dashboard by {_user}",
                                    source="dashboard")
                 st.success(f"Recorded: {pid} confirmed")
+            except PermissionError as pe:
+                st.error(f"Access denied: {pe}")
             except Exception as exc:
                 st.error(f"Error: {exc}")
 
     with btn_cl:
         if st.button("✗  Clear", key=f"btn_clear_{pid}"):
             try:
+                auth_mock.require_permission("take_action")   # function-level gate
                 import audit_log as _al
                 from feedback import record_disposition
                 _al.append_event(
@@ -1013,12 +1077,15 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                                    notes=f"Cleared via dashboard by {_user}",
                                    source="dashboard")
                 st.success(f"Recorded: {pid} cleared")
+            except PermissionError as pe:
+                st.error(f"Access denied: {pe}")
             except Exception as exc:
                 st.error(f"Error: {exc}")
 
     with btn_i:
         if st.button("⚠  Investigating", key=f"btn_invest_{pid}"):
             try:
+                auth_mock.require_permission("take_action")   # function-level gate
                 import audit_log as _al
                 _al.append_event(
                     "action_taken",
@@ -1029,6 +1096,8 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                     reasoning=f"Auditor {_user} opened investigation",
                 )
                 st.info(f"Recorded: {pid} under investigation")
+            except PermissionError as pe:
+                st.error(f"Access denied: {pe}")
             except Exception as exc:
                 st.error(f"Error: {exc}")
 
