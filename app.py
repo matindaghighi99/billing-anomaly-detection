@@ -504,6 +504,16 @@ def render_sidebar(scores: pd.DataFrame):
         """, unsafe_allow_html=True)
 
         st.markdown("---")
+        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AUDITOR</div>', unsafe_allow_html=True)
+        auditor_id = st.text_input(
+            "Your ID (for audit log)",
+            value=st.session_state.get("auditor_id", "auditor"),
+            key="sb_auditor_id",
+            label_visibility="collapsed",
+        )
+        st.session_state["auditor_id"] = auditor_id
+
+        st.markdown("---")
         if st.button("🔄  Clear Cache & Reload", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
@@ -583,7 +593,9 @@ def main():
 
     # ── Tabs ─────────────────────────────────────────────────────────────────
     st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
-    tab_wl, tab_analytics, tab_model = st.tabs(["📋  Worklist", "📊  Analytics", "📖  Model Card"])
+    tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
+        ["📋  Worklist", "📊  Analytics", "📖  Model Card", "🔒  Audit Trail"]
+    )
 
     # ═══════════════ WORKLIST TAB ═════════════════════════════════════════════
     with tab_wl:
@@ -655,6 +667,20 @@ def main():
         )
 
         if selected_pid:
+            # Log flag_viewed once per unique provider per session
+            _prev = st.session_state.get("_last_viewed_pid")
+            if selected_pid != _prev:
+                st.session_state["_last_viewed_pid"] = selected_pid
+                try:
+                    import audit_log as _al
+                    _al.append_event(
+                        "flag_viewed",
+                        provider_id=selected_pid,
+                        user=st.session_state.get("auditor_id", "auditor"),
+                    )
+                except Exception:
+                    pass
+
             _render_provider_detail(
                 selected_pid, rules, peer, ml, metrics, expls, claims,
                 worklist, score_map,
@@ -709,63 +735,179 @@ def main():
 
     # ═══════════════ MODEL CARD TAB ═══════════════════════════════════════════
     with tab_model:
+
+        # ── Model registry section ────────────────────────────────────────────
+        st.markdown(
+            '<div class="section-title"><span class="section-dot"></span>'
+            'Feedback Model Registry</div>',
+            unsafe_allow_html=True,
+        )
+        try:
+            import model_registry as _mr
+            versions = _mr.list_versions()
+            if not versions:
+                st.info(
+                    "No model versions registered yet. "
+                    "Run `python feedback.py --seed-demo` to train the first version."
+                )
+            else:
+                cur = versions[-1]
+                val = cur.get
+                det = cur.get("val_detection_rate")
+                fpr = cur.get("val_false_pos_rate")
+                st.markdown(f"""
+<div style="background:#13131F; border:1px solid #2D2D4E; border-radius:10px; padding:18px 22px; max-width:720px; margin-bottom:12px;">
+  <div style="font-size:0.75rem; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Current model version</div>
+  <div style="display:flex; flex-wrap:wrap; gap:24px;">
+    <div><div style="font-size:0.68rem; color:#5A5A8A;">Version</div><div style="font-size:1.1rem; font-weight:700; color:#D0D0F0; font-family:monospace;">{cur['version_id']}</div></div>
+    <div><div style="font-size:0.68rem; color:#5A5A8A;">Trained</div><div style="font-size:0.88rem; color:#B0B0D0;">{cur['utc_timestamp'][:19].replace('T',' ')} UTC</div></div>
+    <div><div style="font-size:0.68rem; color:#5A5A8A;">Model type</div><div style="font-size:0.88rem; color:#B0B0D0;">{cur['model_type']}</div></div>
+    <div><div style="font-size:0.68rem; color:#5A5A8A;">Labels</div><div style="font-size:0.88rem; color:#B0B0D0;">{cur['n_total_labels']} ({cur['n_confirmed']} confirmed, {cur['n_cleared']} cleared)</div></div>
+  </div>
+  <div style="margin-top:14px; border-top:1px solid #2A2A4A; padding-top:12px; display:flex; gap:24px; flex-wrap:wrap;">
+    <div><div style="font-size:0.68rem; color:#5A5A8A;">Training data hash</div><div style="font-size:0.78rem; color:#7070A0; font-family:monospace;">{cur['training_data_hash'][:32]}...</div></div>
+    <div><div style="font-size:0.68rem; color:#5A5A8A;">Detection rate (val)</div><div style="font-size:0.88rem; color:#{'6BCB77' if det and det >= 0.8 else 'FFD93D' if det else '6A6A9A'};">{f"{det:.1%}" if det is not None else "N/A"}</div></div>
+    <div><div style="font-size:0.68rem; color:#5A5A8A;">FP rate (val)</div><div style="font-size:0.88rem; color:#{'6BCB77' if fpr is not None and fpr <= 0.1 else 'FF6B6B' if fpr else '6A6A9A'};">{f"{fpr:.1%}" if fpr is not None else "N/A"}</div></div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+                if len(versions) > 1:
+                    st.caption(f"{len(versions)} total versions in registry.")
+                    ver_df = pd.DataFrame([{
+                        "Version":    v["version_id"],
+                        "Trained":    v["utc_timestamp"][:19].replace("T", " "),
+                        "Model":      v["model_type"],
+                        "Labels":     v["n_total_labels"],
+                        "Det. rate":  f"{v['val_detection_rate']:.1%}" if v.get("val_detection_rate") is not None else "N/A",
+                        "FP rate":    f"{v['val_false_pos_rate']:.1%}"  if v.get("val_false_pos_rate")  is not None else "N/A",
+                        "Data hash":  v["training_data_hash"][:16] + "...",
+                    } for v in versions])
+                    st.dataframe(ver_df, hide_index=True, use_container_width=True)
+        except Exception as exc:
+            st.warning(f"Model registry unavailable: {exc}")
+
+        st.markdown("---")
+
+        # ── Static methodology card ───────────────────────────────────────────
         st.markdown("""
 <div style="max-width:780px;">
 
-### System Overview
+### System overview
 
 | Field | Value |
 |---|---|
 | **System name** | Physician Billing Anomaly Detection Demo |
-| **Version** | Phase 11 (all upgrades) |
-| **Purpose** | Decision-SUPPORT for human billing auditors |
+| **Version** | Security-enhanced (audit trail + model registry + privacy noise) |
+| **Purpose** | Decision-support for human billing auditors |
 | **Automated decisions** | None — human review required for all flags |
-| **Data** | SYNTHETIC — all providers and claims are fictional |
+| **Data** | Synthetic — all providers and claims are fictional |
 
 ---
 
-### Detection Layers
+### Detection layers
 
 | Layer | Method | Max pts | Notes |
 |---|---|---|---|
 | Rules | Deterministic: impossible day, duplicate billing, unbundling | 50 | HIGH confidence; binary violations |
 | Peer stats | MAD modified z-score within specialty + practice-setting cohort | 25 | One-sided (over-billing only) |
-| ML ensemble | IsolationForest 50% + LOF 30% + OC-SVM 20%, majority vote | 15 | Requires ≥ 2/3 detectors to agree |
+| ML ensemble | IsolationForest 50% + LOF 30% + OC-SVM 20%, majority vote | 15 | Requires >= 2/3 detectors to agree |
 | Code-mix drift | KL divergence + cosine distance vs specialty cohort median | 10 | Catches unusual code pattern shifts |
 | Temporal | CUSUM change-point on monthly volume + spike detection | 5 | Catches sudden-onset billing increases |
-| Feedback | Semi-supervised XGBoost on auditor-confirmed dispositions | 10 | Active only when ≥ 6 labelled examples exist |
+| Feedback | Semi-supervised XGBoost on auditor-confirmed dispositions | 10 | Active only when >= 6 labelled examples exist |
 
 **Total max score:** 100 (clipped)
 
 ---
 
-### Confidence Tiers & Expected Recovery
+### Confidence tiers & expected recovery
 
-| Tier | Criteria | Recovery Likelihood |
+| Tier | Criteria | Recovery likelihood |
 |---|---|---|
 | **HIGH** | Rule violation (any) | 70% |
-| **MEDIUM** | ≥ 2 stat signals, or 1 signal + ML anomaly | 40% |
+| **MEDIUM** | >= 2 stat signals, or 1 signal + ML anomaly | 40% |
 | **LOW** | Single weak signal | 15% |
 
-Expected recovery = estimated exposure × likelihood. Worklist is ranked by `risk_score × log(1 + expected_recovery / 1000)`.
-
 ---
 
-### Known Limitations & Fairness
+### Known limitations & fairness
 
 - **TRAP03 (sub-threshold marathoner):** Flagged as false positive (peer stats). Long individual days are statistically unusual even when clinically explainable. Auditor judgement required.
-- **Fairness audit (Phase 9):** No statistically significant over-flagging by specialty or clinic detected (chi-square p > 0.05 for all groups).
-- **Feedback model:** Trained on a small seed of 11 dispositions; classification confidence improves with more auditor labels.
-- **All data is SYNTHETIC.** This system is a demo only and is not suitable for production use without significant additional validation.
+- **Fairness audit:** No statistically significant over-flagging by specialty or clinic detected (chi-square p > 0.05 for all groups).
+- **Feedback model:** Trained on a small seed of dispositions; classification confidence improves with more auditor labels.
+- **All data is synthetic.** This system is a demo only and is not suitable for production use without significant additional validation.
 
 ---
 
-### Explainability
+### Explainability & privacy
 
-SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. Top-3 driving features shown in the Explanation tab. Full SHAP matrix saved to `shap_values.csv`.
+SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. Top-3 driving features are shown in the Explanation tab.
+
+**Privacy notice:** Displayed SHAP contribution values include calibrated Laplace noise (epsilon shown per explanation). This is a demo-grade privacy measure, NOT a formal differential-privacy guarantee across all queries. Formal DP requires a managed privacy budget across all queries.
 
 </div>
 """)
+
+    # ═══════════════ AUDIT TRAIL TAB ══════════════════════════════════════════
+    with tab_audit:
+        st.markdown(
+            '<div class="section-title"><span class="section-dot"></span>'
+            'Immutable Audit Trail</div>',
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            "Append-only event log. Every flag, view, and auditor action is "
+            "recorded with a SHA-256 hash chain. Verify Integrity checks that "
+            "no record has been altered or deleted."
+        )
+
+        col_v, col_e, col_spacer = st.columns([1, 1, 4])
+        with col_v:
+            if st.button("🔍  Verify Integrity", key="audit_verify"):
+                try:
+                    import audit_log as _al
+                    res = _al.verify_integrity()
+                    if res["ok"]:
+                        st.success(f"✓ {res['message']}")
+                    else:
+                        st.error(f"⚠ {res['message']}")
+                except Exception as exc:
+                    st.error(f"Audit log error: {exc}")
+        with col_e:
+            if st.button("📥  Export to CSV", key="audit_export"):
+                try:
+                    import audit_log as _al
+                    n = _al.export_to_csv()
+                    st.success(f"Exported {n} records → audit_log_export.csv")
+                except Exception as exc:
+                    st.error(f"Export error: {exc}")
+
+        st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
+
+        try:
+            import audit_log as _al
+            recent = _al.get_recent(200)
+            if not recent:
+                st.info(
+                    "No audit events recorded yet. Run `python scoring.py` to "
+                    "generate the first batch of flag_generated events."
+                )
+            else:
+                df_log = pd.DataFrame(recent)
+                # Friendly column order
+                show_cols = [c for c in
+                    ["id", "utc_timestamp", "event_type", "user", "provider_id",
+                     "model_version", "action_taken", "signals_shown", "reasoning"]
+                    if c in df_log.columns]
+                st.dataframe(
+                    df_log[show_cols],
+                    use_container_width=True,
+                    height=500,
+                    hide_index=True,
+                )
+                st.caption(f"{len(recent)} most recent events shown (newest first).")
+        except Exception as exc:
+            st.warning(f"Could not load audit log: {exc}")
 
 
 # ── Provider detail ───────────────────────────────────────────────────────────
@@ -814,6 +956,83 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     st.markdown("**Active signals:**")
     st.markdown(signal_badges(pid, rules, peer, ml, prow), unsafe_allow_html=True)
     st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
+
+    # ── Auditor action buttons ────────────────────────────────────────────────
+    st.markdown(
+        '<div style="font-size:0.78rem; font-weight:600; color:#7070A0; '
+        'margin-bottom:6px;">Record disposition (logged to audit trail):</div>',
+        unsafe_allow_html=True,
+    )
+    _user = st.session_state.get("auditor_id", "auditor")
+
+    # Build signals list for the audit log entry
+    _sigs = []
+    if not rules.empty and not rules[rules["provider_id"] == pid].empty:
+        _sigs += rules[rules["provider_id"] == pid]["rule"].tolist()
+    if prow.get("peer_score", 0) > 0:
+        _sigs.append("peer_stats")
+    if prow.get("ml_is_anomaly", 0):
+        _sigs.append(f"ml_ensemble:{prow.get('ml_score', 0):.0f}")
+
+    btn_c, btn_cl, btn_i, _ = st.columns([1, 1, 1.5, 4])
+
+    with btn_c:
+        if st.button("✓  Confirm", key=f"btn_confirm_{pid}", type="primary"):
+            try:
+                import audit_log as _al
+                from feedback import record_disposition
+                _al.append_event(
+                    "action_taken",
+                    provider_id=pid,
+                    user=_user,
+                    signals_shown=_sigs,
+                    action_taken="confirmed",
+                    reasoning=f"Auditor {_user} confirmed flag",
+                )
+                record_disposition(pid, "confirmed",
+                                   notes=f"Confirmed via dashboard by {_user}",
+                                   source="dashboard")
+                st.success(f"Recorded: {pid} confirmed")
+            except Exception as exc:
+                st.error(f"Error: {exc}")
+
+    with btn_cl:
+        if st.button("✗  Clear", key=f"btn_clear_{pid}"):
+            try:
+                import audit_log as _al
+                from feedback import record_disposition
+                _al.append_event(
+                    "action_taken",
+                    provider_id=pid,
+                    user=_user,
+                    signals_shown=_sigs,
+                    action_taken="cleared",
+                    reasoning=f"Auditor {_user} cleared flag",
+                )
+                record_disposition(pid, "cleared",
+                                   notes=f"Cleared via dashboard by {_user}",
+                                   source="dashboard")
+                st.success(f"Recorded: {pid} cleared")
+            except Exception as exc:
+                st.error(f"Error: {exc}")
+
+    with btn_i:
+        if st.button("⚠  Investigating", key=f"btn_invest_{pid}"):
+            try:
+                import audit_log as _al
+                _al.append_event(
+                    "action_taken",
+                    provider_id=pid,
+                    user=_user,
+                    signals_shown=_sigs,
+                    action_taken="investigating",
+                    reasoning=f"Auditor {_user} opened investigation",
+                )
+                st.info(f"Recorded: {pid} under investigation")
+            except Exception as exc:
+                st.error(f"Error: {exc}")
+
+    st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
 
     # Risk gauge + tabs layout
     gauge_col, tabs_col = st.columns([1, 3])
@@ -890,7 +1109,30 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                     if any(v != 0 for v in vals):
                         st.plotly_chart(shap_bar_chart(clean_feats, vals),
                                         use_container_width=True)
-                    st.caption("Positive SHAP = feature pushes toward anomaly; negative = away from anomaly.")
+
+                    # ── Privacy noise indicator ──────────────────────────────
+                    _eps  = shap_row.iloc[0].get("privacy_epsilon")
+                    _note = shap_row.iloc[0].get("privacy_note", "")
+                    if _eps and not pd.isna(_eps):
+                        st.markdown(
+                            f'<div style="background:rgba(80,60,0,0.25); border:1px solid '
+                            f'rgba(200,150,0,0.4); border-radius:6px; padding:8px 12px; '
+                            f'font-size:0.75rem; color:#C8A020; margin-top:4px;">'
+                            f'<strong>Privacy notice (epsilon={float(_eps):.1f}):</strong> '
+                            f'Explanation values include calibrated Laplace privacy noise. '
+                            f'This is a <em>demo-grade</em> privacy measure, NOT a formal '
+                            f'differential-privacy guarantee across all queries.</div>',
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.caption(
+                            "Privacy noise: not applied "
+                            "(run explain.py to regenerate with privacy.py)."
+                        )
+                    st.caption(
+                        "Positive SHAP = feature pushes toward anomaly; "
+                        "negative = away from anomaly."
+                    )
                     st.markdown("---")
 
             if pid in expls:

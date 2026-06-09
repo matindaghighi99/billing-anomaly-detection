@@ -201,22 +201,64 @@ def build_shap_explanations(df: pd.DataFrame = None) -> pd.DataFrame:
     shap_df.insert(0, "provider_id", provider_ids)
     shap_df.to_csv(OUTPUT_SHAP_CSV, index=False)
 
+    # Compute global sensitivity for privacy noise (from the full SHAP matrix)
+    _shap_sensitivity = None
+    _epsilon          = None
+    try:
+        from privacy import _auto_sensitivity, noise_top_vals, DEFAULT_EPSILON
+        _epsilon         = DEFAULT_EPSILON
+        _shap_sensitivity = _auto_sensitivity(anomaly_shap)
+    except ImportError:
+        pass  # privacy module unavailable; plain SHAP values used
+
     rows = []
     for i, pid in enumerate(provider_ids):
         contribs = pd.Series(anomaly_shap[i], index=feature_names)
-        top3 = contribs.nlargest(3)
+        top3     = contribs.nlargest(3)
+
+        top_true = top3.values.copy().astype(float)
+
+        # Apply calibrated display noise when privacy module is available
+        if _shap_sensitivity is not None and _epsilon is not None:
+            top_display = noise_top_vals(
+                top_true,
+                sensitivity=_shap_sensitivity,
+                epsilon=_epsilon,
+                seed=hash(pid) % (2**31),   # deterministic per provider
+            )
+        else:
+            top_display = top_true
+
         top_features = "; ".join(top3.index.tolist())
-        parts = [_feature_label(f) for f, v in top3.items() if v > 0.001]
+        parts = [_feature_label(f) for f, v in zip(top3.index, top_display)
+                 if v > 0.001]
         explanation = ("Flagged due to: " + ", ".join(parts) + ".") if parts \
                       else "No dominant single-feature driver."
-        rows.append({
+
+        row = {
             "provider_id":   pid,
             "top_features":  top_features,
             "explanation":   explanation,
-            "shap_top1_val": round(float(top3.iloc[0]), 4) if len(top3) > 0 else 0.0,
-            "shap_top2_val": round(float(top3.iloc[1]), 4) if len(top3) > 1 else 0.0,
-            "shap_top3_val": round(float(top3.iloc[2]), 4) if len(top3) > 2 else 0.0,
-        })
+            "shap_top1_val": round(float(top_display[0]), 4) if len(top_display) > 0 else 0.0,
+            "shap_top2_val": round(float(top_display[1]), 4) if len(top_display) > 1 else 0.0,
+            "shap_top3_val": round(float(top_display[2]), 4) if len(top_display) > 2 else 0.0,
+        }
+        if _epsilon is not None:
+            row["privacy_epsilon"]     = _epsilon
+            row["privacy_sensitivity"] = round(_shap_sensitivity, 6)
+            row["privacy_note"] = (
+                "Explanation values include calibrated Laplace privacy noise "
+                f"(epsilon={_epsilon}). This is a demo-grade privacy measure, "
+                "NOT a formal differential-privacy guarantee across all queries."
+            )
+        else:
+            row["privacy_epsilon"]     = None
+            row["privacy_sensitivity"] = None
+            row["privacy_note"] = (
+                "Privacy noise not applied (privacy module unavailable). "
+                "Plain SHAP values shown."
+            )
+        rows.append(row)
 
     expl_df = pd.DataFrame(rows)
     expl_df.to_csv(OUTPUT_EXPL_CSV, index=False)

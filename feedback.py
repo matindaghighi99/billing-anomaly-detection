@@ -148,9 +148,14 @@ def run_feedback_model(verbose: bool = True) -> pd.DataFrame:
     X_train = labelled[feat_cols].values.astype(float)
     y_train = labelled["label"].values
 
+    _using_xgb = False
     try:
         from xgboost import XGBClassifier
+        _using_xgb = True
     except ImportError:
+        pass
+
+    if not _using_xgb:
         if verbose:
             print("  xgboost not installed; falling back to LogisticRegression.")
         from sklearn.linear_model import LogisticRegression
@@ -159,11 +164,17 @@ def run_feedback_model(verbose: bool = True) -> pd.DataFrame:
         X_train = scaler.fit_transform(X_train)
         clf     = LogisticRegression(max_iter=1000, random_state=42)
         clf.fit(X_train, y_train)
-
+        _hyperparams = {"model": "LogisticRegression", "max_iter": 1000,
+                        "random_state": 42}
         X_all = features[feat_cols].values.astype(float)
         X_all = scaler.transform(X_all)
         probs = clf.predict_proba(X_all)[:, 1]
     else:
+        from xgboost import XGBClassifier
+        _hyperparams = {
+            "model": "XGBClassifier", "n_estimators": 100, "max_depth": 3,
+            "learning_rate": 0.1, "random_state": 42,
+        }
         clf = XGBClassifier(
             n_estimators=100, max_depth=3, learning_rate=0.1,
             use_label_encoder=False, eval_metric="logloss",
@@ -172,6 +183,35 @@ def run_feedback_model(verbose: bool = True) -> pd.DataFrame:
         clf.fit(X_train, y_train)
         X_all = features[feat_cols].values.astype(float)
         probs = clf.predict_proba(X_all)[:, 1]
+
+    # Register model version and log to audit trail
+    try:
+        import model_registry as _mr
+        version_id = _mr.register_model(
+            clf,
+            X_train,
+            y_train,
+            hyperparameters=_hyperparams,
+            n_confirmed=int(n_confirmed),
+            n_cleared=int(n_cleared),
+        )
+        if verbose:
+            print(f"  Model registered as version {version_id} in model_registry/")
+        try:
+            import audit_log as _al
+            _al.append_event(
+                "model_updated",
+                model_version=version_id,
+                reasoning=(
+                    f"Feedback model retrained on {len(y_train)} labels "
+                    f"({n_confirmed} confirmed, {n_cleared} cleared)"
+                ),
+            )
+        except Exception:
+            pass
+    except Exception as exc:
+        if verbose:
+            print(f"  Warning: model_registry not available ({exc})")
 
     # Only add points above the 0.5 decision boundary.
     # prob < 0.5 (cleared/uncertain) → 0 pts; prob = 1.0 → FEEDBACK_MAX_PTS.

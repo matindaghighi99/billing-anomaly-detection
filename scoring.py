@@ -268,6 +268,42 @@ def build_risk_scores() -> pd.DataFrame:
     ]
     result = flagged[out_cols].reset_index(drop=True)
     result.to_csv(OUTPUT_CSV, index=False)
+
+    # Append flag_generated events to the immutable audit trail.
+    # Wrapped in try/except so a missing audit_log never blocks scoring.
+    try:
+        import audit_log as _al
+        _current_version = None
+        try:
+            import model_registry as _mr
+            v = _mr.current_version()
+            if v:
+                _current_version = v["version_id"]
+        except Exception:
+            pass
+
+        for _, row in result.iterrows():
+            sigs = []
+            if row["rules_score"] > 0:
+                sigs.append(str(row.get("rules_reasons", "rules")))
+            if row["peer_score"] > 0:
+                sigs.append("peer_stats")
+            if row["ml_is_anomaly"]:
+                sigs.append(f"ml_ensemble:{row['ml_score']:.0f}")
+            if row["codemix_flag"]:
+                sigs.append("codemix_drift")
+            if row["temporal_flag"]:
+                sigs.append("temporal_change_point")
+            _al.append_event(
+                "flag_generated",
+                provider_id=row["provider_id"],
+                model_version=_current_version,
+                signals_shown=sigs,
+                reasoning=row["top_reason"],
+            )
+    except Exception:
+        pass  # never block scoring output on audit log errors
+
     return result
 
 
