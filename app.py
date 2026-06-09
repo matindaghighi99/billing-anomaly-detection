@@ -1247,19 +1247,33 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                     )
                     st.markdown("---")
 
+            _has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+            _expl_label = (
+                "Audit summary (AI-enriched via Claude):"
+                if _has_key else
+                "Audit summary (template — set ANTHROPIC_API_KEY for AI-enriched):"
+            )
             if pid in expls:
+                _is_ai = "[Generated with Anthropic API]" in expls[pid]["explanation"]
+                if _has_key and not _is_ai:
+                    if st.button("Regenerate with Claude", icon=":material/auto_awesome:", key=f"regen_expl_{pid}"):
+                        with st.spinner("Calling Claude…"):
+                            from explain import build_explanations
+                            build_explanations(use_api=True)
+                            st.cache_data.clear()
+                        st.rerun()
                 st.text_area(
-                    "Audit summary (set ANTHROPIC_API_KEY for AI-enriched):",
+                    _expl_label,
                     value=expls[pid]["explanation"],
                     height=260,
                     key=f"expl_{pid}",
                 )
             else:
-                st.info("Full explanation not pre-generated for this provider.")
-                if st.button("Generate explanation now", key=f"gen_expl_{pid}"):
-                    with st.spinner("Running explain.py…"):
+                st.info("Explanation not pre-generated for this provider.")
+                if st.button("Generate explanation now", icon=":material/auto_awesome:", key=f"gen_expl_{pid}"):
+                    with st.spinner("Calling Claude…" if _has_key else "Building template…"):
                         from explain import build_explanations
-                        build_explanations()
+                        build_explanations(use_api=_has_key)
                         st.cache_data.clear()
                     st.rerun()
 
