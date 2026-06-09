@@ -170,58 +170,187 @@ def render_login_screen() -> None:
     """Render the full-page login form.  Calls st.stop() until login succeeds."""
     st.markdown("""
 <style>
-  [data-testid="stSidebar"] { display: none; }
-  .login-card {
-    max-width: 380px; margin: 60px auto 0;
-    background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
-    border: 1px solid #2D2D4E; border-radius: 14px; padding: 38px 34px;
+  /* ── page chrome ── */
+  [data-testid="stSidebar"]  { display: none !important; }
+  .stAppHeader               { visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
+  .stApp                     { background: #080814 !important; min-height: 100vh; }
+
+  /* ── remove sidebar space so main takes full width ── */
+  [data-testid="stAppViewContainer"] > section[data-testid="stMain"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+    min-width: 100% !important;
   }
-  .login-title  { font-size:1.3rem; font-weight:700; color:#E0E0FF; text-align:center; margin-bottom:4px; }
-  .login-sub    { font-size:0.75rem; color:#5A5A8A; text-align:center; margin-bottom:26px; }
-  .login-notice {
-    font-size:0.71rem; color:#8A6A00;
-    background:rgba(160,120,0,0.12); border:1px solid rgba(160,120,0,0.3);
-    border-radius:6px; padding:8px 12px; margin-top:16px; text-align:center;
+
+  /* ── centre the content column ── */
+  div[data-testid="stMainBlockContainer"] {
+    max-width: 440px !important;
+    padding: 32px 1.5rem 2rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
-  .demo-creds   { font-size:0.68rem; color:#383870; text-align:center; margin-top:8px; }
+
+  /* ── logo / title block ── */
+  .lg-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .lg-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #1E1E4E, #2A2A6E);
+    border: 1px solid #3A3A7E;
+    border-radius: 14px;
+    margin-bottom: 14px;
+  }
+  .lg-title {
+    font-size: 1.35rem; font-weight: 700;
+    color: #E4E4FF; letter-spacing: 0.2px;
+    margin-bottom: 4px;
+  }
+  .lg-sub {
+    font-size: 0.7rem; color: #5A5A8A;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* ── form card (targets Streamlit's own form container) ── */
+  [data-testid="stForm"] {
+    background: linear-gradient(160deg, #111128 0%, #0E0E22 100%);
+    border: 1px solid #252548;
+    border-radius: 16px;
+    padding: 32px 28px 24px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  }
+
+  /* ── input labels ── */
+  [data-testid="stForm"] label p {
+    color: #8080B8 !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+
+  /* ── text inputs ── */
+  [data-testid="stForm"] input {
+    background: #0A0A1C !important;
+    border: 1px solid #2A2A50 !important;
+    border-radius: 8px !important;
+    color: #D8D8F8 !important;
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+    transition: border-color 0.15s;
+  }
+  [data-testid="stForm"] input:focus {
+    border-color: #5555CC !important;
+    box-shadow: 0 0 0 3px rgba(85,85,204,0.18) !important;
+  }
+
+  /* ── password eye toggle ── */
+  [data-testid="stForm"] [data-testid="InputInstructions"] { display: none; }
+
+  /* ── sign-in button ── */
+  [data-testid="stFormSubmitButton"] button {
+    background: linear-gradient(135deg, #4040B8, #5555CC) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 9px !important;
+    font-weight: 600 !important;
+    font-size: 0.92rem !important;
+    padding: 11px !important;
+    margin-top: 6px;
+    width: 100%;
+    letter-spacing: 0.3px;
+    transition: opacity 0.15s;
+  }
+  [data-testid="stFormSubmitButton"] button:hover { opacity: 0.88 !important; }
+
+  /* ── notice banner ── */
+  .lg-notice {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: rgba(140,100,0,0.1);
+    border: 1px solid rgba(140,100,0,0.28);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 16px;
+    font-size: 0.71rem; color: #9A7820; line-height: 1.5;
+  }
+  .lg-creds {
+    text-align: center;
+    font-size: 0.67rem; color: #333360;
+    margin-top: 10px; letter-spacing: 0.3px;
+  }
+
+  /* ── error message ── */
+  [data-testid="stForm"] ~ div [data-testid="stAlertContainer"] {
+    border-radius: 8px; margin-top: 10px;
+  }
 </style>
 """, unsafe_allow_html=True)
 
-    _, mid, _ = st.columns([1, 2, 1])
-    with mid:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="login-title">'
-            '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" '
-            'fill="none" stroke="#C0C0F8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" '
-            'style="vertical-align:middle;margin-right:6px;">'
-            '<path d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
-            'Billing Anomaly Audit</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown('<div class="login-sub">DECISION SUPPORT ONLY — SYNTHETIC DATA</div>', unsafe_allow_html=True)
+    # ── JS injection: runs after Emotion, guarantees header/container override ─
+    import streamlit.components.v1 as _components
+    _components.html("""
+<script>
+(function() {
+  function applyStyles() {
+    var s = document.createElement('style');
+    s.innerHTML = `
+      .stAppHeader { visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
+      div[data-testid="stMainBlockContainer"] { max-width: 440px !important; margin-left: auto !important; margin-right: auto !important; padding-top: 32px !important; }
+    `;
+    document.head.appendChild(s);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyStyles);
+  } else {
+    applyStyles();
+  }
+  // Re-apply after short delay to beat React re-renders
+  setTimeout(applyStyles, 300);
+  setTimeout(applyStyles, 800);
+})();
+</script>
+""", height=0)
 
-        with st.form("login_form", clear_on_submit=False):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            submitted = st.form_submit_button("Sign in", use_container_width=True, type="primary")
-
-        if submitted:
-            if attempt_login(username, password):
-                st.rerun()
-            else:
-                st.error("Invalid username or password.")
-
-        st.markdown("""
-<div class="login-notice">
-  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C08000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>
-  MOCK AUTHENTICATION — demo credentials only.<br>
-  Not suitable for real healthcare data.
-</div>
-<div class="demo-creds">
-  auditor1 / supervisor1 / admin1
+    # ── logo + title (pure HTML — renders fine as markdown) ──────────────────
+    st.markdown("""
+<div class="lg-header">
+  <div class="lg-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
+         fill="none" stroke="#9090E8" stroke-width="1.5"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+  </div>
+  <div class="lg-title">Billing Anomaly Audit</div>
+  <div class="lg-sub">Decision support only &nbsp;·&nbsp; Synthetic data</div>
 </div>
 """, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── form (Streamlit renders this in [data-testid="stForm"], styled above) ─
+    with st.form("login_form", clear_on_submit=False):
+        username  = st.text_input("Username")
+        password  = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Sign in", use_container_width=True, type="primary")
+
+    if submitted:
+        if attempt_login(username, password):
+            st.rerun()
+        else:
+            st.error("Invalid username or password.")
+
+    # ── disclaimer ────────────────────────────────────────────────────────────
+    st.markdown("""
+<div class="lg-notice">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+       fill="none" stroke="#9A7820" stroke-width="1.5"
+       stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
+    <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+  </svg>
+  <span>Mock authentication — demo credentials only. Not suitable for real healthcare data.</span>
+</div>
+<div class="lg-creds">auditor1 &nbsp;/&nbsp; supervisor1 &nbsp;/&nbsp; admin1</div>
+""", unsafe_allow_html=True)
 
     st.stop()   # halt page rendering until login succeeds and st.rerun() fires
