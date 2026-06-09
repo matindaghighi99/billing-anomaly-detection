@@ -86,6 +86,10 @@ def _group_stats(dimension: str, providers: pd.DataFrame,
     n_total   = len(all_ids)
     n_flagged_global = len(flagged_ids & all_ids)
 
+    # Load scores once outside the loop (was O(n_groups) file reads before)
+    scores = pd.read_csv(SCORES_CSV, dtype={"provider_id": str})
+    score_map = dict(zip(scores["provider_id"], scores["risk_score"]))
+
     for grp_val, grp_df in providers.groupby(dimension):
         grp_ids    = set(grp_df["provider_id"])
         n_grp      = len(grp_ids)
@@ -105,8 +109,6 @@ def _group_stats(dimension: str, providers: pd.DataFrame,
         precision_proxy = n_confirmed / n_flagged_grp if n_flagged_grp > 0 else None
 
         # Mean risk score across group (all providers, not just flagged)
-        scores = pd.read_csv(SCORES_CSV, dtype={"provider_id": str})
-        score_map = dict(zip(scores["provider_id"], scores["risk_score"]))
         grp_scores = [score_map.get(pid, 0.0) for pid in grp_ids]
         mean_risk  = float(np.mean(grp_scores))
 

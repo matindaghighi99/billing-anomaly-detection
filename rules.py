@@ -163,7 +163,12 @@ def run_rules(df: pd.DataFrame = None) -> pd.DataFrame:
         check_duplicates(df),
         check_unbundling(df),
     ]
-    flags = pd.concat([p for p in parts if not p.empty], ignore_index=True)
+    non_empty = [p for p in parts if not p.empty]
+    if not non_empty:
+        flags = pd.DataFrame(columns=["provider_id", "provider_name", "specialty",
+                                       "rule", "evidence", "estimated_exposure"])
+    else:
+        flags = pd.concat(non_empty, ignore_index=True)
     flags.to_csv(OUTPUT_CSV, index=False)
     return flags
 

@@ -209,46 +209,44 @@ def build_risk_scores() -> pd.DataFrame:
     # Dollar-weighted rank score (used only for ordering)
     df["_rank_score"] = df["risk_score"] * np.log1p(df["estimated_exposure"] / 1_000)
 
-    # Top reason
-    def top_reason(row):
-        reasons = []
-        if pd.notna(row.get("rules_reasons")) and row["rules_reasons"]:
-            reasons.append(f"Rule: {row['rules_reasons']}")
-        if pd.notna(row.get("peer_reasons")) and row["peer_reasons"]:
-            reasons.append(f"Peer z>3: {row['peer_reasons']}")
-        if row["ml_is_anomaly"]:
-            reasons.append(f"ML anomaly score {row['ml_score']:.0f}/100")
-        if row["codemix_flag"]:
-            reasons.append(f"Code-mix drift KL={row['kl_divergence']:.3f}")
-        if row["temporal_flag"]:
-            reasons.append(f"Temporal change-point")
-        if row["feedback_label"]:
-            reasons.append(f"Feedback model confirmed")
-        return " | ".join(reasons) if reasons else "no flags"
+    # ── Top reason (vectorized — no per-row Python apply) ────────────────────
+    has_rule   = df["rules_reasons"].notna() & (df["rules_reasons"] != "")
+    has_peer   = df["peer_reasons"].notna()  & (df["peer_reasons"]  != "")
+    has_ml     = df["ml_is_anomaly"].astype(bool)
+    has_cm     = df["codemix_flag"].astype(bool)
+    has_temp   = df["temporal_flag"].astype(bool)
+    has_fb     = df["feedback_label"].astype(bool)
 
-    df["top_reason"] = df.apply(top_reason, axis=1)
+    rule_str  = np.where(has_rule,   "Rule: "         + df["rules_reasons"].fillna(""),    "")
+    peer_str  = np.where(has_peer,   "Peer z>3: "     + df["peer_reasons"].fillna(""),     "")
+    ml_str    = np.where(has_ml,     "ML anomaly score " + df["ml_score"].map("{:.0f}".format) + "/100", "")
+    cm_str    = np.where(has_cm,     "Code-mix drift KL=" + df["kl_divergence"].map("{:.3f}".format), "")
+    temp_str  = np.where(has_temp,   "Temporal change-point",                              "")
+    fb_str    = np.where(has_fb,     "Feedback model confirmed",                           "")
 
-    # ── Phase 6: confidence tier ──────────────────────────────────────────────
-    def assign_confidence(row) -> str:
-        if row["rules_score"] > 0:
-            return "HIGH"
-        n_stat_signals = (
-            int(row["peer_score"] > 0) +
-            int(row["codemix_flag"]) +
-            int(row["temporal_flag"])
-        )
-        if n_stat_signals >= 2 or (n_stat_signals == 1 and row["ml_is_anomaly"]):
-            return "MEDIUM"
-        return "LOW"
+    def _join_parts(row_parts):
+        return " | ".join(p for p in row_parts if p) or "no flags"
 
-    df["confidence"] = df.apply(assign_confidence, axis=1)
+    reason_parts = list(zip(rule_str, peer_str, ml_str, cm_str, temp_str, fb_str))
+    df["top_reason"] = [_join_parts(p) for p in reason_parts]
 
-    # ── Expected recovery = exposure x likelihood ─────────────────────────────
-    df["expected_recovery"] = df.apply(
-        lambda r: round(r["estimated_exposure"] *
-                        CONFIDENCE_LIKELIHOOD[r["confidence"]], 2),
-        axis=1,
+    # ── Phase 6: confidence tier (vectorized) ────────────────────────────────
+    n_stat = (
+        (df["peer_score"]    > 0).astype(int) +
+        df["codemix_flag"].astype(int) +
+        df["temporal_flag"].astype(int)
     )
+    medium_cond = (n_stat >= 2) | ((n_stat == 1) & df["ml_is_anomaly"].astype(bool))
+    df["confidence"] = np.where(
+        df["rules_score"] > 0, "HIGH",
+        np.where(medium_cond, "MEDIUM", "LOW")
+    )
+
+    # ── Expected recovery = exposure x likelihood (vectorized) ───────────────
+    likelihood_map = pd.Series(CONFIDENCE_LIKELIHOOD)
+    df["expected_recovery"] = (
+        df["estimated_exposure"] * df["confidence"].map(likelihood_map)
+    ).round(2)
 
     # ── Dollar-weighted rank score using expected recovery (not raw exposure) ─
     df["_rank_score"] = df["risk_score"] * np.log1p(df["expected_recovery"] / 1_000)
