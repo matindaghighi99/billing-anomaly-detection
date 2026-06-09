@@ -119,8 +119,114 @@ Open http://localhost:8501 in your browser.
   - Rule Evidence -- specific violations with dollar amounts + peer-stat outliers
   - Peer Comparison -- bar chart vs specialty median for 5 metrics
   - Monthly Volume -- claims and billing trend over the year
-  - Explanation -- SHAP feature drivers + plain-English audit summary
-- **Model Card** (bottom, expandable) -- methodology, confidence tiers, known limitations, fairness audit results
+  - Explanation -- SHAP feature drivers + plain-English audit summary + **privacy noise label**
+- **Confirm / Clear / Investigating buttons** in provider detail (logged to audit trail)
+- **Model Card** tab -- methodology, versioned model info, confidence tiers, limitations
+- **Audit Trail** tab -- recent events, Verify Integrity button, CSV export
+
+The remaining false positive (TRAP03) is a sub-threshold marathoner whose long working days are genuinely statistically unusual even though they stay below the 1,440-minute limit. PRV0127 has a single accidental duplicate claim -- a legitimate rule trigger.
+
+### Final worklist (top 11)
+
+| Rank | Provider | Type | Score | Confidence | Est. Exposure |
+|------|----------|------|-------|------------|---------------|
+| 1 | PRV0025 | volume_outlier | 88.2 | HIGH | $213,461 |
+| 2 | PRV0045 | impossible_day | 100.0 | HIGH | $37,966 |
+| 3 | PRV0089 | impossible_day | 90.4 | HIGH | $38,206 |
+| 4 | PRV0098 | volume_outlier | 36.5 | MEDIUM | $621,307 |
+| 5 | PRV0006 | upcoder | 47.4 | MEDIUM | $141,573 |
+| 6 | PRV0112 | novel | 53.6 | MEDIUM | $59,524 |
+| 7 | PRV0133 | duplicate | 60.8 | HIGH | $20,226 |
+| 9 | PRV0008 | upcoder | 39.8 | MEDIUM | $37,631 |
+| 10 | PRV0077 | duplicate | 64.0 | HIGH | $5,440 |
+| 11 | PRV0142 | unbundler | 83.4 | HIGH | $1,427 |
+
+---
+
+## Security Features (branch: security)
+
+Three additional modules strengthen accountability, reproducibility, and
+responsible-AI disclosure.
+
+### 1. Immutable Audit Trail (`audit_log.py`)
+
+Every system and user action is recorded in an append-only SQLite log
+(`audit_log.db`) with a SHA-256 hash chain: each row's hash covers the
+previous row's hash plus its own content, so any alteration or deletion
+is detectable.
+
+Event types logged:
+- `flag_generated` — automatically when `scoring.py` runs
+- `flag_viewed` — when an auditor selects a provider in the dashboard
+- `action_taken` — when Confirm / Clear / Investigating buttons are clicked
+- `model_updated` — when the feedback model is retrained
+
+```bash
+# Test the hash chain and tamper detection
+python audit_log.py
+
+# Export the full log to CSV for auditors
+python -c "import audit_log; print(audit_log.export_to_csv())"
+```
+
+The dashboard's **Audit Trail** tab shows recent events, offers a
+"Verify Integrity" button, and lets auditors export to CSV.
+
+### 2. Model Versioning + Model Card (`model_registry.py`)
+
+Every feedback-model training run is registered under a monotonically
+incrementing version ID (`v001`, `v002`, …). Each version saves:
+- a pickled model artifact
+- a machine-readable model card (`model_card.json`) with SHA-256 hash
+  of the exact training data used
+- a human-readable model card (`model_card.md`) with hyperparameters,
+  validation metrics (detection rate + FP rate on held-out data), and
+  known limitations
+
+```bash
+# Train and register a model version
+python feedback.py --seed-demo
+
+# Reload a specific version and replay its scores
+python -c "
+import model_registry as mr
+clf, card = mr.load_version('v001')
+print(card['version_id'], card['training_data_hash'][:16])
+"
+
+# Run the self-test
+python model_registry.py
+```
+
+The dashboard's **Model Card** tab shows the current version, training
+data hash, and validation metrics.
+
+### 3. SHAP Explanations with Privacy Noise (`privacy.py` + `explain.py`)
+
+Displayed SHAP contribution values have calibrated Laplace noise added
+before they are shown or written to `shap_explanations.csv`:
+
+```
+noise ~ Laplace(0, sensitivity / epsilon)
+sensitivity = 95th percentile of |SHAP values| across all providers
+epsilon = 1.0 (configurable in privacy.py DEFAULT_EPSILON)
+```
+
+**Honesty requirement** — every code path, model card, and dashboard
+panel that shows noised values labels them as:
+
+> "Explanation values include calibrated Laplace privacy noise (epsilon
+> shown). This is a demo-grade privacy measure, NOT a formal
+> differential-privacy guarantee across all queries. Formal DP requires
+> a managed privacy budget."
+
+If `diffprivlib` is installed it is used for the Laplace draw; otherwise
+the fallback is `numpy.random.default_rng().laplace()`.
+
+```bash
+# Run the self-test (bounds check + ordering preservation)
+python privacy.py
+```
 
 ---
 
@@ -131,19 +237,22 @@ Open http://localhost:8501 in your browser.
 | `claims.csv` | ~54,000 synthetic claims |
 | `ground_truth.json` | Planted bad-actor + clean-trap IDs |
 | `rules_flags.csv` | Deterministic rule violations |
-| `peer_flags.csv` | Peer-stat outliers (MAD |z| > 3.5) |
+| `peer_flags.csv` | Peer-stat outliers (MAD \|z\| > 3.5) |
 | `provider_metrics.csv` | Per-provider billing metrics |
 | `provider_codemix.csv` | KL divergence + cosine distance per provider |
 | `provider_temporal.csv` | CUSUM scores + spike flags per provider |
 | `ml_scores.csv` | Ensemble anomaly scores (0-100) + per-detector flags |
 | `risk_scores.csv` | Combined ranked risk scores with confidence + expected recovery |
 | `feedback_scores.csv` | Semi-supervised feedback model scores |
-| `shap_values.csv` | Full SHAP value matrix (provider x feature) |
-| `shap_explanations.csv` | Plain-English SHAP attribution per provider |
+| `shap_values.csv` | Full SHAP value matrix (provider x feature) — raw values |
+| `shap_explanations.csv` | SHAP attribution per provider — **values include privacy noise** |
 | `explanations.json` | Full audit summaries (template + optional API) |
 | `fairness_summary.csv` | Flag rates + chi-square p-values by specialty/clinic/setting |
 | `fairness_report.md` | Human-readable fairness audit report |
 | `dispositions.csv` | Auditor-recorded confirmed/cleared dispositions |
+| `audit_log.db` | Append-only SQLite audit trail (hash-chained) |
+| `audit_log_export.csv` | CSV export of the audit trail (generated on demand) |
+| `model_registry/` | Per-version model artifacts, JSON + Markdown model cards |
 
 ---
 
@@ -158,6 +267,10 @@ After all 11 upgrade phases vs. the baseline:
 | Avg rank of bad actors | 6.1 | **5.8** | -0.3 |
 | False-positive rate (traps) | 100% (3/3) | **33% (1/3)** | -67% |
 | Spurious FP in top-20 | 8 | **1** (PRV0127) | -7 |
+
+The security additions (audit_log, model_registry, privacy noise) are
+observability and accountability layers only; they do not alter the
+detection pipeline or its scores.
 
 The remaining false positive (TRAP03) is a sub-threshold marathoner whose long working days are genuinely statistically unusual even though they stay below the 1,440-minute limit. PRV0127 has a single accidental duplicate claim -- a legitimate rule trigger.
 
@@ -187,11 +300,15 @@ peer_stats.py      -- MAD z-score benchmarking with cohort stratification
 codemix.py         -- KL divergence + cosine code-mix drift
 temporal.py        -- CUSUM change-point + spike detection
 anomaly_model.py   -- IF + LOF + OC-SVM ensemble; DuckDB feature matrix
-feedback.py        -- semi-supervised feedback loop
+feedback.py        -- semi-supervised feedback loop (registers model versions)
 scoring.py         -- multi-layer risk scoring, confidence tiers, expected recovery
-explain.py         -- SHAP feature attribution + plain-English summaries
+explain.py         -- SHAP feature attribution + plain-English summaries (with privacy noise)
 fairness.py        -- disparate-impact audit by specialty/clinic/setting
 validate.py        -- ground-truth validation harness
 run_pipeline.py    -- orchestrator with two-stage funnel (--fast mode)
 app.py             -- Streamlit audit dashboard
+
+audit_log.py       -- (security) append-only hash-chained audit trail
+model_registry.py  -- (security) model versioning + machine/human-readable model cards
+privacy.py         -- (security) calibrated Laplace noise for displayed SHAP values
 ```

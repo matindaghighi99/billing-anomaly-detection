@@ -164,7 +164,7 @@ def build_feature_matrix(df: pd.DataFrame,
         daily_min = df.groupby(["provider_id", "service_date"])["service_minutes"].sum()
         core["max_daily_minutes"] = daily_min.groupby("provider_id").max()
 
-    # ── Top-tier code share ──────────────────────────────────────────────────
+    # ── Top-tier code share (vectorized) ────────────────────────────────────
     SPECIALTY_TOP = {
         "Family Medicine": {"99215"},
         "Cardiology":      {"99215"},
@@ -174,14 +174,21 @@ def build_feature_matrix(df: pd.DataFrame,
         "Surgery":         {"27447", "43239"},
     }
 
-    def top_share(sub):
-        spec = df.loc[sub.index, "specialty"].iloc[0]
-        top  = SPECIALTY_TOP.get(spec, set())
-        return sub.isin(top).mean() if top else 0.0
-
-    core["top_tier_share"] = df.groupby("provider_id")["fee_code"].apply(
-        top_share, include_groups=False
+    # Build a per-row boolean: is this claim's fee_code a top-tier code for
+    # its provider's specialty?  Then aggregate per provider — no Python loop.
+    prov_spec = df.groupby("provider_id")["specialty"].first()
+    top_codes_for_provider = prov_spec.map(
+        lambda s: SPECIALTY_TOP.get(s, set())
     )
+    # Expand back to claim-level: map provider_id -> set of top codes
+    claim_top_set = df["provider_id"].map(top_codes_for_provider)
+    is_top = pd.Series(
+        [code in (tops if isinstance(tops, set) else set())
+         for code, tops in zip(df["fee_code"], claim_top_set)],
+        index=df.index,
+        dtype=float,
+    )
+    core["top_tier_share"] = is_top.groupby(df["provider_id"]).mean()
 
     # ── Per-code fraction (code-mix fingerprint) ─────────────────────────────
     code_counts = (
@@ -195,16 +202,16 @@ def build_feature_matrix(df: pd.DataFrame,
             code_fractions[c] = 0.0
     code_fractions = code_fractions[ALL_CODES].add_prefix("pct_")
 
-    # ── Shannon entropy of code distribution ────────────────────────────────
-    def entropy(row):
-        p = row[row > 0]
-        return float(-np.sum(p * np.log2(p)))
-
-    core["code_entropy"] = code_fractions.apply(entropy, axis=1)
+    # ── Shannon entropy (vectorized — no per-row Python apply) ──────────────
+    pct_vals = code_fractions.values.astype(float)
+    # Avoid log(0): replace 0 with 1 (log(1)=0, so those terms vanish)
+    safe_p = np.where(pct_vals > 0, pct_vals, 1.0)
+    entropy_vals = -np.sum(np.where(pct_vals > 0, pct_vals * np.log2(safe_p), 0.0), axis=1)
+    core["code_entropy"] = pd.Series(entropy_vals, index=code_fractions.index)
 
     # ── Assemble ──────────────────────────────────────────────────────────────
     features = core.join(code_fractions).join(spec_dummies)
-    features.fillna(0, inplace=True)
+    features = features.fillna(0)
     return features
 
 

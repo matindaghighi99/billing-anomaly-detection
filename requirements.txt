@@ -5,3 +5,12 @@ faker>=19.0.0
 streamlit>=1.28.0
 anthropic>=0.20.0
 plotly>=5.15.0
+
+# Phase 8 — SHAP feature attribution
+shap>=0.43.0
+
+# Phase 3 (security) — calibrated Laplace noise for displayed SHAP values
+# Optional: if not installed, privacy.py falls back to numpy's Laplace implementation.
+# Note: this provides the noise *mechanism* only; the system does NOT claim full
+# differential-privacy compliance (formal DP requires a managed privacy budget).
+diffprivlib>=0.6.0

@@ -108,7 +108,10 @@ def build_temporal_scores(df: pd.DataFrame) -> pd.DataFrame:
             "estimated_exposure": round(total_billed, 2),
         })
 
-    return pd.DataFrame(rows).sort_values("cusum_score", ascending=False)
+    result = pd.DataFrame(rows)
+    if result.empty:
+        return result
+    return result.sort_values("cusum_score", ascending=False)
 
 
 def run_temporal(df: pd.DataFrame = None):
@@ -119,7 +122,10 @@ def run_temporal(df: pd.DataFrame = None):
     scores = build_temporal_scores(df)
     scores.to_csv(OUTPUT_SCORES_CSV, index=False)
 
-    flags = scores[scores["temporal_flag"]].copy()
+    if scores.empty or "temporal_flag" not in scores.columns:
+        flags = pd.DataFrame()
+    else:
+        flags = scores[scores["temporal_flag"]].copy()
     flags.to_csv(OUTPUT_FLAGS_CSV, index=False)
     return scores, flags
 
