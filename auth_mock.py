@@ -170,10 +170,12 @@ def render_login_screen() -> None:
     """Render the full-page login form.  Calls st.stop() until login succeeds."""
     st.markdown("""
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600;700&family=Fira+Sans:wght@300;400;500;600&display=swap');
+
   /* ── page chrome ── */
   [data-testid="stSidebar"]  { display: none !important; }
   .stAppHeader               { visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
-  .stApp                     { background: #080814 !important; min-height: 100vh; }
+  .stApp                     { background: #060610 !important; min-height: 100vh; font-family: 'Fira Sans', system-ui, sans-serif !important; }
 
   /* ── remove sidebar space so main takes full width ── */
   [data-testid="stAppViewContainer"] > section[data-testid="stMain"] {
@@ -185,7 +187,7 @@ def render_login_screen() -> None:
   /* ── centre the content column ── */
   div[data-testid="stMainBlockContainer"] {
     max-width: 440px !important;
-    padding: 32px 1.5rem 2rem !important;
+    padding: 40px 1.5rem 2rem !important;
     margin-left: auto !important;
     margin-right: auto !important;
   }
@@ -193,97 +195,125 @@ def render_login_screen() -> None:
   /* ── logo / title block ── */
   .lg-header {
     text-align: center;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
   }
   .lg-icon {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 52px; height: 52px;
-    background: linear-gradient(135deg, #1E1E4E, #2A2A6E);
-    border: 1px solid #3A3A7E;
-    border-radius: 14px;
-    margin-bottom: 14px;
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #0F2744, #1E3A5F);
+    border: 1px solid #2563EB44;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 20px rgba(37,99,235,0.15);
   }
   .lg-title {
-    font-size: 1.35rem; font-weight: 700;
-    color: #E4E4FF; letter-spacing: 0.2px;
-    margin-bottom: 4px;
+    font-family: 'Fira Code', monospace !important;
+    font-size: 1.4rem; font-weight: 600;
+    color: #E8EEFF; letter-spacing: -0.3px;
+    margin-bottom: 6px;
   }
   .lg-sub {
-    font-size: 0.7rem; color: #5A5A8A;
-    letter-spacing: 1px; text-transform: uppercase;
+    font-size: 0.68rem; color: #4A5A7A;
+    letter-spacing: 1.2px; text-transform: uppercase;
   }
 
-  /* ── form card (targets Streamlit's own form container) ── */
+  /* ── form card ── */
   [data-testid="stForm"] {
-    background: linear-gradient(160deg, #111128 0%, #0E0E22 100%);
-    border: 1px solid #252548;
+    background: linear-gradient(160deg, #0C0C20 0%, #090916 100%);
+    border: 1px solid #1E2848;
     border-radius: 16px;
-    padding: 32px 28px 24px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    padding: 32px 28px 28px !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(37,99,235,0.06);
   }
 
   /* ── input labels ── */
   [data-testid="stForm"] label p {
-    color: #8080B8 !important;
-    font-size: 0.8rem !important;
+    color: #6878A8 !important;
+    font-size: 0.78rem !important;
     font-weight: 500 !important;
-    letter-spacing: 0.3px;
-    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
   }
 
   /* ── text inputs ── */
   [data-testid="stForm"] input {
-    background: #0A0A1C !important;
-    border: 1px solid #2A2A50 !important;
+    background: #07071A !important;
+    border: 1px solid #1E2848 !important;
     border-radius: 8px !important;
-    color: #D8D8F8 !important;
-    padding: 10px 14px !important;
+    color: #D0D8F0 !important;
+    padding: 11px 14px !important;
     font-size: 0.9rem !important;
-    transition: border-color 0.15s;
+    font-family: 'Fira Sans', sans-serif !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
   [data-testid="stForm"] input:focus {
-    border-color: #5555CC !important;
-    box-shadow: 0 0 0 3px rgba(85,85,204,0.18) !important;
+    border-color: #2563EB !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.2) !important;
+    outline: none !important;
   }
 
-  /* ── password eye toggle ── */
-  [data-testid="stForm"] [data-testid="InputInstructions"] { display: none; }
+  /* ── password eye toggle — match input background ── */
+  [data-testid="stForm"] [data-testid="InputInstructions"] { display: none !important; }
+  [data-testid="stForm"] button[kind="secondary"],
+  [data-testid="stForm"] [data-testid="baseButton-secondary"] {
+    background: #07071A !important;
+    border: none !important;
+    color: #4A5A7A !important;
+  }
+  [data-testid="stForm"] button[kind="secondary"]:hover {
+    background: #0E0E2A !important;
+    color: #8898C8 !important;
+  }
 
-  /* ── sign-in button ── */
+  /* ── sign-in button (professional trust-blue) ── */
   [data-testid="stFormSubmitButton"] button {
-    background: linear-gradient(135deg, #4040B8, #5555CC) !important;
+    background: #2563EB !important;
     color: #FFFFFF !important;
     border: none !important;
     border-radius: 9px !important;
     font-weight: 600 !important;
-    font-size: 0.92rem !important;
-    padding: 11px !important;
-    margin-top: 6px;
+    font-size: 0.9rem !important;
+    font-family: 'Fira Sans', sans-serif !important;
+    padding: 12px !important;
+    margin-top: 8px;
     width: 100%;
-    letter-spacing: 0.3px;
-    transition: opacity 0.15s;
+    letter-spacing: 0.4px;
+    transition: background 0.2s, transform 0.1s;
+    cursor: pointer;
   }
-  [data-testid="stFormSubmitButton"] button:hover { opacity: 0.88 !important; }
+  [data-testid="stFormSubmitButton"] button:hover {
+    background: #1D4ED8 !important;
+  }
+  [data-testid="stFormSubmitButton"] button:active {
+    transform: scale(0.99) !important;
+  }
 
   /* ── notice banner ── */
   .lg-notice {
-    display: flex; align-items: flex-start; gap: 8px;
-    background: rgba(140,100,0,0.1);
-    border: 1px solid rgba(140,100,0,0.28);
-    border-radius: 8px;
-    padding: 10px 14px;
+    display: flex; align-items: flex-start; gap: 10px;
+    background: rgba(120,90,0,0.09);
+    border: 1px solid rgba(120,90,0,0.22);
+    border-radius: 10px;
+    padding: 11px 14px;
     margin-top: 16px;
-    font-size: 0.71rem; color: #9A7820; line-height: 1.5;
+    font-size: 0.71rem; color: #8A7020; line-height: 1.6;
   }
   .lg-creds {
     text-align: center;
-    font-size: 0.67rem; color: #333360;
+    font-size: 0.67rem; color: #2A2A50;
     margin-top: 10px; letter-spacing: 0.3px;
   }
 
-  /* ── error message ── */
-  [data-testid="stForm"] ~ div [data-testid="stAlertContainer"] {
-    border-radius: 8px; margin-top: 10px;
+  /* ── error state ── */
+  [data-testid="stAlertContainer"] {
+    border-radius: 8px !important; margin-top: 8px !important;
+  }
+
+  /* ── reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    [data-testid="stForm"] input,
+    [data-testid="stFormSubmitButton"] button { transition: none !important; }
   }
 </style>
 """, unsafe_allow_html=True)
@@ -318,7 +348,7 @@ def render_login_screen() -> None:
 <div class="lg-header">
   <div class="lg-icon">
     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-         fill="none" stroke="#9090E8" stroke-width="1.5"
+         fill="none" stroke="#60A0E8" stroke-width="1.5"
          stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>
