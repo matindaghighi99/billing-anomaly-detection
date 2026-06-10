@@ -15,17 +15,105 @@ auth_mock.py — Mock role-based access control for the Billing Anomaly Dashboar
     • All auth events (login, logout, failures) recorded in the audit trail
 """
 
+import hashlib
+import hmac
+import json
+import os
+import time
+
 import streamlit as st
 
 # ---------------------------------------------------------------------------
-# Demo credentials — readable by anyone with file access; that is intentional
-# for a demo.  In production these would live in an identity provider, not here.
+# Credential store (demo hardening)
 # ---------------------------------------------------------------------------
-_DEMO_USERS: dict[str, dict] = {
+# Security improvements over the original plaintext-compare mock:
+#   • Passwords are stored ONLY as a salted SHA-256 digest in the user store;
+#     login uses a constant-time comparison (hmac.compare_digest) so timing
+#     cannot be used as an oracle.
+#   • Real deployments should supply credentials via the AUTH_USERS_JSON env
+#     var (JSON: {username: {"password_hash": <hex>, "role": ..., "display": ...}})
+#     together with a per-deployment AUTH_PWD_SALT, so no secrets live in source.
+#   • Repeated failed logins are rate-limited with a per-username lockout.
+#
+# This is still a DEMO mock. Production additionally requires an SSO/OAuth/SAML
+# identity provider, MFA, server-signed session tokens, and audited auth events.
+# ---------------------------------------------------------------------------
+
+_PWD_SALT = os.environ.get("AUTH_PWD_SALT", "billing-anomaly-demo-salt")
+
+
+def _hash_pw(password: str) -> str:
+    """Salted SHA-256 digest of a password (demo-grade; prefer bcrypt/argon2 in prod)."""
+    return hashlib.sha256(f"{_PWD_SALT}{password}".encode("utf-8")).hexdigest()
+
+
+# Demo plaintext is kept only to derive hashes at import time and to power the
+# on-screen demo hints. Override entirely with AUTH_USERS_JSON in production.
+_DEMO_PLAINTEXT: dict[str, dict] = {
     "auditor1":    {"password": "demo_auditor1",    "role": "auditor",    "display": "Alex Auditor"},    # pragma: allowlist secret
     "supervisor1": {"password": "demo_supervisor1", "role": "supervisor", "display": "Sam Supervisor"},  # pragma: allowlist secret
     "admin1":      {"password": "demo_admin1",      "role": "admin",      "display": "Admin User"},      # pragma: allowlist secret
 }
+
+
+def _load_users() -> dict[str, dict]:
+    """Build the user store: env-provided credentials win; demo map is fallback."""
+    raw = os.environ.get("AUTH_USERS_JSON")
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            users: dict[str, dict] = {}
+            for uname, rec in parsed.items():
+                pw_hash = rec.get("password_hash")
+                if not pw_hash and "password" in rec:
+                    pw_hash = _hash_pw(rec["password"])
+                users[uname] = {
+                    "pw_hash": pw_hash,
+                    "role":    rec.get("role", "auditor"),
+                    "display": rec.get("display", uname),
+                }
+            if users:
+                return users
+        except (ValueError, AttributeError):
+            # Malformed env config: fall back to demo rather than locking everyone out.
+            pass
+    return {
+        u: {"pw_hash": _hash_pw(r["password"]), "role": r["role"], "display": r["display"]}
+        for u, r in _DEMO_PLAINTEXT.items()
+    }
+
+
+_DEMO_USERS = _load_users()
+
+# ── Brute-force protection (in-process; demo-grade) ────────────────────────────
+_MAX_FAILED_ATTEMPTS = int(os.environ.get("AUTH_MAX_FAILED", "5"))
+_LOCKOUT_SECONDS     = int(os.environ.get("AUTH_LOCKOUT_SECONDS", "300"))
+_failed_attempts: dict[str, list] = {}   # username -> [count, first_fail_epoch]
+
+# ── Idle session timeout ───────────────────────────────────────────────────────
+_IDLE_TIMEOUT_SECONDS = int(os.environ.get("AUTH_IDLE_TIMEOUT_SECONDS", "1800"))
+
+
+def _is_locked_out(username: str) -> bool:
+    rec = _failed_attempts.get(username)
+    if not rec:
+        return False
+    count, first = rec
+    if count < _MAX_FAILED_ATTEMPTS:
+        return False
+    if time.time() - first >= _LOCKOUT_SECONDS:
+        _failed_attempts.pop(username, None)   # window expired; reset
+        return False
+    return True
+
+
+def _record_failure(username: str) -> None:
+    now = time.time()
+    rec = _failed_attempts.get(username)
+    if not rec or now - rec[1] >= _LOCKOUT_SECONDS:
+        _failed_attempts[username] = [1, now]
+    else:
+        rec[0] += 1
 
 # ---------------------------------------------------------------------------
 # Permission matrix
@@ -70,6 +158,7 @@ _KEY_VERIFIED = "_auth_verified"
 _KEY_ROLE     = "_auth_role"
 _KEY_USER     = "_auth_user"
 _KEY_DISPLAY  = "_auth_display"
+_KEY_LAST_ACT = "_auth_last_activity"
 
 
 # ---------------------------------------------------------------------------
@@ -77,8 +166,20 @@ _KEY_DISPLAY  = "_auth_display"
 # ---------------------------------------------------------------------------
 
 def is_authenticated() -> bool:
-    """True only when the current session completed a successful login."""
-    return bool(st.session_state.get(_KEY_VERIFIED, False))
+    """True only when the current session completed a successful login.
+
+    Enforces an idle timeout: a verified session that has been inactive for
+    longer than _IDLE_TIMEOUT_SECONDS is cleared and treated as logged out.
+    """
+    if not bool(st.session_state.get(_KEY_VERIFIED, False)):
+        return False
+    last = st.session_state.get(_KEY_LAST_ACT)
+    now  = time.time()
+    if last is not None and now - last > _IDLE_TIMEOUT_SECONDS:
+        st.session_state.clear()   # idle expiry → force re-login
+        return False
+    st.session_state[_KEY_LAST_ACT] = now   # refresh activity on each check
+    return True
 
 
 def current_role() -> str | None:
@@ -136,16 +237,27 @@ def attempt_login(username: str, password: str) -> bool:
     are ONLY ever written here.  They are never read from URL parameters,
     form hidden fields, or any other client-supplied source.
 
-    Returns True on success, False on bad credentials.
+    Returns True on success, False on bad credentials or while locked out.
     """
-    user_record = _DEMO_USERS.get(username)
-    if user_record is None or user_record["password"] != password:
+    if _is_locked_out(username):
         return False
 
+    user_record = _DEMO_USERS.get(username)
+    # Always hash the candidate (even for unknown users) and compare in constant
+    # time, so neither the existence of a username nor a near-correct password
+    # leaks through response timing.
+    candidate = _hash_pw(password or "")
+    stored    = user_record.get("pw_hash") if user_record else None
+    if stored is None or not hmac.compare_digest(candidate, stored):
+        _record_failure(username)
+        return False
+
+    _failed_attempts.pop(username, None)   # successful login clears the counter
     st.session_state[_KEY_VERIFIED] = True
     st.session_state[_KEY_ROLE]     = user_record["role"]
     st.session_state[_KEY_USER]     = username
     st.session_state[_KEY_DISPLAY]  = user_record["display"]
+    st.session_state[_KEY_LAST_ACT] = time.time()
     st.session_state["auditor_id"]  = username   # used by audit log trail
     return True
 
