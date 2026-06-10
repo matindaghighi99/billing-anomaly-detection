@@ -7,6 +7,9 @@ NEVER makes automated decisions — all outputs are for human review only.
 import json
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -71,8 +74,11 @@ st.set_page_config(
 # ── Global CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+  /* ── fonts — unified with login screen ── */
+  @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
   /* ── base ── */
-  html, body, [class*="css"] { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  html, body, [class*="css"] { font-family: 'Fira Sans', 'Segoe UI', system-ui, -apple-system, sans-serif; }
 
   /* ── warning banner ── */
   .banner {
@@ -105,7 +111,8 @@ st.markdown("""
     font-size: clamp(1.2rem, 1.4vw, 1.9rem); font-weight: 700;
     color: #E8E8FF; line-height: 1.1; white-space: nowrap; overflow: visible;
   }
-  .kpi-sub   { font-size: 0.73rem; color: #7878A0; margin-top: 8px; }
+  /* #9898C0 on #16213E ≈ 6.2:1 — WCAG AA (was #7878A0 ≈ 4.1:1, failing) */
+  .kpi-sub   { font-size: 0.73rem; color: #9898C0; margin-top: 8px; }
 
   /* ── section headings ── */
   .section-title {
@@ -147,14 +154,14 @@ st.markdown("""
     padding: 22px 26px; margin-bottom: 18px;
   }
   .prov-name { font-size: 1.45rem; font-weight: 700; color: #E0E0FF; }
-  .prov-pid  { font-size: 0.82rem; color: #6A6A9A; margin-top: 2px; font-family: monospace; }
+  .prov-pid  { font-size: 0.82rem; color: #8A8ABE; margin-top: 2px; font-family: 'Fira Code', monospace; letter-spacing: 0.3px; }
   .prov-stats {
     display: flex; gap: 0; margin-top: 18px;
     border-top: 1px solid #2A2A4A; padding-top: 16px; flex-wrap: wrap;
   }
   .prov-stat { flex: 1; min-width: 110px; padding: 0 20px 0 0; }
   .prov-stat + .prov-stat { border-left: 1px solid #2A2A4A; padding-left: 20px; }
-  .prov-stat-label { font-size: 0.68rem; color: #6A6A9A; text-transform: uppercase; letter-spacing: 0.9px; }
+  .prov-stat-label { font-size: 0.68rem; color: #8A8ABE; text-transform: uppercase; letter-spacing: 0.9px; }
   .prov-stat-value { font-size: 1.12rem; font-weight: 600; color: #D0D0F0; margin-top: 3px; }
 
   /* ── evidence cards ── */
@@ -175,11 +182,67 @@ st.markdown("""
     border-right: 1px solid #1E1E36;
   }
 
+  /* ── tabs — active state indicator ── */
+  [data-testid="stTabs"] [role="tablist"] {
+    border-bottom: 1px solid #1E2848;
+    gap: 4px;
+  }
+  [data-testid="stTabs"] [role="tab"] {
+    font-family: 'Fira Sans', system-ui, sans-serif !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    color: #6878A8 !important;
+    padding: 8px 16px !important;
+    border-radius: 6px 6px 0 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  [data-testid="stTabs"] [role="tab"]:hover {
+    color: #A0B0D8 !important;
+    background: rgba(37,99,235,0.06) !important;
+  }
+  [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+    color: #C8D8FF !important;
+    border-bottom: 2px solid #2563EB !important;
+    background: rgba(37,99,235,0.08) !important;
+    font-weight: 600 !important;
+  }
+
+  /* ── focus-visible ring for keyboard nav (WCAG 2.1 §2.4.11) ── */
+  :focus-visible {
+    outline: 2px solid #2563EB !important;
+    outline-offset: 2px !important;
+  }
+
   /* ── scrollbar ── */
   ::-webkit-scrollbar       { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: #0E1117; }
   ::-webkit-scrollbar-thumb { background: #2A2A4A; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #3A3A6A; }
+
+  /* ── app background — prevents white bleed behind the main content area ── */
+  .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"],
+  [data-testid="stMainBlockContainer"] {
+    background: #0D0D1A !important;
+  }
+
+  /* ── responsive KPI grid ── */
+  /* On narrow viewports Streamlit's flex row wraps; keep cards legible */
+  @media (max-width: 768px) {
+    .kpi-card { padding: 16px 18px; }
+    .kpi-value { font-size: 1.35rem !important; }
+    .kpi-label { font-size: 0.66rem; letter-spacing: 0.9px; }
+    /* stack provider-stat row on small screens */
+    .prov-stats { flex-direction: column; gap: 12px; }
+    .prov-stat + .prov-stat { border-left: none; padding-left: 0; border-top: 1px solid #2A2A4A; padding-top: 12px; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-card { padding: 14px 14px; }
+    .kpi-value { font-size: 1.2rem !important; }
+    .section-title { font-size: 0.9rem; }
+    .prov-name { font-size: 1.2rem; }
+  }
 
   /* ── reduced-motion: disable decorative transitions ── */
   @media (prefers-reduced-motion: reduce) {
@@ -573,7 +636,7 @@ def render_sidebar(scores: pd.DataFrame):
             auth_mock.logout()   # clears ALL session state, then st.rerun()
 
         st.markdown("---")
-        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AUDITOR ID</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#9090B8; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AUDITOR ID</div>', unsafe_allow_html=True)
         # Auditor ID is pre-filled from the logged-in username; allow override for
         # cases where a shared account acts on behalf of another named auditor.
         auditor_id = st.text_input(
@@ -589,7 +652,7 @@ def render_sidebar(scores: pd.DataFrame):
             st.cache_data.clear()
             st.rerun()
 
-        st.markdown('<div style="font-size:0.65rem; color:#6060A0; text-align:center; margin-top:20px;">SYNTHETIC DATA ONLY<br>All providers and claims are fictional.</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.65rem; color:#7878A8; text-align:center; margin-top:20px;">SYNTHETIC DATA ONLY<br>All providers and claims are fictional.</div>', unsafe_allow_html=True)
 
     return sel_spec, sel_conf, min_score
 
@@ -837,7 +900,6 @@ def main():
                     )
                 else:
                     cur = versions[-1]
-                    val = cur.get
                     det = cur.get("val_detection_rate")
                     fpr = cur.get("val_false_pos_rate")
                     st.markdown(f"""
@@ -953,34 +1015,38 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                 "no record has been altered or deleted."
             )
 
-            col_v, col_e, col_spacer = st.columns([1, 1, 4])
+            col_v, col_e, col_spacer = st.columns([3, 3, 4])
             with col_v:
-                if st.button("Verify Integrity", icon=":material/shield:", key="audit_verify"):
-                    try:
-                        # ── Function-level gate (second line of defence) ──────
-                        auth_mock.require_permission("verify_integrity")
-                        import audit_log as _al
-                        res = _al.verify_integrity()
-                        if res["ok"]:
-                            st.success(res['message'])
-                        else:
-                            st.error(res['message'])
-                    except PermissionError as pe:
-                        st.error(f"Access denied: {pe}")
-                    except Exception as exc:
-                        st.error(f"Audit log error: {exc}")
+                _vi_clicked = st.button("Verify Integrity", icon=":material/shield:", key="audit_verify", use_container_width=True)
             with col_e:
-                if st.button("Export to CSV", icon=":material/download:", key="audit_export"):
-                    try:
-                        # ── Function-level gate (second line of defence) ──────
-                        auth_mock.require_permission("export_audit_log")
-                        import audit_log as _al
-                        n = _al.export_to_csv()
-                        st.success(f"Exported {n} records → audit_log_export.csv")
-                    except PermissionError as pe:
-                        st.error(f"Access denied: {pe}")
-                    except Exception as exc:
-                        st.error(f"Export error: {exc}")
+                _ex_clicked = st.button("Export to CSV", icon=":material/download:", key="audit_export", use_container_width=True)
+
+            if _vi_clicked:
+                try:
+                    # ── Function-level gate (second line of defence) ──────
+                    auth_mock.require_permission("verify_integrity")
+                    import audit_log as _al
+                    res = _al.verify_integrity()
+                    if res["ok"]:
+                        st.success(res['message'])
+                    else:
+                        st.error(res['message'])
+                except PermissionError as pe:
+                    st.error(f"Access denied: {pe}")
+                except Exception as exc:
+                    st.error(f"Audit log error: {exc}")
+
+            if _ex_clicked:
+                try:
+                    # ── Function-level gate (second line of defence) ──────
+                    auth_mock.require_permission("export_audit_log")
+                    import audit_log as _al
+                    n = _al.export_to_csv()
+                    st.success(f"Exported {n} records → audit_log_export.csv")
+                except PermissionError as pe:
+                    st.error(f"Access denied: {pe}")
+                except Exception as exc:
+                    st.error(f"Export error: {exc}")
 
             st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
 
@@ -1014,7 +1080,9 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
 
 def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                              worklist, score_map):
-    prow       = worklist[worklist["provider_id"] == pid].iloc[0]
+    # Convert to dict so .get() calls below are dict lookups, not the deprecated
+    # pd.Series.get() which raises FutureWarning in pandas 2.1+ and is removed in 3.0.
+    prow       = worklist[worklist["provider_id"] == pid].iloc[0].to_dict()
     confidence = prow.get("confidence", "N/A")
     exp_rec    = float(prow.get("expected_recovery", prow.get("estimated_exposure", 0)))
     exposure   = float(prow.get("estimated_exposure", 0))
@@ -1074,72 +1142,76 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     if prow.get("ml_is_anomaly", 0):
         _sigs.append(f"ml_ensemble:{prow.get('ml_score', 0):.0f}")
 
-    btn_c, btn_cl, btn_i, _ = st.columns([1.5, 1.5, 2, 3])
+    btn_c, btn_cl, btn_i, _ = st.columns([2, 2, 3, 2])
 
     with btn_c:
-        if st.button("Confirm", icon=":material/check:", key=f"btn_confirm_{pid}", type="primary"):
-            try:
-                auth_mock.require_permission("take_action")   # function-level gate
-                import audit_log as _al
-                from feedback import record_disposition
-                _al.append_event(
-                    "action_taken",
-                    provider_id=pid,
-                    user=_user,
-                    signals_shown=_sigs,
-                    action_taken="confirmed",
-                    reasoning=f"Auditor {_user} confirmed flag",
-                )
-                record_disposition(pid, "confirmed",
-                                   notes=f"Confirmed via dashboard by {_user}",
-                                   source="dashboard")
-                st.success(f"Recorded: {pid} confirmed")
-            except PermissionError as pe:
-                st.error(f"Access denied: {pe}")
-            except Exception as exc:
-                st.error(f"Error: {exc}")
-
+        _confirm_clicked = st.button("Confirm", icon=":material/check:", key=f"btn_confirm_{pid}", type="primary", use_container_width=True)
     with btn_cl:
-        if st.button("Clear", icon=":material/close:", key=f"btn_clear_{pid}"):
-            try:
-                auth_mock.require_permission("take_action")   # function-level gate
-                import audit_log as _al
-                from feedback import record_disposition
-                _al.append_event(
-                    "action_taken",
-                    provider_id=pid,
-                    user=_user,
-                    signals_shown=_sigs,
-                    action_taken="cleared",
-                    reasoning=f"Auditor {_user} cleared flag",
-                )
-                record_disposition(pid, "cleared",
-                                   notes=f"Cleared via dashboard by {_user}",
-                                   source="dashboard")
-                st.success(f"Recorded: {pid} cleared")
-            except PermissionError as pe:
-                st.error(f"Access denied: {pe}")
-            except Exception as exc:
-                st.error(f"Error: {exc}")
-
+        _clear_clicked = st.button("Clear", icon=":material/close:", key=f"btn_clear_{pid}", use_container_width=True)
     with btn_i:
-        if st.button("Investigating", icon=":material/flag:", key=f"btn_invest_{pid}"):
-            try:
-                auth_mock.require_permission("take_action")   # function-level gate
-                import audit_log as _al
-                _al.append_event(
-                    "action_taken",
-                    provider_id=pid,
-                    user=_user,
-                    signals_shown=_sigs,
-                    action_taken="investigating",
-                    reasoning=f"Auditor {_user} opened investigation",
-                )
-                st.info(f"Recorded: {pid} under investigation")
-            except PermissionError as pe:
-                st.error(f"Access denied: {pe}")
-            except Exception as exc:
-                st.error(f"Error: {exc}")
+        _invest_clicked = st.button("Investigating", icon=":material/flag:", key=f"btn_invest_{pid}", use_container_width=True)
+
+    if _confirm_clicked:
+        try:
+            auth_mock.require_permission("take_action")   # function-level gate
+            import audit_log as _al
+            from feedback import record_disposition
+            _al.append_event(
+                "action_taken",
+                provider_id=pid,
+                user=_user,
+                signals_shown=_sigs,
+                action_taken="confirmed",
+                reasoning=f"Auditor {_user} confirmed flag",
+            )
+            record_disposition(pid, "confirmed",
+                               notes=f"Confirmed via dashboard by {_user}",
+                               source="dashboard")
+            st.success(f"Recorded: {pid} confirmed")
+        except PermissionError as pe:
+            st.error(f"Access denied: {pe}")
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+
+    if _clear_clicked:
+        try:
+            auth_mock.require_permission("take_action")   # function-level gate
+            import audit_log as _al
+            from feedback import record_disposition
+            _al.append_event(
+                "action_taken",
+                provider_id=pid,
+                user=_user,
+                signals_shown=_sigs,
+                action_taken="cleared",
+                reasoning=f"Auditor {_user} cleared flag",
+            )
+            record_disposition(pid, "cleared",
+                               notes=f"Cleared via dashboard by {_user}",
+                               source="dashboard")
+            st.success(f"Recorded: {pid} cleared")
+        except PermissionError as pe:
+            st.error(f"Access denied: {pe}")
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+
+    if _invest_clicked:
+        try:
+            auth_mock.require_permission("take_action")   # function-level gate
+            import audit_log as _al
+            _al.append_event(
+                "action_taken",
+                provider_id=pid,
+                user=_user,
+                signals_shown=_sigs,
+                action_taken="investigating",
+                reasoning=f"Auditor {_user} opened investigation",
+            )
+            st.info(f"Recorded: {pid} under investigation")
+        except PermissionError as pe:
+            st.error(f"Access denied: {pe}")
+        except Exception as exc:
+            st.error(f"Error: {exc}")
 
     st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
 
@@ -1211,9 +1283,10 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             if not shap_df.empty:
                 shap_row = shap_df[shap_df["provider_id"] == pid]
                 if not shap_row.empty:
-                    feats = shap_row.iloc[0]["top_features"].split(";")[:3]
-                    vals  = [float(shap_row.iloc[0].get(f"shap_top{i}_val", 0))
-                             for i in range(1, len(feats) + 1)]
+                    shap_r = shap_row.iloc[0].to_dict()
+                    feats  = shap_r["top_features"].split(";")[:3]
+                    vals   = [float(shap_r.get(f"shap_top{i}_val", 0))
+                              for i in range(1, len(feats) + 1)]
                     clean_feats = [f.strip() for f in feats]
                     if any(v != 0 for v in vals):
                         st.plotly_chart(shap_bar_chart(clean_feats, vals),
@@ -1244,19 +1317,33 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                     )
                     st.markdown("---")
 
+            _has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+            _expl_label = (
+                "Audit summary (AI-enriched via Claude):"
+                if _has_key else
+                "Audit summary (template — set ANTHROPIC_API_KEY for AI-enriched):"
+            )
             if pid in expls:
+                _is_ai = "[Generated with Anthropic API]" in expls[pid]["explanation"]
+                if _has_key and not _is_ai:
+                    if st.button("Regenerate with Claude", icon=":material/auto_awesome:", key=f"regen_expl_{pid}"):
+                        with st.spinner("Calling Claude…"):
+                            from explain import build_explanations
+                            build_explanations(use_api=True)
+                            st.cache_data.clear()
+                        st.rerun()
                 st.text_area(
-                    "Audit summary (set ANTHROPIC_API_KEY for AI-enriched):",
+                    _expl_label,
                     value=expls[pid]["explanation"],
                     height=260,
                     key=f"expl_{pid}",
                 )
             else:
-                st.info("Full explanation not pre-generated for this provider.")
-                if st.button("Generate explanation now", key=f"gen_expl_{pid}"):
-                    with st.spinner("Running explain.py…"):
+                st.info("Explanation not pre-generated for this provider.")
+                if st.button("Generate explanation now", icon=":material/auto_awesome:", key=f"gen_expl_{pid}"):
+                    with st.spinner("Calling Claude…" if _has_key else "Building template…"):
                         from explain import build_explanations
-                        build_explanations()
+                        build_explanations(use_api=_has_key)
                         st.cache_data.clear()
                     st.rerun()
 

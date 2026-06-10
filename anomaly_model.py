@@ -250,15 +250,21 @@ def _normalise(scores: np.ndarray) -> np.ndarray:
     return (inverted - lo) / (hi - lo + 1e-9) * 100
 
 
-def fit_ensemble(features: pd.DataFrame) -> pd.DataFrame:
-    """Fit IF + LOF + OC-SVM, return per-provider consensus scores."""
+def fit_ensemble(features: pd.DataFrame,
+                 contamination: float = 0.10) -> pd.DataFrame:
+    """Fit IF + LOF + OC-SVM, return per-provider consensus scores.
+
+    contamination: expected fraction of anomalies. Callers should pass
+    (n_candidates / n_total_providers) when running in funnel mode so the
+    detectors aren't forced to label a fixed 10% of an already-filtered set.
+    """
     provider_ids = features.index.tolist()
     X = features.values.astype(float)
 
     scaler   = RobustScaler()
     X_scaled = scaler.fit_transform(X)
 
-    CONTAM = 0.10
+    CONTAM = float(np.clip(contamination, 0.01, 0.49))
 
     # ── Isolation Forest ─────────────────────────────────────────────────────
     iforest = IsolationForest(
@@ -336,7 +342,15 @@ def run_anomaly_model(df: pd.DataFrame = None,
     if features.empty:
         _EMPTY_SCORES_DF.to_csv(OUTPUT_CSV, index=False)
         return _EMPTY_SCORES_DF.copy()
-    scores   = fit_ensemble(features)
+
+    # In funnel mode, contamination = subset fraction; avoids forcing 10% of an
+    # already-filtered candidate set to be flagged when true prevalence differs.
+    if provider_subset is not None:
+        n_total = df["provider_id"].nunique()
+        contam  = len(provider_subset) / max(n_total, 1)
+    else:
+        contam = 0.10
+    scores   = fit_ensemble(features, contamination=contam)
     meta     = df[["provider_id","provider_name","specialty"]].drop_duplicates("provider_id")
     scores   = scores.merge(meta, on="provider_id")
 

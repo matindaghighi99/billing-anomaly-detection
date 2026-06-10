@@ -96,9 +96,30 @@ python validate.py
 **Optional Anthropic API enrichment** (explain.py):
 
 ```bash
-set ANTHROPIC_API_KEY=sk-ant-...
+# Copy the example and fill in your key (never commit the real .env)
+cp .env.example .env
+# then edit .env and set ANTHROPIC_API_KEY=sk-ant-...
 python explain.py
 ```
+
+---
+
+## Secret Leak Prevention
+
+A `detect-secrets` pre-commit hook blocks commits that contain API keys, tokens,
+or other secrets. Set it up once after cloning:
+
+```bash
+pip install pre-commit detect-secrets
+pre-commit install
+```
+
+> **If `pre-commit install` fails with "Cowardly refusing … core.hooksPath":**
+> run `git config --global --unset-all core.hooksPath` first, then retry.
+
+The hook uses `.secrets.baseline` to track known false-positives (the intentional
+demo credentials in `auth_mock.py`). If you add a new intentional dummy value,
+run `detect-secrets scan > .secrets.baseline` to update the baseline and commit it.
 
 ---
 

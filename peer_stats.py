@@ -197,12 +197,29 @@ def zscore_within_cohort(metrics: pd.DataFrame) -> pd.DataFrame:
     """Modified z-scores within specialty + practice_setting cohort.
 
     If a cohort is smaller than MIN_COHORT_SIZE, falls back to the
-    full-specialty distribution to keep the estimate stable.
+    full-specialty distribution and records this in the cohort_fallback column
+    so downstream callers (flags, dashboard) can surface the lower reliability.
     """
     numeric_cols = [
         "avg_billed", "claims_per_day", "top_tier_share",
         "services_per_patient", "avg_minutes",
     ]
+
+    # Record cohort size and fallback status for every provider upfront.
+    cohort_sizes    = metrics.groupby("cohort_key")["provider_id"].transform("count")
+    metrics         = metrics.copy()
+    metrics["cohort_size"]     = cohort_sizes
+    metrics["cohort_fallback"] = cohort_sizes < MIN_COHORT_SIZE
+
+    fallback_cohorts = metrics.loc[metrics["cohort_fallback"], "cohort_key"].unique()
+    if len(fallback_cohorts):
+        warnings.warn(
+            f"[peer_stats] {len(fallback_cohorts)} cohort(s) below "
+            f"MIN_COHORT_SIZE={MIN_COHORT_SIZE} — falling back to full-specialty "
+            f"z-scores: {list(fallback_cohorts)}. "
+            f"Flags from these cohorts have lower statistical reliability.",
+            UserWarning,
+        )
 
     for col in numeric_cols:
         z_col  = f"z_{col}"
@@ -275,6 +292,8 @@ def build_flags(metrics: pd.DataFrame) -> pd.DataFrame:
                 "peer_median":        round(float(medians[col]), 4),
                 "z_score":            round(float(z), 2),
                 "estimated_exposure": round(float(prov["total_billed"]), 2),
+                "cohort_size":        int(prov.get("cohort_size", 0)),
+                "cohort_fallback":    bool(prov.get("cohort_fallback", False)),
             })
 
     return pd.DataFrame(rows)
@@ -290,6 +309,7 @@ _PEER_REQUIRED = [
 _EMPTY_FLAGS   = pd.DataFrame(columns=[
     "provider_id","provider_name","specialty","cohort_key","practice_setting",
     "metric","provider_value","peer_median","z_score","estimated_exposure",
+    "cohort_size","cohort_fallback",
 ])
 _EMPTY_METRICS = pd.DataFrame(columns=[
     "provider_id","provider_name","specialty","total_claims","total_billed",

@@ -187,8 +187,18 @@ def run_rules(df: pd.DataFrame = None) -> pd.DataFrame:
         _EMPTY_FLAGS.to_csv(OUTPUT_CSV, index=False)
         return _EMPTY_FLAGS.copy()
 
-    # Coerce service_minutes to numeric so rule 1 arithmetic works
-    df["service_minutes"] = pd.to_numeric(df["service_minutes"], errors="coerce").fillna(0)
+    # Coerce service_minutes to numeric; drop rows where it can't be parsed.
+    # Filling with 0 would make corrupt durations invisible to the impossible-day
+    # rule (a 0-minute claim never pushes the daily total over 1 440).
+    df["service_minutes"] = pd.to_numeric(df["service_minutes"], errors="coerce")
+    n_bad = int(df["service_minutes"].isna().sum())
+    if n_bad:
+        warnings.warn(
+            f"[rules] {n_bad} claim(s) have non-numeric service_minutes "
+            f"and are excluded from all rule checks.",
+            UserWarning,
+        )
+    df = df.dropna(subset=["service_minutes"])
 
     parts = [
         check_impossible_days(df),

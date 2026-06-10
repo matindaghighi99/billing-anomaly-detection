@@ -15,9 +15,14 @@ Outputs:
 
 import json
 import os
+import warnings
 
 import numpy as np
 import pandas as pd
+
+# Model used for Anthropic API enrichment. Override via env var so this
+# never needs a code change when a model is retired or upgraded.
+_ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-4-7")
 
 RULES_CSV   = "rules_flags.csv"
 PEER_CSV    = "peer_flags.csv"
@@ -330,14 +335,19 @@ def _call_anthropic(provider_id: str, provider_name: str, specialty: str,
             f"No headings, no bullet points.\n\n{template_text}"
         )
         msg = client.messages.create(
-            model="claude-opus-4-7",
+            model=_ANTHROPIC_MODEL,
             max_tokens=400,
             system=system,
             messages=[{"role": "user", "content": prompt}],
         )
         enriched = msg.content[0].text.strip()
-        return enriched + "\n\n[Generated with Anthropic API]"
-    except Exception:
+        return enriched + f"\n\n[Generated with Anthropic API / {_ANTHROPIC_MODEL}]"
+    except Exception as exc:
+        warnings.warn(
+            f"[explain] Anthropic API call failed for {provider_id!r} "
+            f"(model={_ANTHROPIC_MODEL!r}): {exc}. Falling back to template.",
+            UserWarning,
+        )
         return template_text
 
 

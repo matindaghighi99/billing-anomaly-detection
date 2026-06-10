@@ -85,14 +85,18 @@ def main():
     from anomaly_model import run_anomaly_model
 
     if args.fast:
+        # Import scoring constants so the funnel always uses the same weights
+        # as the final scorer — divergence here caused bad actors to fall off
+        # the candidate list before ML ever saw them.
+        from scoring import RULE_POINTS, PEER_MAX_PTS
+
         # Compute stage-1 preliminary scores to identify ML candidates
         rules_df = pd.read_csv("rules_flags.csv", dtype={"provider_id": str})
         peer_df  = pd.read_csv("peer_flags.csv",  dtype={"provider_id": str})
 
-        rule_pts  = {"impossible_day": 40, "duplicate_billing": 35, "unbundling": 30}
         rules_pts = (
             rules_df.copy()
-                    .assign(pts=rules_df["rule"].map(rule_pts).fillna(25))
+                    .assign(pts=rules_df["rule"].map(RULE_POINTS).fillna(25))
                     .groupby("provider_id")["pts"].sum()
                     .clip(upper=50)
         )
@@ -101,7 +105,7 @@ def main():
                 lambda z: min((z - 3.5) * 2 + 5, 10)
             ))
             .groupby("provider_id")["pts"].sum()
-            .clip(upper=25)
+            .clip(upper=PEER_MAX_PTS)
         )
         stage1 = rules_pts.add(peer_pts, fill_value=0)
         candidates = stage1[stage1 >= STAGE1_THRESHOLD].index.tolist()

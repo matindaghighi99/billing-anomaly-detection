@@ -91,10 +91,13 @@ def _score_run(gt, scores):
                 "is_fp": float(r["risk_score"]) >= RISK_SCORE_FP_CUTOFF,
             })
 
-    # ── Spurious FP: unknown providers in top 20 ─────────────────────────────
-    top20_ids     = set(scores.head(20)["provider_id"].tolist())
-    known_ids     = set(bad_actors) | set(clean_providers.keys())
-    spurious_fp20 = sorted(top20_ids - known_ids)
+    # ── Unregistered providers in top 20 ─────────────────────────────────────
+    # "Unknown" means not listed in ground_truth.json — not necessarily a false
+    # positive. If ground_truth.json is stale or incomplete these could be real
+    # bad actors. Labelling them "spurious FP" was misleading.
+    top20_ids          = set(scores.head(20)["provider_id"].tolist())
+    known_ids          = set(bad_actors) | set(clean_providers.keys())
+    unregistered_top20 = sorted(top20_ids - known_ids)
 
     # ── Aggregate metrics ─────────────────────────────────────────────────────
     n_total       = len(ba_rows)
@@ -107,10 +110,10 @@ def _score_run(gt, scores):
     fp_rate       = round(n_fp / n_traps * 100, 1) if n_traps else 0.0
 
     return {
-        "ba_rows":       ba_rows,
-        "fp_rows":       fp_rows,
-        "spurious_fp20": spurious_fp20,
-        "n_total":       n_total,
+        "ba_rows":            ba_rows,
+        "fp_rows":            fp_rows,
+        "unregistered_top20": unregistered_top20,
+        "n_total":            n_total,
         "n_caught_10":   n_caught_10,
         "n_caught_20":   n_caught_20,
         "avg_rank":      round(avg_rank, 1),
@@ -171,12 +174,13 @@ def _print_report(result, baseline=None):
         print(f"  False-positive rate (traps) : "
               f"{result['n_fp']}/{result['n_traps']}  ({result['fp_rate']:.0f}%)")
 
-    # ── Spurious FP in top-20 ─────────────────────────────────────────────────
-    if result["spurious_fp20"]:
-        print(f"  Spurious FP in top-20 (unknown providers) : "
-              f"{result['spurious_fp20']}")
+    # ── Unregistered providers in top-20 ─────────────────────────────────────
+    if result["unregistered_top20"]:
+        print(f"  Top-20 providers not in ground truth      : "
+              f"{result['unregistered_top20']}")
+        print(f"  (may be real bad actors if ground_truth.json is incomplete)")
     else:
-        print("  Spurious FP in top-20       : none")
+        print("  Top-20 unregistered providers : none")
 
     # ── Before vs. after ─────────────────────────────────────────────────────
     if baseline:
@@ -222,7 +226,7 @@ def _print_report(result, baseline=None):
 def _serialisable(result):
     """Strip non-serialisable list-of-dicts before saving to JSON."""
     return {k: v for k, v in result.items()
-            if k not in ("ba_rows", "fp_rows", "spurious_fp20")}
+            if k not in ("ba_rows", "fp_rows", "unregistered_top20")}
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
