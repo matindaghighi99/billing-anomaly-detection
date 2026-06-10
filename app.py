@@ -31,6 +31,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 import auth_mock
+import config
 
 # ── SVG icon helpers ───────────────────────────────────────────────────────────
 # Heroicons v2 outline (24×24 viewBox, stroke-width 1.5)
@@ -678,6 +679,21 @@ def render_sidebar(scores: pd.DataFrame):
 # ── Main app ──────────────────────────────────────────────────────────────────
 
 def main():
+    # ── Production preflight ───────────────────────────────────────────────────
+    # In production (APP_ENV=production) this refuses to start while insecure
+    # defaults remain (demo credentials, default salt, no model HMAC key).
+    # In demo/dev it only logs a warning so the synthetic demo still runs.
+    try:
+        _cfg_issues = config.production_preflight()
+    except RuntimeError as exc:
+        st.error(str(exc))
+        st.stop()
+    else:
+        if _cfg_issues:
+            logger.warning(
+                "Running with insecure demo defaults: %s", "; ".join(_cfg_issues)
+            )
+
     # ── Authentication gate ───────────────────────────────────────────────────
     if not auth_mock.is_authenticated():
         auth_mock.render_login_screen()   # calls st.stop() if not yet logged in

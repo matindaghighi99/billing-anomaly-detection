@@ -39,7 +39,13 @@ import streamlit as st
 # identity provider, MFA, server-signed session tokens, and audited auth events.
 # ---------------------------------------------------------------------------
 
-_PWD_SALT = os.environ.get("AUTH_PWD_SALT", "billing-anomaly-demo-salt")
+_DEFAULT_PWD_SALT = "billing-anomaly-demo-salt"
+_PWD_SALT = os.environ.get("AUTH_PWD_SALT", _DEFAULT_PWD_SALT)
+
+# Set True when the user store falls back to the built-in demo accounts (i.e.
+# AUTH_USERS_JSON was not provided). config.production_issues() reads this to
+# block a production boot on demo credentials.
+_USING_DEMO_CREDENTIALS = False
 
 
 def _hash_pw(password: str) -> str:
@@ -58,6 +64,7 @@ _DEMO_PLAINTEXT: dict[str, dict] = {
 
 def _load_users() -> dict[str, dict]:
     """Build the user store: env-provided credentials win; demo map is fallback."""
+    global _USING_DEMO_CREDENTIALS
     raw = os.environ.get("AUTH_USERS_JSON")
     if raw:
         try:
@@ -73,10 +80,12 @@ def _load_users() -> dict[str, dict]:
                     "display": rec.get("display", uname),
                 }
             if users:
+                _USING_DEMO_CREDENTIALS = False
                 return users
         except (ValueError, AttributeError):
             # Malformed env config: fall back to demo rather than locking everyone out.
             pass
+    _USING_DEMO_CREDENTIALS = True
     return {
         u: {"pw_hash": _hash_pw(r["password"]), "role": r["role"], "display": r["display"]}
         for u, r in _DEMO_PLAINTEXT.items()
@@ -84,6 +93,16 @@ def _load_users() -> dict[str, dict]:
 
 
 _DEMO_USERS = _load_users()
+
+
+def using_demo_credentials() -> bool:
+    """True if the active user store is the built-in demo fallback."""
+    return _USING_DEMO_CREDENTIALS
+
+
+def using_default_salt() -> bool:
+    """True if the password salt is the shipped default (must be overridden in prod)."""
+    return _PWD_SALT == _DEFAULT_PWD_SALT
 
 # ── Brute-force protection (in-process; demo-grade) ────────────────────────────
 _MAX_FAILED_ATTEMPTS = int(os.environ.get("AUTH_MAX_FAILED", "5"))
