@@ -96,9 +96,11 @@ git reflog expire --expire=now --all && git gc --prune=now --aggressive
 
 ---
 
-### M-1 · MEDIUM · `pickle.load()` used for ML model artifacts (`model_registry.py`)
+### M-1 · MEDIUM · Unsafe deserialization of ML model artifacts (`model_registry.py`)
 
-**Status: FIXED** — Migrated to `joblib`.
+**Status: MITIGATED** — Integrity check added before load. Note: migrating
+`pickle` → `joblib` did **not** by itself remove this risk; `joblib.load()`
+also executes code embedded in the artifact (same `CWE-502`).
 
 **Bandit rule:** B301 / B403 (`CWE-502 Deserialization of Untrusted Data`)
 
@@ -120,9 +122,17 @@ python -m bandit model_registry.py -t B301
 ```
 
 **Fix applied:**  
-`import pickle` replaced with `import joblib`. `joblib.dump()` / `joblib.load()`
-used instead. File extension changed from `.model.pkl` to `.model.joblib`.
-`joblib` was already a project dependency (`joblib==1.5.3`).
+`import pickle` replaced with `import joblib` (file extension `.pkl` →
+`.joblib`). **Critically**, because `joblib.load()` is just as capable of code
+execution as `pickle.load()`, `register_model()` now records an integrity tag
+for each artifact (HMAC-SHA256 when `MODEL_REGISTRY_HMAC_KEY` is set, otherwise
+SHA-256) and `load_version()` verifies it *before* calling `joblib.load()`,
+refusing to load a file whose tag does not match.
+
+**Residual risk:** with SHA-256 (no HMAC key) an attacker who can rewrite both
+the artifact and `registry.json` can still forge a matching tag. Set
+`MODEL_REGISTRY_HMAC_KEY` (kept secret, outside the registry dir) for tamper
+resistance, and restrict write access to the model store.
 
 ---
 
