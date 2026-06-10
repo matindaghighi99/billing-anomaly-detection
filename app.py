@@ -4,11 +4,26 @@ Single-screen decision-support tool for human billing auditors.
 NEVER makes automated decisions — all outputs are for human review only.
 """
 
+import html
 import json
+import logging
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+
+def _esc(value) -> str:
+    """HTML-escape any value before interpolating it into unsafe_allow_html markup.
+
+    All data-derived strings (provider names, specialties, rule evidence, etc.)
+    originate from CSV/pipeline output and must never be trusted as raw HTML —
+    otherwise a crafted provider name or evidence string is stored XSS in the
+    auditor's browser.
+    """
+    return html.escape(str(value), quote=True)
 
 import pandas as pd
 import plotly.express as px
@@ -539,7 +554,7 @@ def signal_badges(pid: str, rules_df, peer_df, ml_df, worklist_row=None) -> str:
     badges = []
     if not rules_df.empty:
         for r in rules_df[rules_df["provider_id"] == pid]["rule"].unique():
-            label = r.replace("_", " ").title()
+            label = _esc(str(r).replace("_", " ").title())
             badges.append(f'<span class="signal-chip chip-rule">{_icon("exclamation-triangle",11,"#FF8080","margin-right:3px;")} {label}</span>')
     if not peer_df.empty:
         n_peer = len(peer_df[peer_df["provider_id"] == pid])
@@ -637,15 +652,18 @@ def render_sidebar(scores: pd.DataFrame):
 
         st.markdown("---")
         st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#9090B8; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AUDITOR ID</div>', unsafe_allow_html=True)
-        # Auditor ID is pre-filled from the logged-in username; allow override for
-        # cases where a shared account acts on behalf of another named auditor.
-        auditor_id = st.text_input(
-            "Your ID (for audit log)",
-            value=st.session_state.get("auditor_id", auth_mock.current_user() or "auditor"),
-            key="sb_auditor_id",
-            label_visibility="collapsed",
-        )
+        # Audit-trail accountability: the auditor ID is bound to the authenticated
+        # session and is NOT user-editable. A free-text override would let any
+        # signed-in user attribute their actions to a colleague, defeating the
+        # tamper-evident audit log's non-repudiation guarantee.
+        auditor_id = auth_mock.current_user() or "auditor"
         st.session_state["auditor_id"] = auditor_id
+        st.markdown(
+            f'<div style="font-size:0.85rem; color:#C0C0E0; font-family:monospace; '
+            f'background:#10101F; border:1px solid #1E1E36; border-radius:6px; '
+            f'padding:7px 11px;">{_esc(auditor_id)}</div>',
+            unsafe_allow_html=True,
+        )
 
         st.markdown("---")
         if st.button("Clear Cache & Reload", icon=":material/refresh:", use_container_width=True):
@@ -817,7 +835,7 @@ def main():
                     _al.append_event(
                         "flag_viewed",
                         provider_id=selected_pid,
-                        user=st.session_state.get("auditor_id", "auditor"),
+                        user=auth_mock.current_user() or "auditor",
                     )
                 except Exception:
                     pass
@@ -931,8 +949,9 @@ def main():
                             "Data hash":  v["training_data_hash"][:16] + "...",
                         } for v in versions])
                         st.dataframe(ver_df, hide_index=True, use_container_width=True)
-            except Exception as exc:
-                st.warning(f"Model registry unavailable: {exc}")
+            except Exception:
+                logger.exception("Model registry unavailable")
+                st.warning("Model registry is currently unavailable.")
 
             st.markdown("---")
 
@@ -1033,8 +1052,9 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                         st.error(res['message'])
                 except PermissionError as pe:
                     st.error(f"Access denied: {pe}")
-                except Exception as exc:
-                    st.error(f"Audit log error: {exc}")
+                except Exception:
+                    logger.exception("Audit log verify failed")
+                    st.error("Audit log verification failed. Please contact your administrator.")
 
             if _ex_clicked:
                 try:
@@ -1045,8 +1065,9 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                     st.success(f"Exported {n} records → audit_log_export.csv")
                 except PermissionError as pe:
                     st.error(f"Access denied: {pe}")
-                except Exception as exc:
-                    st.error(f"Export error: {exc}")
+                except Exception:
+                    logger.exception("Audit log export failed")
+                    st.error("Audit log export failed. Please contact your administrator.")
 
             st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
 
@@ -1072,8 +1093,9 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                         hide_index=True,
                     )
                     st.caption(f"{len(recent)} most recent events shown (newest first).")
-            except Exception as exc:
-                st.warning(f"Could not load audit log: {exc}")
+            except Exception:
+                logger.exception("Could not load audit log")
+                st.warning("Could not load the audit log.")
 
 
 # ── Provider detail ───────────────────────────────────────────────────────────
@@ -1094,8 +1116,8 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     <div class="prov-header">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div>
-          <div class="prov-name">{prow['provider_name']}</div>
-          <div class="prov-pid">{pid} · {prow['specialty']}</div>
+          <div class="prov-name">{_esc(prow['provider_name'])}</div>
+          <div class="prov-pid">{_esc(pid)} · {_esc(prow['specialty'])}</div>
         </div>
         <span class="conf-pill conf-{confidence}">{confidence} CONFIDENCE</span>
       </div>
@@ -1114,7 +1136,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
         </div>
         <div class="prov-stat">
           <div class="prov-stat-label">Specialty</div>
-          <div class="prov-stat-value">{prow['specialty']}</div>
+          <div class="prov-stat-value">{_esc(prow['specialty'])}</div>
         </div>
       </div>
     </div>
@@ -1131,7 +1153,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
         'margin-bottom:6px;">Record disposition (logged to audit trail):</div>',
         unsafe_allow_html=True,
     )
-    _user = st.session_state.get("auditor_id", "auditor")
+    _user = auth_mock.current_user() or "auditor"
 
     # Build signals list for the audit log entry
     _sigs = []
@@ -1170,8 +1192,9 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             st.success(f"Recorded: {pid} confirmed")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
-        except Exception as exc:
-            st.error(f"Error: {exc}")
+        except Exception:
+            logger.exception("Action handler failed")
+            st.error("An unexpected error occurred. Please contact your administrator.")
 
     if _clear_clicked:
         try:
@@ -1192,8 +1215,9 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             st.success(f"Recorded: {pid} cleared")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
-        except Exception as exc:
-            st.error(f"Error: {exc}")
+        except Exception:
+            logger.exception("Action handler failed")
+            st.error("An unexpected error occurred. Please contact your administrator.")
 
     if _invest_clicked:
         try:
@@ -1210,8 +1234,9 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             st.info(f"Recorded: {pid} under investigation")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
-        except Exception as exc:
-            st.error(f"Error: {exc}")
+        except Exception:
+            logger.exception("Action handler failed")
+            st.error("An unexpected error occurred. Please contact your administrator.")
 
     st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
 
@@ -1235,9 +1260,9 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                 for _, r in rule_rows.iterrows():
                     st.markdown(f"""
                     <div class="ev-card ev-rule">
-                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#FF7070","margin-right:3px;")} {r['rule'].replace('_', ' ').upper()}</span>
+                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#FF7070","margin-right:3px;")} {_esc(str(r['rule']).replace('_', ' ').upper())}</span>
                       <span class="ev-exposure">${r['estimated_exposure']:,.2f}</span>
-                      <div class="ev-text">{r['evidence']}</div>
+                      <div class="ev-text">{_esc(r['evidence'])}</div>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -1248,7 +1273,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                     direction = "above" if r["z_score"] > 0 else "below"
                     st.markdown(f"""
                     <div class="ev-card ev-peer">
-                      <span class="ev-peer-label">{_icon("chart-bar",12,"#6A9FFF","margin-right:3px;")} {r['metric'].replace('_', ' ').upper()}</span>
+                      <span class="ev-peer-label">{_icon("chart-bar",12,"#6A9FFF","margin-right:3px;")} {_esc(str(r['metric']).replace('_', ' ').upper())}</span>
                       <div class="ev-text">
                         Provider: <strong style="color:#D0D0F0">{r['provider_value']:.2f}</strong> &nbsp;·&nbsp;
                         z = <strong style="color:#FFD93D">{r['z_score']:.2f}</strong> &nbsp;·&nbsp;
