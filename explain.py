@@ -223,13 +223,18 @@ def build_shap_explanations(df: pd.DataFrame = None) -> pd.DataFrame:
 
         top_true = top3.values.copy().astype(float)
 
-        # Apply calibrated display noise when privacy module is available
+        # Apply calibrated display noise when privacy module is available.
+        # seed is left as None (fresh OS entropy) ON PURPOSE: a seed derived
+        # from the provider id made the noise a public function of a known key,
+        # so anyone who knew the algorithm could regenerate and subtract it to
+        # recover the true SHAP values — i.e. no privacy at all. Non-deterministic
+        # noise cannot be reconstructed this way.
         if _shap_sensitivity is not None and _epsilon is not None:
             top_display = noise_top_vals(
                 top_true,
                 sensitivity=_shap_sensitivity,
                 epsilon=_epsilon,
-                seed=hash(pid) % (2**31),   # deterministic per provider
+                seed=None,
             )
         else:
             top_display = top_true
