@@ -89,9 +89,9 @@ class TestDemoDefaults(_EnvIsolated):
 class TestFullyConfigured(_EnvIsolated):
     def test_no_issues_when_properly_configured(self):
         os.environ["AUTH_USERS_JSON"] = (
-            '{"realadmin": {"password": "s3cret", "role": "admin", "display": "Real Admin"}}'
+            '{"realadmin": {"password": "s3cret", "role": "admin", "display": "Real Admin"}}'  # pragma: allowlist secret
         )
-        os.environ["AUTH_PWD_SALT"] = "a-unique-deployment-salt"
+        os.environ["AUTH_PWD_SALT"] = "a-unique-deployment-salt"  # pragma: allowlist secret
         os.environ["MODEL_REGISTRY_HMAC_KEY"] = "a-secret-hmac-key"
         importlib.reload(auth_mock)   # rebuild under the configured env
 

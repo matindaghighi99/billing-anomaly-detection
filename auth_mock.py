@@ -39,7 +39,7 @@ import streamlit as st
 # identity provider, MFA, server-signed session tokens, and audited auth events.
 # ---------------------------------------------------------------------------
 
-_DEFAULT_PWD_SALT = "billing-anomaly-demo-salt"
+_DEFAULT_PWD_SALT = "billing-anomaly-demo-salt"  # pragma: allowlist secret
 _PWD_SALT = os.environ.get("AUTH_PWD_SALT", _DEFAULT_PWD_SALT)
 
 # Set True when the user store falls back to the built-in demo accounts (i.e.

@@ -1,0 +1,81 @@
+name: CI
+
+# Tests + security scanning on every push and pull request, plus a weekly
+# dependency audit so newly-disclosed CVEs are caught even without new commits.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC — dependency audit
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Functional tests ──────────────────────────────────────────────────────
+  test:
+    name: tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install test dependencies
+        # Minimal runtime deps needed by the test suite + pytest. The heavier
+        # optional deps (shap, streamlit, anthropic, diffprivlib) are exercised
+        # separately; the code degrades gracefully without them.
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas scikit-learn scipy faker python-dotenv pytest
+
+      - name: Generate synthetic data + run pipeline
+        # The data artifacts are intentionally not committed, so regenerate them
+        # here. This also lets the full-pipeline integration tests run instead of
+        # skipping.
+        run: python run_pipeline.py
+
+      - name: Run tests
+        run: python -m pytest tests/ -q
+
+  # ── Security scanning ─────────────────────────────────────────────────────
+  security:
+    name: security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install scanners
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pip-audit detect-secrets
+
+      - name: Bandit (SAST, medium+ severity)
+        run: bandit -r . -ll -x ./tests,./__pycache__
+
+      - name: detect-secrets (vs baseline)
+        run: git ls-files | xargs detect-secrets-hook --baseline .secrets.baseline
+
+      - name: pip-audit (dependency CVEs)
+        # Advisory only: an upstream CVE with no released fix should surface here
+        # without blocking unrelated PRs. Review failures and pin/upgrade when a
+        # fix exists. The weekly schedule keeps this monitored between commits.
+        continue-on-error: true
+        run: pip-audit -r requirements.txt
