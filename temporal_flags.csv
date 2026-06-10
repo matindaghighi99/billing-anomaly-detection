@@ -1,2 +1,0 @@
-provider_id,provider_name,specialty,n_active_months,cusum_score,cusum_flag,spike_ratio,spike_flag,temporal_flag,estimated_exposure
-PRV0089,Lisa Archer,Family Medicine,12,3.3018,True,2.1194,False,True,76214.07
