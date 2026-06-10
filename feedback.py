@@ -65,9 +65,18 @@ def record_disposition(provider_id: str, outcome: str,
         "notes":       notes,
         "source":      source,
     }])
-    mode   = "a"   if os.path.exists(DISPOSITIONS_CSV) else "w"
-    header = not os.path.exists(DISPOSITIONS_CSV)
-    row.to_csv(DISPOSITIONS_CSV, mode=mode, header=header, index=False)
+    # Atomic create/append: open(path, 'x') fails with FileExistsError if the
+    # file already exists, eliminating the TOCTOU race between the exists()
+    # check and the write that caused double-header corruption under concurrent
+    # auditor clicks.
+    try:
+        fh = open(DISPOSITIONS_CSV, "x", newline="", encoding="utf-8")
+        write_header = True
+    except FileExistsError:
+        fh = open(DISPOSITIONS_CSV, "a", newline="", encoding="utf-8")
+        write_header = False
+    with fh:
+        row.to_csv(fh, header=write_header, index=False)
 
 
 # ── Feature assembly ──────────────────────────────────────────────────────────
@@ -141,9 +150,12 @@ def run_feedback_model(verbose: bool = True) -> pd.DataFrame:
     if features.empty:
         return pd.DataFrame()
 
-    labelled = disp.merge(features, on="provider_id", how="inner")
+    # Use left join so disposed providers are never silently dropped due to a
+    # missing entry in one feature CSV; missing features fill as 0.
+    labelled = disp.merge(features, on="provider_id", how="left")
     feat_cols = [c for c in labelled.columns
                  if c not in ("provider_id", "outcome", "label", "notes", "source")]
+    labelled[feat_cols] = labelled[feat_cols].fillna(0)
 
     X_train = labelled[feat_cols].values.astype(float)
     y_train = labelled["label"].values

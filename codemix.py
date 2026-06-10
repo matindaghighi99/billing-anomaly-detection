@@ -195,11 +195,12 @@ def run_codemix(df: pd.DataFrame = None, metrics_df: pd.DataFrame = None):
         _EMPTY_FLAGS.to_csv(OUTPUT_FLAGS_CSV, index=False)
         return _EMPTY_SCORES.copy(), _EMPTY_FLAGS.copy()
 
-    # Coerce fee_code to string so sorting and set membership work
+    # Drop genuinely missing fee codes BEFORE astype(str) so we never produce
+    # the string "nan" — which would collide with any real claim coded "nan"
+    # and silently drop it alongside the missing values.
     df = df.copy()
+    df = df[df["fee_code"].notna()]
     df["fee_code"] = df["fee_code"].astype(str)
-    # Drop rows where fee_code is 'nan' (became string after astype on NaN)
-    df = df[df["fee_code"] != "nan"]
 
     if df.empty:
         _EMPTY_SCORES.to_csv(OUTPUT_SCORES_CSV, index=False)

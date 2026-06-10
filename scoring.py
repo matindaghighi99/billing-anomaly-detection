@@ -155,7 +155,7 @@ def peer_component() -> pd.DataFrame:
         pdf.groupby("provider_id")
            .agg(
                peer_score   =("metric_pts",          "sum"),
-               peer_exposure=("estimated_exposure",  "first"),
+               peer_exposure=("estimated_exposure",  "sum"),
                peer_reasons =("metric",              lambda x: "; ".join(sorted(set(x)))),
            )
            .reset_index()
@@ -167,6 +167,14 @@ def peer_component() -> pd.DataFrame:
 def ml_component() -> pd.DataFrame:
     """0-15 pts from IsolationForest normalised score."""
     mdf = pd.read_csv(ML_CSV, dtype={"provider_id": str})
+    max_ml = mdf["ml_score"].max() if not mdf.empty else 0
+    if max_ml <= 1.0:
+        warnings.warn(
+            f"[scoring] ml_score max={max_ml:.4f} — values appear to be in [0,1] "
+            f"range rather than [0,100]. ml_score_pts will be near zero and the ML "
+            f"layer will contribute almost nothing. Check anomaly_model.py output.",
+            UserWarning,
+        )
     mdf["ml_score_pts"] = (mdf["ml_score"] / 100 * ML_MAX_PTS).round(2)
     return mdf[["provider_id","ml_score","ml_score_pts","ml_is_anomaly"]]
 
@@ -290,8 +298,17 @@ def build_risk_scores() -> pd.DataFrame:
 
     # ── Expected recovery = exposure x likelihood (vectorized) ───────────────
     likelihood_map = pd.Series(CONFIDENCE_LIKELIHOOD)
+    mapped = df["confidence"].map(likelihood_map)
+    n_unmapped = int(mapped.isna().sum())
+    if n_unmapped:
+        warnings.warn(
+            f"[scoring] {n_unmapped} row(s) have an unrecognised confidence tier "
+            f"and will use the LOW likelihood ({CONFIDENCE_LIKELIHOOD['LOW']}) "
+            f"for expected_recovery.",
+            UserWarning,
+        )
     df["expected_recovery"] = (
-        df["estimated_exposure"] * df["confidence"].map(likelihood_map)
+        df["estimated_exposure"] * mapped.fillna(CONFIDENCE_LIKELIHOOD["LOW"])
     ).round(2)
 
     # ── Dollar-weighted rank score using expected recovery (not raw exposure) ─
@@ -312,24 +329,7 @@ def build_risk_scores() -> pd.DataFrame:
     ]
     result = flagged[out_cols].reset_index(drop=True)
 
-    # ── Final output validation: log warnings for out-of-range scores ──────────
-    n_nan = result["risk_score"].isna().sum()
-    n_neg = (result["risk_score"].dropna() < 0).sum()
-    n_over = (result["risk_score"].dropna() > 100).sum()
-    if n_nan:
-        warnings.warn(f"[scoring] {n_nan} NaN risk_score(s) in output — setting to 0",
-                      UserWarning)
-        result["risk_score"] = result["risk_score"].fillna(0)
-    if n_neg:
-        warnings.warn(f"[scoring] {n_neg} negative risk_score(s) — clipping to 0",
-                      UserWarning)
-        result["risk_score"] = result["risk_score"].clip(lower=0)
-    if n_over:
-        warnings.warn(f"[scoring] {n_over} risk_score(s) > 100 — clipping to 100",
-                      UserWarning)
-        result["risk_score"] = result["risk_score"].clip(upper=100)
-
-    result.to_csv(OUTPUT_CSV, index=False)
+    # ── Final output validation: clip before writing so the CSV is always clean ─
     n_nan = result["risk_score"].isna().sum()
     n_neg = (result["risk_score"].dropna() < 0).sum()
     n_over = (result["risk_score"].dropna() > 100).sum()

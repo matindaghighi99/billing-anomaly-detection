@@ -101,9 +101,13 @@ def build_temporal_scores(df: pd.DataFrame) -> pd.DataFrame:
         total_billed  = grp["total_billed"].sum()
         median_claims = float(np.median(claims_series))
 
-        # Month-over-month fractional change (clipped to avoid division by zero)
-        baseline = np.clip(claims_series[:-1], a_min=1, a_max=None)
-        mom_changes = (claims_series[1:] - claims_series[:-1]) / baseline
+        # Month-over-month fractional change.
+        # Months where the previous count was 0 mean the provider was inactive
+        # that month (not a change-point); treat those transitions as 0 change.
+        # Clipping 0→1 was wrong: it made a 0→N start look like an N-fold spike.
+        prev        = claims_series[:-1]
+        curr        = claims_series[1:]
+        mom_changes = np.where(prev > 0, (curr - prev) / prev, 0.0)
 
         cusum_score  = _cusum_max(mom_changes)
         cusum_flag   = cusum_score >= CUSUM_THRESHOLD

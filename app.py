@@ -900,7 +900,6 @@ def main():
                     )
                 else:
                     cur = versions[-1]
-                    val = cur.get
                     det = cur.get("val_detection_rate")
                     fpr = cur.get("val_false_pos_rate")
                     st.markdown(f"""
@@ -1081,7 +1080,9 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
 
 def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                              worklist, score_map):
-    prow       = worklist[worklist["provider_id"] == pid].iloc[0]
+    # Convert to dict so .get() calls below are dict lookups, not the deprecated
+    # pd.Series.get() which raises FutureWarning in pandas 2.1+ and is removed in 3.0.
+    prow       = worklist[worklist["provider_id"] == pid].iloc[0].to_dict()
     confidence = prow.get("confidence", "N/A")
     exp_rec    = float(prow.get("expected_recovery", prow.get("estimated_exposure", 0)))
     exposure   = float(prow.get("estimated_exposure", 0))
@@ -1282,9 +1283,10 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             if not shap_df.empty:
                 shap_row = shap_df[shap_df["provider_id"] == pid]
                 if not shap_row.empty:
-                    feats = shap_row.iloc[0]["top_features"].split(";")[:3]
-                    vals  = [float(shap_row.iloc[0].get(f"shap_top{i}_val", 0))
-                             for i in range(1, len(feats) + 1)]
+                    shap_r = shap_row.iloc[0].to_dict()
+                    feats  = shap_r["top_features"].split(";")[:3]
+                    vals   = [float(shap_r.get(f"shap_top{i}_val", 0))
+                              for i in range(1, len(feats) + 1)]
                     clean_feats = [f.strip() for f in feats]
                     if any(v != 0 for v in vals):
                         st.plotly_chart(shap_bar_chart(clean_feats, vals),

@@ -310,7 +310,7 @@ def plant_duplicates(pmap: dict, claims: list, ids: list, rng):
     extras = []
     for pid in ids:
         idxs = [i for i, c in enumerate(claims) if c["provider_id"] == pid]
-        n    = max(10, int(len(idxs) * 0.15))
+        n    = min(max(1, int(len(idxs) * 0.15)), len(idxs))
         for i in rng.choice(idxs, size=n, replace=False).tolist():
             extras.append(claims[i].copy())
     claims.extend(extras)

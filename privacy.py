@@ -36,11 +36,14 @@ TEST
     2. Top-feature rank is preserved for clear-cut cases (gap ≥ 10× noise scale).
 """
 
+import warnings
+
 import numpy as np
 import pandas as pd
 from typing import Optional
 
 DEFAULT_EPSILON     = 1.0
+MIN_SENSITIVITY     = 1e-3   # below this the noise is so small it provides no privacy
 PRIVACY_DISCLAIMER  = (
     "Explanation values include calibrated Laplace privacy noise "
     "(epsilon shown). This is a demo-grade privacy measure, NOT a formal "
@@ -57,32 +60,42 @@ def _laplace_noise(
     epsilon: float,
     seed: Optional[int] = None,
 ) -> np.ndarray:
-    """Draw Laplace(0, sensitivity/epsilon) noise using diffprivlib or numpy."""
+    """Draw Laplace(0, sensitivity/epsilon) noise.
+
+    Uses numpy directly. diffprivlib was previously tried first but its
+    Laplace scale parameterization varies across versions (some releases
+    produce 2× the intended scale), which would make the displayed epsilon
+    label wrong without any visible error. numpy's rng.laplace(scale=Δ/ε)
+    is unambiguous and always correct.
+    """
     scale = sensitivity / epsilon
-
-    try:
-        from diffprivlib.mechanisms import Laplace as DPLaplace
-        # diffprivlib Laplace draws one value at a time; vectorise manually
-        mech  = DPLaplace(epsilon=epsilon, sensitivity=sensitivity)
-        noise = np.array([mech.randomise(0.0) for _ in range(size)])
-    except ImportError:
-        rng   = np.random.default_rng(seed)
-        noise = rng.laplace(loc=0.0, scale=scale, size=size)
-
-    return noise
+    rng   = np.random.default_rng(seed)
+    return rng.laplace(loc=0.0, scale=scale, size=size)
 
 
 def _auto_sensitivity(shap_matrix: np.ndarray) -> float:
     """95th percentile of |SHAP values| across all entries.
 
-    This is a reasonable heuristic for a demo: the noise will be
-    proportional to the typical magnitude of contributions, not the
-    extreme outlier values.
+    If the computed sensitivity is below MIN_SENSITIVITY the SHAP values are
+    too sparse to produce meaningful noise — the epsilon label would be
+    misleading. A floor is applied and a warning is issued so callers know
+    the privacy guarantee is weaker than the displayed epsilon implies.
     """
     abs_vals = np.abs(shap_matrix[np.isfinite(shap_matrix)])
     if len(abs_vals) == 0:
         return 1.0
-    return float(np.percentile(abs_vals, 95))
+    sensitivity = float(np.percentile(abs_vals, 95))
+    if sensitivity < MIN_SENSITIVITY:
+        warnings.warn(
+            f"[privacy] Auto-computed sensitivity ({sensitivity:.2e}) is below "
+            f"MIN_SENSITIVITY ({MIN_SENSITIVITY:.2e}). SHAP values appear sparse; "
+            f"the Laplace noise would be negligible and the epsilon label "
+            f"misleading. Raising sensitivity to {MIN_SENSITIVITY:.2e}. "
+            f"Consider increasing epsilon or reviewing SHAP output quality.",
+            UserWarning,
+        )
+        sensitivity = MIN_SENSITIVITY
+    return sensitivity
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -224,12 +237,8 @@ def _selftest():
     print("    [PASS] apply_display_noise_to_df: epsilon column present, "
           "provider_id unchanged")
 
-    # ── Info: which Laplace backend is in use ─────────────────────────────────
-    try:
-        import diffprivlib
-        print("    [INFO] diffprivlib is installed — used for noise draws")
-    except ImportError:
-        print("    [INFO] diffprivlib not installed — using numpy fallback (OK)")
+    print("    [INFO] numpy Laplace backend in use (diffprivlib removed — "
+          "parameterisation varies across versions)")
 
 
 if __name__ == "__main__":

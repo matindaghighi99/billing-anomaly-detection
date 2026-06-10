@@ -45,9 +45,12 @@ CREATE TABLE IF NOT EXISTS audit_log (
 # Genesis hash — used as prev_hash for the very first row
 _GENESIS = "0" * 64
 
-# Ordered list of fields included in the content hash (never includes hash fields)
+# Ordered list of fields included in the content hash (never includes hash fields).
+# id is intentionally excluded: it is auto-assigned by SQLite after INSERT, so
+# including it would require a pre-INSERT SELECT MAX(id) that is not atomic and
+# would allow two concurrent writers to corrupt the chain.
 _CONTENT_FIELDS = [
-    "id", "utc_timestamp", "event_type", "user", "provider_id",
+    "utc_timestamp", "event_type", "user", "provider_id",
     "model_version", "signals_shown", "action_taken", "reasoning",
 ]
 
@@ -102,13 +105,15 @@ def append_event(
     ts   = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
     sigs = json.dumps(signals_shown) if signals_shown is not None else None
 
-    with conn:
-        last_id = conn.execute("SELECT MAX(id) FROM audit_log").fetchone()[0] or 0
-        new_id  = last_id + 1
-        prev    = _last_hash(conn)
+    # BEGIN IMMEDIATE acquires a write lock before we read the previous hash,
+    # so two concurrent callers cannot both read the same tail hash and then
+    # each insert a row that claims a different predecessor — which would
+    # silently fork the chain and make verify_integrity() report a false break.
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        prev = _last_hash(conn)
 
         record = {
-            "id":            new_id,
             "utc_timestamp": ts,
             "event_type":    event_type,
             "user":          user,
@@ -120,16 +125,21 @@ def append_event(
         }
         row_hash = _sha256(prev, _content_str(record))
 
-        conn.execute(
+        cur = conn.execute(
             "INSERT INTO audit_log "
-            "(id, utc_timestamp, event_type, user, provider_id, model_version, "
+            "(utc_timestamp, event_type, user, provider_id, model_version, "
             " signals_shown, action_taken, reasoning, row_hash, prev_hash) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (new_id, ts, event_type, user, provider_id, model_version,
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (ts, event_type, user, provider_id, model_version,
              sigs, action_taken, reasoning, row_hash, prev),
         )
-
-    conn.close()
+        new_id = cur.lastrowid
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
     return new_id
 
 

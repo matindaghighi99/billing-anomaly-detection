@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS specialty_top_codes (
 -- ── Core entity tables ────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS providers (
-    provider_id     VARCHAR(10)  PRIMARY KEY,
+    provider_id     VARCHAR(20)  PRIMARY KEY,
     provider_name   VARCHAR(100) NOT NULL,
     specialty       VARCHAR(50)  NOT NULL,
     clinic_id       VARCHAR(10)  NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS providers (
 
 CREATE TABLE IF NOT EXISTS claims (
     claim_id        VARCHAR(15)    PRIMARY KEY,
-    provider_id     VARCHAR(10)    NOT NULL,
+    provider_id     VARCHAR(20)    NOT NULL,
     patient_id      VARCHAR(10)    NOT NULL,
     service_date    DATE           NOT NULL,
     fee_code        VARCHAR(10)    NOT NULL,
@@ -76,7 +76,7 @@ CREATE INDEX IF NOT EXISTS idx_claims_fee_code   ON claims(fee_code);
 
 CREATE TABLE IF NOT EXISTS rule_flags (
     flag_id             INTEGER      PRIMARY KEY AUTOINCREMENT,
-    provider_id         VARCHAR(10)  NOT NULL,
+    provider_id         VARCHAR(20)  NOT NULL,
     rule_name           VARCHAR(50)  NOT NULL,   -- impossible_day | duplicate_billing | unbundling
     evidence            TEXT,
     estimated_exposure  DECIMAL(12,2),
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS rule_flags (
 
 CREATE TABLE IF NOT EXISTS peer_flags (
     flag_id             INTEGER      PRIMARY KEY AUTOINCREMENT,
-    provider_id         VARCHAR(10)  NOT NULL,
+    provider_id         VARCHAR(20)  NOT NULL,
     metric              VARCHAR(50)  NOT NULL,
     provider_value      DECIMAL(12,4),
     peer_median         DECIMAL(12,4),
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS peer_flags (
 );
 
 CREATE TABLE IF NOT EXISTS provider_metrics (
-    provider_id          VARCHAR(10)  PRIMARY KEY,
+    provider_id          VARCHAR(20)  PRIMARY KEY,
     total_claims         INTEGER,
     total_billed         DECIMAL(12,2),
     avg_billed           DECIMAL(10,2),
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS provider_metrics (
 );
 
 CREATE TABLE IF NOT EXISTS ml_scores (
-    provider_id     VARCHAR(10)  PRIMARY KEY,
+    provider_id     VARCHAR(20)  PRIMARY KEY,
     ml_raw_score    DECIMAL(10,4),
     ml_score        DECIMAL(6,2),   -- 0-100 normalised
     ml_is_anomaly   SMALLINT,       -- 1 = anomaly, 0 = normal
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS ml_scores (
 );
 
 CREATE TABLE IF NOT EXISTS risk_scores (
-    provider_id          VARCHAR(10)    PRIMARY KEY,
+    provider_id          VARCHAR(20)    PRIMARY KEY,
     risk_score           DECIMAL(5,1),
     estimated_exposure   DECIMAL(12,2),
     rules_score          DECIMAL(5,1),
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS risk_scores (
 );
 
 CREATE TABLE IF NOT EXISTS explanations (
-    provider_id          VARCHAR(10)  PRIMARY KEY,
+    provider_id          VARCHAR(20)  PRIMARY KEY,
     risk_score           DECIMAL(5,1),
     estimated_exposure   DECIMAL(12,2),
     explanation_text     TEXT,
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS explanations (
 
 CREATE TABLE IF NOT EXISTS audit_reviews (
     review_id       INTEGER      PRIMARY KEY AUTOINCREMENT,
-    provider_id     VARCHAR(10)  NOT NULL,
+    provider_id     VARCHAR(20)  NOT NULL,
     reviewer_name   VARCHAR(100),
     review_date     DATE,
     outcome         VARCHAR(30),   -- confirmed_fraud | false_positive | needs_more_info | cleared

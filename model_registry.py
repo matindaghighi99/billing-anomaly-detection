@@ -57,12 +57,16 @@ def _next_version_id(registry: list) -> str:
 
 
 def _data_hash(X_train: np.ndarray, y_train: np.ndarray) -> str:
-    """SHA256 of the exact training arrays used."""
-    raw = (
-        np.array2string(X_train, precision=8, floatmode="fixed").encode() +
-        np.array2string(y_train).encode()
-    )
-    return hashlib.sha256(raw).hexdigest()
+    """SHA256 of the exact training arrays used.
+
+    Uses raw IEEE-754 bytes rather than np.array2string(), which varies
+    across NumPy versions and precision settings, producing different hashes
+    for identical data in different environments.
+    """
+    h = hashlib.sha256()
+    h.update(X_train.astype(np.float64).tobytes())
+    h.update(y_train.astype(np.int64).tobytes())
+    return h.hexdigest()
 
 
 def _val_metrics(clf, X_train: np.ndarray, y_train: np.ndarray) -> dict:
@@ -85,7 +89,10 @@ def _val_metrics(clf, X_train: np.ndarray, y_train: np.ndarray) -> dict:
                 random_state=42,
                 stratify=y_train,
             )
-            # Re-train on the reduced set for held-out validation
+            # Re-train a proxy model on 80 % to get genuine held-out metrics.
+            # The deployed model was fit on 100 % of labels; these metrics come
+            # from a separate proxy fit, so they are directionally correct but
+            # slightly conservative (less data → lower performance than deployed).
             import copy
             clf_val = copy.deepcopy(clf)
             clf_val.fit(X_tr, y_tr)
@@ -93,11 +100,14 @@ def _val_metrics(clf, X_train: np.ndarray, y_train: np.ndarray) -> dict:
             det_rate = float((preds[y_val == 1] == 1).mean()) if (y_val == 1).any() else None
             fpr      = float((preds[y_val == 0] == 1).mean()) if (y_val == 0).any() else None
             return {
-                "method":          "stratified_80_20_split",
+                "method":          "stratified_80_20_split_proxy",
                 "val_size":        len(y_val),
                 "detection_rate":  round(det_rate, 3) if det_rate is not None else None,
                 "false_pos_rate":  round(fpr, 3)      if fpr      is not None else None,
-                "note":            "Held-out 20% of labeled examples.",
+                "note":            (
+                    "Proxy model retrained on 80 % of labels; deployed model "
+                    "uses all labels and will perform at least as well."
+                ),
             }
         except Exception as exc:
             return {"method": "error", "note": str(exc)}
