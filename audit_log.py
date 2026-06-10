@@ -45,6 +45,19 @@ CREATE TABLE IF NOT EXISTS audit_log (
 # Genesis hash — used as prev_hash for the very first row
 _GENESIS = "0" * 64
 
+# Leading characters that spreadsheet apps treat as the start of a formula.
+# Audit fields such as 'user'/'reasoning' can contain attacker-influenced text,
+# so we neutralise them on CSV export to prevent formula (CSV) injection when
+# the export is opened in Excel/Sheets.
+_CSV_INJECTION_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value):
+    """Prefix a single quote to any value that could be parsed as a formula."""
+    if isinstance(value, str) and value and value[0] in _CSV_INJECTION_PREFIXES:
+        return "'" + value
+    return value
+
 # Ordered list of fields included in the content hash (never includes hash fields).
 # id is intentionally excluded: it is auto-assigned by SQLite after INSERT, so
 # including it would require a pre-INSERT SELECT MAX(id) that is not atomic and
@@ -102,7 +115,7 @@ def append_event(
         raise ValueError(f"event_type must be one of {valid}, got {event_type!r}")
 
     conn = _open_db()
-    ts   = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    ts   = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z"
     sigs = json.dumps(signals_shown) if signals_shown is not None else None
 
     # BEGIN IMMEDIATE acquires a write lock before we read the previous hash,
@@ -226,7 +239,8 @@ def export_to_csv(path: str = "audit_log_export.csv") -> int:
     with open(path, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(headers)
-        w.writerows(rows)
+        for row in rows:
+            w.writerow([_csv_safe(cell) for cell in row])
     return len(rows)
 
 
