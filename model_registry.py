@@ -2,21 +2,25 @@
 
 On every training run in feedback.py, register_model() is called to:
   1. Assign a monotonically-incrementing version_id (v001, v002, …)
-  2. Save the model artifact (pickle)
+  2. Save the model artifact (joblib) and record an integrity tag
   3. Write a machine-readable model card (JSON)
   4. Write a human-readable model card (Markdown)
   5. Append the version record to the registry index (registry.json)
 
-load_version(version_id) reloads the exact pickled model so a disputed
-flag can be replayed against the model that produced it.
+load_version(version_id) verifies the artefact's integrity tag and then
+reloads the model so a disputed flag can be replayed against the model that
+produced it. NOTE: joblib.load (like pickle) executes code embedded in the
+artefact, so the integrity check is a security control, not just a checksum.
 
 All version artefacts live under REGISTRY_DIR/v{n:03d}/.
 """
 
 import datetime
 import hashlib
+import hmac
 import json
 import os
+import warnings
 
 import joblib
 import numpy as np
@@ -54,6 +58,31 @@ def _save_registry(registry: list) -> None:
 def _next_version_id(registry: list) -> str:
     n = len(registry) + 1
     return f"v{n:03d}"
+
+
+def _model_integrity(path: str) -> str:
+    """Integrity tag for a model artifact file.
+
+    joblib.load() (like pickle) executes arbitrary code embedded in the
+    artifact, so an attacker who can drop or modify a .joblib file gets code
+    execution the moment it is loaded. We record an integrity tag at save time
+    and verify it before loading.
+
+    If MODEL_REGISTRY_HMAC_KEY is set, an HMAC-SHA256 is used (resists tampering
+    even by someone who can also rewrite registry.json, provided the key stays
+    secret). Otherwise a plain SHA-256 is used, which detects accidental or
+    third-party corruption but not an attacker who can rewrite the registry too.
+    """
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    digest = h.hexdigest()
+    key = os.environ.get("MODEL_REGISTRY_HMAC_KEY")
+    if key:
+        return "hmac:" + hmac.new(key.encode("utf-8"), digest.encode("utf-8"),
+                                  hashlib.sha256).hexdigest()
+    return "sha256:" + digest
 
 
 def _data_hash(X_train: np.ndarray, y_train: np.ndarray) -> str:
@@ -222,7 +251,7 @@ def register_model(
     _ensure_dir()
     registry = _load_registry()
     version_id = _next_version_id(registry)
-    ts = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z"
 
     version_dir = os.path.join(REGISTRY_DIR, version_id)
     os.makedirs(version_dir, exist_ok=True)
@@ -252,6 +281,8 @@ def register_model(
     # Save artefacts
     model_path = os.path.join(version_dir, "model.joblib")
     joblib.dump(clf, model_path)
+    model_integrity = _model_integrity(model_path)
+    card["model_integrity"] = model_integrity
 
     card_json_path = os.path.join(version_dir, "model_card.json")
     with open(card_json_path, "w", encoding="utf-8") as fh:
@@ -273,6 +304,7 @@ def register_model(
         "val_false_pos_rate": val.get("false_pos_rate"),
         "val_note":           val.get("note", ""),
         "model_path":         model_path,
+        "model_integrity":    model_integrity,
         "card_json_path":     card_json_path,
         "card_md_path":       card_md_path,
     })
@@ -282,9 +314,14 @@ def register_model(
 
 
 def load_version(version_id: str):
-    """Reload the pickled model for a given version_id.
+    """Reload the model artefact for a given version_id.
 
-    Returns (clf, card_dict) or raises FileNotFoundError.
+    Verifies the artefact's integrity tag (recorded at save time) BEFORE
+    calling joblib.load(), because joblib/pickle deserialization executes
+    arbitrary code in the artefact. A failed check raises ValueError and the
+    file is never loaded.
+
+    Returns (clf, card_dict) or raises FileNotFoundError / ValueError.
     """
     version_dir   = os.path.join(REGISTRY_DIR, version_id)
     model_path    = os.path.join(version_dir, "model.joblib")
@@ -293,6 +330,27 @@ def load_version(version_id: str):
     if not os.path.exists(model_path):
         raise FileNotFoundError(
             f"No model artefact for version {version_id!r} at {model_path}"
+        )
+
+    # ── Integrity gate (second line of defence against tampered artefacts) ──
+    expected = None
+    for rec in _load_registry():
+        if rec.get("version_id") == version_id:
+            expected = rec.get("model_integrity")
+            break
+    actual = _model_integrity(model_path)
+    if expected is None:
+        warnings.warn(
+            f"[model_registry] No integrity tag recorded for {version_id!r}; "
+            f"loading an unverified artefact. Re-register the model to enable "
+            f"integrity verification.",
+            UserWarning,
+        )
+    elif not hmac.compare_digest(expected, actual):
+        raise ValueError(
+            f"Model artefact integrity check failed for {version_id!r}: stored "
+            f"tag does not match the file on disk. Refusing to load a possibly "
+            f"tampered model."
         )
 
     clf = joblib.load(model_path)
