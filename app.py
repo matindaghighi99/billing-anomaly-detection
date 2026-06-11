@@ -77,71 +77,166 @@ st.markdown("""
   /* ── fonts — unified with login screen ── */
   @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
 
+  /* ── design tokens ─────────────────────────────────────────────────────────
+     A single source of truth for the colour, radius, shadow, and motion scale.
+     Every component below references these so the visual language stays cohesive
+     and a global retune is a one-line change. */
+  :root {
+    --bg-0: #0A0A16;          /* deepest app background          */
+    --bg-1: #0D0D1A;          /* panel background                */
+    --bg-2: #13131F;          /* raised surface                  */
+    --stroke: #2D2D4E;        /* default 1px border              */
+    --stroke-hi: #4A4A7A;     /* hover/active border             */
+    --accent: #5A5AFF;        /* primary accent (indigo)         */
+    --accent-2: #2563EB;      /* secondary accent (trust-blue)   */
+    --txt-hi: #E8E8FF;        /* primary text                    */
+    --txt-mid: #B0B0D8;       /* secondary text                  */
+    --txt-lo: #9090B8;        /* muted text                      */
+
+    --r-sm: 8px;              /* radius scale */
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-pill: 999px;
+
+    /* layered shadows give real depth instead of a flat 1px border */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-lg: 0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4);
+    --glow:      0 0 0 1px rgba(90,90,255,0.18), 0 8px 28px rgba(40,40,160,0.22);
+
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);   /* smooth "ease-out-expo" feel */
+    --t-fast: 0.16s var(--ease);
+    --t-med:  0.28s var(--ease);
+  }
+
   /* ── base ── */
-  html, body, [class*="css"] { font-family: 'Fira Sans', 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  html, body, [class*="css"] {
+    font-family: 'Fira Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── entrance keyframes (used by cards / panels) ── */
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bannerSheen {
+    0%   { background-position: -180% 0; }
+    100% { background-position: 280% 0; }
+  }
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(90,90,255,0.45); }
+    50%      { box-shadow: 0 0 0 5px rgba(90,90,255,0); }
+  }
 
   /* ── warning banner ── */
   .banner {
+    position: relative; overflow: hidden;
     background: linear-gradient(90deg, #7B1111 0%, #9B2525 100%);
-    color: #FFD0D0; padding: 10px 20px; border-radius: 8px;
+    color: #FFE0E0; padding: 11px 22px; border-radius: var(--r-sm);
     font-weight: 600; font-size: 0.88rem; text-align: center;
     margin-bottom: 4px; border-left: 4px solid #FF4444;
     letter-spacing: 0.2px;
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  /* a slow diagonal sheen sweeps across the alert to draw the eye without
+     being distracting — disabled under prefers-reduced-motion below */
+  .banner::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.10) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: bannerSheen 6s linear infinite;
+    pointer-events: none;
   }
 
   /* ── KPI cards ── */
   .kpi-card {
-    background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
-    border: 1px solid #2D2D4E; border-radius: 12px;
-    padding: 22px 24px; position: relative;
-    transition: border-color 0.2s;
+    background:
+      radial-gradient(120% 120% at 0% 0%, rgba(90,90,255,0.10) 0%, transparent 45%),
+      linear-gradient(135deg, #1A1A2E 0%, #14182E 100%);
+    border: 1px solid var(--stroke); border-radius: var(--r-md);
+    padding: 22px 24px; position: relative; overflow: hidden;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(6px);
+    transition: transform var(--t-med), border-color var(--t-med), box-shadow var(--t-med);
+    animation: riseIn 0.5s var(--ease) both;
   }
-  .kpi-card:hover { border-color: #4A4A7A; }
+  /* the top hairline lights up on hover — a quiet, premium tell */
+  .kpi-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(120,120,255,0.55), transparent);
+    opacity: 0; transition: opacity var(--t-med);
+  }
+  .kpi-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--stroke-hi);
+    box-shadow: var(--shadow-lg), var(--glow);
+  }
+  .kpi-card:hover::before { opacity: 1; }
   .kpi-accent {
     position: absolute; top: 0; left: 0;
     width: 4px; height: 100%;
+    box-shadow: 0 0 14px 1px currentColor;
   }
-  .kpi-icon { margin-bottom: 10px; opacity: 0.9; display:flex; align-items:center; }
+  .kpi-icon {
+    margin-bottom: 10px; opacity: 0.92; display:flex; align-items:center;
+    transition: transform var(--t-med), opacity var(--t-med);
+  }
+  .kpi-card:hover .kpi-icon { transform: scale(1.08) translateX(2px); opacity: 1; }
   .kpi-label {
-    font-size: 0.7rem; color: #9090B8; text-transform: uppercase;
+    font-size: 0.7rem; color: var(--txt-lo); text-transform: uppercase;
     letter-spacing: 1.2px; margin-bottom: 8px; font-weight: 500;
   }
   /* clamp scales value text across sidebar-open/closed layouts without wrapping */
   .kpi-value {
     font-size: clamp(1.2rem, 1.4vw, 1.9rem); font-weight: 700;
-    color: #E8E8FF; line-height: 1.1; white-space: nowrap; overflow: visible;
+    color: var(--txt-hi); line-height: 1.1; white-space: nowrap; overflow: visible;
+    text-shadow: 0 1px 12px rgba(120,120,220,0.18);
   }
   /* #9898C0 on #16213E ≈ 6.2:1 — WCAG AA (was #7878A0 ≈ 4.1:1, failing) */
   .kpi-sub   { font-size: 0.73rem; color: #9898C0; margin-top: 8px; }
 
   /* ── section headings ── */
   .section-title {
-    font-size: 1.0rem; font-weight: 600; color: #B0B0D8;
+    font-size: 1.0rem; font-weight: 600; color: var(--txt-mid);
     padding-bottom: 10px; margin: 28px 0 16px;
-    border-bottom: 1px solid #2D2D4E;
-    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--stroke);
+    display: flex; align-items: center; gap: 9px;
   }
   .section-dot {
     width: 8px; height: 8px; border-radius: 50%;
-    background: #5A5AFF; display: inline-block; flex-shrink: 0;
+    background: var(--accent); display: inline-block; flex-shrink: 0;
+    animation: dotPulse 2.6s var(--ease) infinite;
   }
 
   /* ── signal chips ── */
   .signal-chip {
-    display: inline-block; padding: 3px 10px; border-radius: 20px;
-    font-size: 0.71rem; font-weight: 600; margin: 2px 2px 4px;
+    display: inline-flex; align-items: center; padding: 3px 11px;
+    border-radius: var(--r-pill);
+    font-size: 0.71rem; font-weight: 600; margin: 2px 3px 4px;
     letter-spacing: 0.2px;
+    transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
+    cursor: default;
   }
+  .signal-chip:hover { transform: translateY(-1px); filter: brightness(1.12); }
   .chip-rule     { background: rgba(200,30,30,0.2);  color: #FF8080; border: 1px solid rgba(200,30,30,0.4); }
+  .chip-rule:hover     { box-shadow: 0 4px 12px rgba(200,30,30,0.30); }
   .chip-peer     { background: rgba(30,100,200,0.2); color: #80AAFF; border: 1px solid rgba(30,100,200,0.4); }
+  .chip-peer:hover     { box-shadow: 0 4px 12px rgba(30,100,200,0.30); }
   .chip-ml       { background: rgba(0,140,80,0.2);   color: #60DDA0; border: 1px solid rgba(0,140,80,0.4); }
+  .chip-ml:hover       { box-shadow: 0 4px 12px rgba(0,140,80,0.30); }
   .chip-temporal { background: rgba(200,110,0,0.2);  color: #FFAA55; border: 1px solid rgba(200,110,0,0.4); }
+  .chip-temporal:hover { box-shadow: 0 4px 12px rgba(200,110,0,0.30); }
   .chip-feedback { background: rgba(120,0,200,0.2);  color: #CC88FF; border: 1px solid rgba(120,0,200,0.4); }
+  .chip-feedback:hover { box-shadow: 0 4px 12px rgba(120,0,200,0.30); }
 
   /* ── confidence pill ── */
   .conf-pill {
-    display: inline-block; padding: 2px 10px; border-radius: 20px;
-    font-size: 0.78rem; font-weight: 700;
+    display: inline-block; padding: 3px 12px; border-radius: var(--r-pill);
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.3px;
+    box-shadow: var(--shadow-sm);
   }
   .conf-HIGH   { background: rgba(180,20,20,0.25);  color: #FF7070; border: 1px solid rgba(180,20,20,0.5); }
   .conf-MEDIUM { background: rgba(180,150,0,0.25);  color: #FFD040; border: 1px solid rgba(180,150,0,0.5); }
@@ -149,11 +244,20 @@ st.markdown("""
 
   /* ── provider header card ── */
   .prov-header {
-    background: linear-gradient(135deg, #14142A 0%, #1C1C38 100%);
-    border: 1px solid #32325A; border-radius: 12px;
-    padding: 22px 26px; margin-bottom: 18px;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(140% 120% at 100% 0%, rgba(90,90,255,0.12) 0%, transparent 50%),
+      linear-gradient(135deg, #14142A 0%, #1C1C38 100%);
+    border: 1px solid #32325A; border-radius: var(--r-md);
+    padding: 24px 28px; margin-bottom: 18px;
+    box-shadow: var(--shadow-md);
+    animation: riseIn 0.45s var(--ease) both;
   }
-  .prov-name { font-size: 1.45rem; font-weight: 700; color: #E0E0FF; }
+  .prov-header::before {
+    content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--accent), transparent);
+  }
+  .prov-name { font-size: 1.45rem; font-weight: 700; color: #E0E0FF; letter-spacing: -0.2px; }
   .prov-pid  { font-size: 0.82rem; color: #8A8ABE; margin-top: 2px; font-family: 'Fira Code', monospace; letter-spacing: 0.3px; }
   .prov-stats {
     display: flex; gap: 0; margin-top: 18px;
@@ -166,11 +270,23 @@ st.markdown("""
 
   /* ── evidence cards ── */
   .ev-card {
-    background: #13131F; border-left: 3px solid;
-    border-radius: 0 8px 8px 0; padding: 12px 16px; margin-bottom: 10px;
+    position: relative;
+    background: linear-gradient(135deg, #15151F 0%, #111119 100%);
+    border-left: 3px solid;
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    padding: 13px 17px; margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+  }
+  .ev-card:hover {
+    transform: translateX(4px);
+    background: linear-gradient(135deg, #181826 0%, #131320 100%);
+    box-shadow: var(--shadow-md);
   }
   .ev-rule    { border-color: #C83232; }
+  .ev-rule:hover    { box-shadow: -6px 0 18px -8px rgba(200,50,50,0.5), var(--shadow-md); }
   .ev-peer    { border-color: #2050C8; }
+  .ev-peer:hover    { box-shadow: -6px 0 18px -8px rgba(32,80,200,0.5), var(--shadow-md); }
   .ev-rule-label { font-size: 0.75rem; font-weight: 700; color: #FF7070; text-transform: uppercase; letter-spacing: 0.6px; }
   .ev-peer-label { font-size: 0.75rem; font-weight: 700; color: #6A9FFF; text-transform: uppercase; letter-spacing: 0.6px; }
   .ev-exposure { font-size: 0.78rem; color: #E8C547; font-weight: 600; float: right; }
@@ -178,8 +294,82 @@ st.markdown("""
 
   /* ── sidebar accent ── */
   [data-testid="stSidebar"] {
-    background: #0D0D1A;
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(40,40,90,0.30) 0%, transparent 60%),
+      #0B0B16;
     border-right: 1px solid #1E1E36;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+  }
+
+  /* ── buttons — cohesive depth + spring press ── */
+  .stButton > button, [data-testid="stFormSubmitButton"] > button {
+    border-radius: var(--r-sm) !important;
+    border: 1px solid var(--stroke) !important;
+    background: linear-gradient(180deg, #1A1A2E, #15151F) !important;
+    color: var(--txt-mid) !important;
+    font-weight: 600 !important;
+    transition: transform var(--t-fast), border-color var(--t-fast),
+                box-shadow var(--t-fast), background var(--t-fast) !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+  .stButton > button:hover, [data-testid="stFormSubmitButton"] > button:hover {
+    border-color: var(--stroke-hi) !important;
+    color: var(--txt-hi) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-md), var(--glow) !important;
+  }
+  .stButton > button:active, [data-testid="stFormSubmitButton"] > button:active {
+    transform: translateY(0) scale(0.985) !important;
+  }
+  /* primary buttons keep the trust-blue identity but gain the same motion */
+  .stButton > button[kind="primary"] {
+    background: linear-gradient(180deg, #2D6AF0, #1D4ED8) !important;
+    border-color: transparent !important; color: #fff !important;
+  }
+  .stButton > button[kind="primary"]:hover {
+    box-shadow: 0 8px 22px rgba(37,99,235,0.40) !important;
+  }
+
+  /* ── inputs / selects — unify radius, focus ring ── */
+  [data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {
+    border-radius: var(--r-sm) !important;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast) !important;
+  }
+  [data-baseweb="select"] > div:focus-within,
+  .stTextInput input:focus, .stNumberInput input:focus {
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.22) !important;
+  }
+
+  /* ── slider — accent the active track + thumb glow ── */
+  [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
+    box-shadow: 0 0 0 4px rgba(90,90,255,0.18), var(--shadow-sm) !important;
+    transition: box-shadow var(--t-fast) !important;
+  }
+  [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]:hover {
+    box-shadow: 0 0 0 7px rgba(90,90,255,0.22), var(--shadow-md) !important;
+  }
+
+  /* ── dataframe — softer container with depth ── */
+  [data-testid="stDataFrame"] {
+    border-radius: var(--r-md) !important;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--stroke);
+  }
+
+  /* ── plotly charts sit on rounded, shadowed surfaces ── */
+  [data-testid="stPlotlyChart"] {
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--t-med);
+  }
+  [data-testid="stPlotlyChart"]:hover { box-shadow: var(--shadow-md); }
+
+  /* ── alerts / info boxes — rounded + subtle lift ── */
+  [data-testid="stAlertContainer"] {
+    border-radius: var(--r-sm) !important;
+    box-shadow: var(--shadow-sm) !important;
   }
 
   /* ── tabs — active state indicator ── */
@@ -244,9 +434,14 @@ st.markdown("""
     .prov-name { font-size: 1.2rem; }
   }
 
-  /* ── reduced-motion: disable decorative transitions ── */
+  /* ── reduced-motion: disable decorative transitions & animations ── */
   @media (prefers-reduced-motion: reduce) {
-    .kpi-card { transition: none; }
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    .kpi-card:hover { transform: none; }
+    .ev-card:hover  { transform: none; }
   }
 </style>
 """, unsafe_allow_html=True)
@@ -697,7 +892,7 @@ def main():
     # ── Page header ───────────────────────────────────────────────────────────
     col_h, col_sub = st.columns([3, 1])
     with col_h:
-        st.markdown('<h1 style="font-size:1.7rem; font-weight:700; color:#D0D0FF; margin:0;">Physician Billing Anomaly Detection</h1>', unsafe_allow_html=True)
+        st.markdown('<h1 style="font-size:1.7rem; font-weight:700; margin:0; letter-spacing:-0.4px; background:linear-gradient(92deg,#E8E8FF 0%,#A9B6FF 55%,#7FA8FF 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Physician Billing Anomaly Detection</h1>', unsafe_allow_html=True)
         st.markdown('<p style="font-size:0.82rem; color:#5A5A8A; margin-top:4px;">Dollar-ranked proactive audit worklist · Rules + Peer Stats + ML Ensemble</p>', unsafe_allow_html=True)
 
     # ── KPI cards ─────────────────────────────────────────────────────────────
