@@ -172,6 +172,16 @@ def render_login_screen() -> None:
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600;700&family=Fira+Sans:wght@300;400;500;600&display=swap');
 
+  /* ── motion ── */
+  @keyframes lgRise  { from { opacity: 0; transform: translateY(14px); }
+                       to   { opacity: 1; transform: translateY(0); } }
+  @keyframes lgGlow  { 0%,100% { box-shadow: 0 0 22px rgba(37,99,235,0.18),
+                                              inset 0 0 0 1px rgba(96,160,232,0.12); }
+                       50%     { box-shadow: 0 0 34px rgba(37,99,235,0.34),
+                                              inset 0 0 0 1px rgba(96,160,232,0.22); } }
+  @keyframes lgFloat { 0%,100% { transform: translateY(0); }
+                       50%     { transform: translateY(-3px); } }
+
   /* ── page chrome ── */
   [data-testid="stSidebar"]  { display: none !important; }
   .stAppHeader               { visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
@@ -205,6 +215,7 @@ def render_login_screen() -> None:
     border-radius: 16px;
     margin-bottom: 16px;
     box-shadow: 0 0 20px rgba(37,99,235,0.15);
+    animation: lgGlow 4s ease-in-out infinite, lgFloat 6s ease-in-out infinite;
   }
   .lg-title {
     font-family: 'Fira Code', monospace !important;
@@ -219,11 +230,18 @@ def render_login_screen() -> None:
 
   /* ── form card ── */
   [data-testid="stForm"] {
+    position: relative;
     background: linear-gradient(160deg, #0C0C20 0%, #090916 100%);
     border: 1px solid #1E2848;
     border-radius: 16px;
     padding: 32px 28px 28px !important;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(37,99,235,0.06);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(37,99,235,0.08);
+    animation: lgRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  /* a faint top hairline gives the card a crafted, lit-from-above edge */
+  [data-testid="stForm"]::before {
+    content: ""; position: absolute; top: 0; left: 16px; right: 16px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(96,160,232,0.55), transparent);
   }
 
   /* ── input labels ── */
@@ -312,8 +330,7 @@ def render_login_screen() -> None:
 
   /* ── reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
-    [data-testid="stForm"] input,
-    [data-testid="stFormSubmitButton"] button { transition: none !important; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 """, unsafe_allow_html=True)
