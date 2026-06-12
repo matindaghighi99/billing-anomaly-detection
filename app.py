@@ -926,12 +926,20 @@ def main():
 
     # ── Tabs ─────────────────────────────────────────────────────────────────
     st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
-    tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
-        ["Worklist", "Analytics", "Model Card", "Audit Trail"]
+    tab_ohip, tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
+        ["OHIP Casebook", "Worklist", "Analytics", "Model Card", "Audit Trail"]
     )
     # Role labels for the access-denied banners below
     _can_model = auth_mock.has_permission("view_model_card")
     _can_audit = auth_mock.has_permission("view_audit_trail")
+
+    # ═══════════════ OHIP CASEBOOK TAB ════════════════════════════════════════
+    with tab_ohip:
+        try:
+            import moh_dashboard
+            moh_dashboard.render_ohip_tab(_icon)
+        except Exception as exc:
+            st.warning(f"OHIP casebook unavailable: {exc}")
 
     # ═══════════════ WORKLIST TAB ═════════════════════════════════════════════
     with tab_wl:
