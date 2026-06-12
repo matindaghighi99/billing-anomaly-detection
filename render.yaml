@@ -6,7 +6,7 @@ services:
     name: billing-anomaly-audit
     runtime: docker
     plan: free                      # bump to "starter" to avoid idle spin-down
-    branch: claude/project-setup-x11b0o
+    branch: master
     dockerfilePath: ./Dockerfile
     healthCheckPath: /_stcore/health
     autoDeploy: true                # redeploy on every push to the branch
