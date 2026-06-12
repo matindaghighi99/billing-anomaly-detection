@@ -9,15 +9,12 @@ venv/
 .env
 .env.*
 *.db
-# Regenerated inside the image at build time:
+# Big raw claims files are regenerated at build/runtime (the small *_large
+# aggregate outputs ARE shipped so the dashboard has data even without a build).
 claims.csv
 claims_large.csv
-*_large.csv
-explanations*.json
 shap_values.csv
-shap_explanations.csv
-fraud_evidence.csv
-moh_recovery_summary.csv
 audit_log_export.csv
+audit_log.db
 # Docs/reports not needed at runtime
 *_REPORT.md
