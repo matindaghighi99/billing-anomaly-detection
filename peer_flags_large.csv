@@ -1,0 +1,40 @@
+provider_id,provider_name,specialty,cohort_key,practice_setting,metric,provider_value,peer_median,z_score,estimated_exposure,cohort_size,cohort_fallback
+PRV0008,Rebecca Alvarado,Psychiatry,Psychiatry | full_time,full_time,claims_per_day,23.9507,1.176,1164.71,1029713.58,13,False
+PRV0009,Linda Murray,Orthopedic Surgery,Orthopedic Surgery | full_time,full_time,claims_per_day,1.1889,1.027,12.42,87140.58,13,False
+PRV0012,Curtis Jones,Cardiology,Cardiology | full_time,full_time,claims_per_day,1.7845,1.4125,12.19,79987.27,20,False
+PRV0012,Curtis Jones,Cardiology,Cardiology | full_time,full_time,services_per_patient,1.2321,1.0019,80.28,79987.27,20,False
+PRV0039,Erica Johnson,Cardiology,Cardiology | full_time,full_time,claims_per_day,1.8138,1.4125,13.15,97617.08,20,False
+PRV0039,Erica Johnson,Cardiology,Cardiology | full_time,full_time,services_per_patient,1.2412,1.0019,83.43,97617.08,20,False
+PRV0043,James Fields,Dermatology,Dermatology | full_time,full_time,claims_per_day,2.0506,1.7566,6.25,61920.16,28,False
+PRV0043,James Fields,Dermatology,Dermatology | full_time,full_time,avg_minutes,14.2603,12.6893,5.04,61920.16,28,False
+PRV0046,Grace Skinner,Internal Medicine,Internal Medicine | full_time,full_time,avg_billed,142.8743,102.3057,20.47,77294.97,22,False
+PRV0046,Grace Skinner,Internal Medicine,Internal Medicine | full_time,full_time,avg_minutes,29.1035,19.7123,20.01,77294.97,22,False
+PRV0055,Alan Hernandez DVM,Internal Medicine,Internal Medicine | full_time,full_time,avg_billed,137.6426,102.3057,17.83,74739.93,22,False
+PRV0055,Alan Hernandez DVM,Internal Medicine,Internal Medicine | full_time,full_time,avg_minutes,27.8453,19.7123,17.33,74739.93,22,False
+PRV0061,Allison Simmons,Radiology,Radiology | full_time,full_time,services_per_patient,1.15,1.0014,77.17,301785.46,30,False
+PRV0084,Danny Lopez,Neurology,Neurology | full_time,full_time,claims_per_day,24.1901,1.1802,1015.05,2501955.96,12,False
+PRV0122,Robert Burns,Family Medicine,Family Medicine | full_time,full_time,claims_per_day,2.2465,1.9564,10.44,80861.7,38,False
+PRV0122,Robert Burns,Family Medicine,Family Medicine | full_time,full_time,services_per_patient,1.1543,1.0017,61.88,80861.7,38,False
+PRV0125,Billy Rivera,Psychiatry,Psychiatry | full_time,full_time,avg_billed,149.4927,125.1782,9.32,54265.84,13,False
+PRV0125,Billy Rivera,Psychiatry,Psychiatry | full_time,full_time,avg_minutes,53.0992,46.2924,8.75,54265.84,13,False
+PRV0145,Jennifer Potter,Orthopedic Surgery,Orthopedic Surgery | full_time,full_time,claims_per_day,1.1373,1.027,8.46,115100.23,13,False
+PRV0158,Elizabeth Foster,Pulmonology,Pulmonology | full_time,full_time,claims_per_day,1.5897,1.25,19.94,112286.86,19,False
+PRV0162,Taylor Perez,Orthopedic Surgery,Orthopedic Surgery | full_time,full_time,claims_per_day,1.12,1.027,7.13,118038.52,13,False
+PRV0216,Janet Harrison,Ophthalmology,Ophthalmology | full_time,full_time,avg_billed,391.0676,237.1671,8.91,220562.11,24,False
+PRV0252,Sharon Kim,Family Medicine,Family Medicine | full_time,full_time,avg_billed,177.6435,101.548,40.1,104276.76,38,False
+PRV0252,Sharon Kim,Family Medicine,Family Medicine | full_time,full_time,avg_minutes,36.1499,19.8484,39.51,104276.76,38,False
+PRV0256,Michael Mckinney,Family Medicine,Family Medicine | full_time,full_time,avg_billed,175.2049,101.548,38.81,122292.99,38,False
+PRV0256,Michael Mckinney,Family Medicine,Family Medicine | full_time,full_time,avg_minutes,35.659,19.8484,38.32,122292.99,38,False
+PRV0262,Francisco Davis,Dermatology,Dermatology | full_time,full_time,avg_billed,86.8358,77.631,3.85,58266.83,28,False
+PRV0262,Francisco Davis,Dermatology,Dermatology | full_time,full_time,claims_per_day,2.052,1.7566,6.28,58266.83,28,False
+PRV0262,Francisco Davis,Dermatology,Dermatology | full_time,full_time,avg_minutes,14.7243,12.6893,6.53,58266.83,28,False
+PRV0264,Ronald Nelson,Family Medicine,Family Medicine | full_time,full_time,avg_billed,127.5859,101.548,13.72,107172.15,38,False
+PRV0264,Ronald Nelson,Family Medicine,Family Medicine | full_time,full_time,claims_per_day,2.6582,1.9564,25.27,107172.15,38,False
+PRV0264,Ronald Nelson,Family Medicine,Family Medicine | full_time,full_time,avg_minutes,25.1667,19.8484,12.89,107172.15,38,False
+PRV0268,Mark Mcintyre,Psychiatry,Psychiatry | full_time,full_time,avg_billed,142.7137,125.1782,6.72,50520.66,13,False
+PRV0268,Mark Mcintyre,Psychiatry,Psychiatry | full_time,full_time,avg_minutes,52.8249,46.2924,8.4,50520.66,13,False
+PRV0279,Nicole Thomas,Gastroenterology,Gastroenterology | full_time,full_time,claims_per_day,1.7449,1.1285,22.18,172232.32,11,False
+PRV0279,Nicole Thomas,Gastroenterology,Gastroenterology | full_time,full_time,avg_minutes,33.098,29.0929,9.91,172232.32,11,False
+PRV0280,Darrell Mcgrath,Ophthalmology,Ophthalmology | full_time,full_time,avg_billed,385.0841,237.1671,8.56,193312.22,24,False
+PRV0296,Ronald Walters,Family Medicine,Family Medicine | full_time,full_time,avg_billed,172.3409,101.548,37.31,127015.28,38,False
+PRV0296,Ronald Walters,Family Medicine,Family Medicine | full_time,full_time,avg_minutes,35.0814,19.8484,36.92,127015.28,38,False

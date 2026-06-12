@@ -33,11 +33,13 @@ import pandas as pd
 
 from validators import validate_claims_df
 
-INPUT_CSV         = "claims.csv"
+from dataset_config import CLAIMS_FILE, out
+
+INPUT_CSV         = CLAIMS_FILE
 
 logger = logging.getLogger(__name__)
-OUTPUT_FLAGS_CSV  = "temporal_flags.csv"
-OUTPUT_SCORES_CSV = "provider_temporal.csv"
+OUTPUT_FLAGS_CSV  = out("temporal_flags.csv")
+OUTPUT_SCORES_CSV = out("provider_temporal.csv")
 
 # ── Calibrated thresholds ────────────────────────────────────────────────────
 CUSUM_THRESHOLD   = 3.0   # CUSUM score above this => change-point flag

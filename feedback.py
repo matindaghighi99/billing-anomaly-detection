@@ -34,14 +34,16 @@ import sys
 import numpy as np
 import pandas as pd
 
-DISPOSITIONS_CSV  = "dispositions.csv"
-FEEDBACK_CSV      = "feedback_scores.csv"
+from dataset_config import out
+
+DISPOSITIONS_CSV  = out("dispositions.csv")
+FEEDBACK_CSV      = out("feedback_scores.csv")
 GROUND_TRUTH_JSON = "ground_truth.json"
 
-METRICS_CSV       = "provider_metrics.csv"
-CODEMIX_CSV       = "provider_codemix.csv"
-ML_CSV            = "ml_scores.csv"
-TEMPORAL_CSV      = "provider_temporal.csv"
+METRICS_CSV       = out("provider_metrics.csv")
+CODEMIX_CSV       = out("provider_codemix.csv")
+ML_CSV            = out("ml_scores.csv")
+TEMPORAL_CSV      = out("provider_temporal.csv")
 
 MIN_LABELS        = 6    # minimum confirmed+cleared to attempt training
 FEEDBACK_MAX_PTS  = 10   # maximum points this layer contributes to risk score

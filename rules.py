@@ -16,8 +16,10 @@ import pandas as pd
 
 from validators import validate_claims_df
 
-INPUT_CSV  = "claims.csv"
-OUTPUT_CSV = "rules_flags.csv"
+from dataset_config import CLAIMS_FILE, out
+
+INPUT_CSV  = CLAIMS_FILE
+OUTPUT_CSV = out("rules_flags.csv")
 
 logger = logging.getLogger(__name__)
 

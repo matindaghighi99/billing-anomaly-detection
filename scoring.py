@@ -20,16 +20,18 @@ import warnings
 import numpy as np
 import pandas as pd
 
-RULES_CSV    = "rules_flags.csv"
+from dataset_config import CLAIMS_FILE, out
+
+RULES_CSV    = out("rules_flags.csv")
 
 logger = logging.getLogger(__name__)
-PEER_CSV     = "peer_flags.csv"
-ML_CSV       = "ml_scores.csv"
-CODEMIX_CSV   = "provider_codemix.csv"
-TEMPORAL_CSV  = "provider_temporal.csv"
-FEEDBACK_CSV  = "feedback_scores.csv"
-CLAIMS_CSV    = "claims.csv"
-OUTPUT_CSV    = "risk_scores.csv"
+PEER_CSV     = out("peer_flags.csv")
+ML_CSV       = out("ml_scores.csv")
+CODEMIX_CSV   = out("provider_codemix.csv")
+TEMPORAL_CSV  = out("provider_temporal.csv")
+FEEDBACK_CSV  = out("feedback_scores.csv")
+CLAIMS_CSV    = CLAIMS_FILE
+OUTPUT_CSV    = out("risk_scores.csv")
 
 # Points per rule type
 RULE_POINTS = {

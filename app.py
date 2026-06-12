@@ -10,6 +10,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+# Consolidated on the expanded MOH dataset (claims_large.csv → *_large outputs)
+# so every tab — worklist, analytics, and the OHIP casebook — shows the same
+# 300-physician / 15-specialty universe. Set DATASET=demo to use the original
+# curated 6-specialty set instead.
+os.environ.setdefault("DATASET", "large")
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -50,14 +56,16 @@ def _icon(name: str, size: int = 16, color: str = "currentColor", style: str = "
         f'<path d="{path}"/></svg>'
     )
 
-SCORES_CSV  = "risk_scores.csv"
-RULES_CSV   = "rules_flags.csv"
-PEER_CSV    = "peer_flags.csv"
-ML_CSV      = "ml_scores.csv"
-METRICS_CSV = "provider_metrics.csv"
-EXPLS_JSON  = "explanations.json"
-CLAIMS_CSV  = "claims.csv"
-SHAP_CSV    = "shap_explanations.csv"
+from dataset_config import CLAIMS_FILE, out
+
+SCORES_CSV  = out("risk_scores.csv")
+RULES_CSV   = out("rules_flags.csv")
+PEER_CSV    = out("peer_flags.csv")
+ML_CSV      = out("ml_scores.csv")
+METRICS_CSV = out("provider_metrics.csv")
+EXPLS_JSON  = out("explanations.json")
+CLAIMS_CSV  = CLAIMS_FILE
+SHAP_CSV    = out("shap_explanations.csv")
 
 RISK_THRESHOLD = 10
 

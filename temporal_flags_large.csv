@@ -1,0 +1,4 @@
+provider_id,provider_name,specialty,n_active_months,cusum_score,cusum_flag,spike_ratio,spike_flag,temporal_flag,estimated_exposure
+PRV0279,Nicole Thomas,Gastroenterology,24,12.6107,True,3.4118,False,True,172232.32
+PRV0264,Ronald Nelson,Family Medicine,24,5.2748,True,3.3191,False,True,107172.15
+PRV0046,Grace Skinner,Internal Medicine,24,3.1431,True,1.5556,False,True,77294.97

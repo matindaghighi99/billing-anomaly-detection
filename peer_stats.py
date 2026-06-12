@@ -41,20 +41,34 @@ from scipy import stats as scipy_stats
 
 from validators import validate_claims_df
 
-INPUT_CSV   = "claims.csv"
+from dataset_config import CLAIMS_FILE, out
+
+INPUT_CSV   = CLAIMS_FILE
 
 logger = logging.getLogger(__name__)
-OUTPUT_CSV  = "peer_flags.csv"
-METRICS_CSV = "provider_metrics.csv"
+OUTPUT_CSV  = out("peer_flags.csv")
+METRICS_CSV = out("provider_metrics.csv")
 
 # Top-tier codes per specialty (same as data_gen)
 SPECIALTY_TOP_TIER = {
-    "Family Medicine": {"99215"},
-    "Cardiology":      {"99215"},
-    "Radiology":       {"70553"},
-    "Psychiatry":      {"90837"},
-    "Dermatology":     {"11100"},
+    # Original demo set (claims.csv)
+    "Family Medicine": {"99215", "99204"},
+    "Cardiology":      {"99215", "93458", "93350", "93306"},
+    "Radiology":       {"70553", "72148", "74177", "71250", "73721"},
+    "Psychiatry":      {"90837", "90791"},
+    "Dermatology":     {"11100", "17000"},
     "Surgery":         {"27447", "43239"},
+    # Expanded set (claims_large.csv) — top-tier codes per data_gen_large
+    "Internal Medicine":  {"99215", "99233"},
+    "Orthopedic Surgery": {"27447", "29881"},
+    "General Surgery":    {"43239", "45380", "47562", "49505"},
+    "Gastroenterology":   {"45378", "43235", "91110", "43239"},
+    "Ophthalmology":      {"66984", "67028"},
+    "OB/GYN":             {"59400", "57454"},
+    "Neurology":          {"95910", "95816", "64483"},
+    "Emergency Medicine": {"99285", "99284"},
+    "Endocrinology":      {"99215"},
+    "Pulmonology":        {"31628"},
 }
 
 # ── Phase 2 cohort parameters ────────────────────────────────────────────────
