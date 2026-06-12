@@ -83,372 +83,409 @@ st.set_page_config(
 # ── Global CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-  /* ── fonts — unified with login screen ── */
-  @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-  /* ── design tokens ─────────────────────────────────────────────────────────
-     A single source of truth for the colour, radius, shadow, and motion scale.
-     Every component below references these so the visual language stays cohesive
-     and a global retune is a one-line change. */
-  :root {
-    --bg-0: #0A0A16;          /* deepest app background          */
-    --bg-1: #0D0D1A;          /* panel background                */
-    --bg-2: #13131F;          /* raised surface                  */
-    --stroke: #2D2D4E;        /* default 1px border              */
-    --stroke-hi: #4A4A7A;     /* hover/active border             */
-    --accent: #5A5AFF;        /* primary accent (indigo)         */
-    --accent-2: #2563EB;      /* secondary accent (trust-blue)   */
-    --txt-hi: #E8E8FF;        /* primary text                    */
-    --txt-mid: #B0B0D8;       /* secondary text                  */
-    --txt-lo: #9090B8;        /* muted text                      */
-
-    --r-sm: 8px;              /* radius scale */
-    --r-md: 12px;
-    --r-lg: 16px;
-    --r-pill: 999px;
-
-    /* layered shadows give real depth instead of a flat 1px border */
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.4);
-    --shadow-lg: 0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4);
-    --glow:      0 0 0 1px rgba(90,90,255,0.18), 0 8px 28px rgba(40,40,160,0.22);
-
-    --ease: cubic-bezier(0.22, 1, 0.36, 1);   /* smooth "ease-out-expo" feel */
-    --t-fast: 0.16s var(--ease);
-    --t-med:  0.28s var(--ease);
+  /* ── Keyframes ── */
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bannerSweep {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 300% 0; }
+  }
+  @keyframes dotGlow {
+    0%,100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.6); opacity: 1; }
+    50%     { box-shadow: 0 0 0 6px rgba(99,102,241,0); opacity: 0.7; }
+  }
+  @keyframes gradientBorder {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes kpiShimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
   }
 
-  /* ── base ── */
+  /* ── Design tokens ── */
+  :root {
+    --bg-0: #020209;
+    --bg-1: #06061A;
+    --bg-2: #0A0A1E;
+    --bg-3: #0E0E26;
+
+    --indigo:    #6366F1;
+    --indigo-lo: rgba(99,102,241,0.12);
+    --cyan:      #06B6D4;
+    --cyan-lo:   rgba(6,182,212,0.12);
+    --violet:    #8B5CF6;
+    --violet-lo: rgba(139,92,246,0.12);
+    --rose:      #F43F5E;
+    --rose-lo:   rgba(244,63,94,0.12);
+    --amber:     #F59E0B;
+    --amber-lo:  rgba(245,158,11,0.12);
+    --emerald:   #10B981;
+    --emerald-lo:rgba(16,185,129,0.12);
+
+    --txt-hi:  #EEF0FF;
+    --txt-mid: #8A96C8;
+    --txt-lo:  #3D4870;
+
+    --stroke:    #131830;
+    --stroke-hi: #252D58;
+
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.55);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.55);
+    --shadow-lg: 0 16px 56px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.55);
+    --glow-ind:  0 0 24px rgba(99,102,241,0.3);
+    --glow-cyn:  0 0 24px rgba(6,182,212,0.3);
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --t-fast: 0.14s var(--ease);
+    --t-med:  0.26s var(--ease);
+
+    --r-sm:   8px;
+    --r-md:   12px;
+    --r-lg:   16px;
+    --r-xl:   20px;
+    --r-pill: 999px;
+  }
+
+  /* ── Base ── */
   html, body, [class*="css"] {
-    font-family: 'Fira Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
-  /* ── entrance keyframes (used by cards / panels) ── */
-  @keyframes riseIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes bannerSheen {
-    0%   { background-position: -180% 0; }
-    100% { background-position: 280% 0; }
-  }
-  @keyframes dotPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(90,90,255,0.45); }
-    50%      { box-shadow: 0 0 0 5px rgba(90,90,255,0); }
+  /* ── App background ── */
+  .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"],
+  [data-testid="stMainBlockContainer"] {
+    background: var(--bg-0) !important;
   }
 
-  /* ── warning banner ── */
+  /* ── Warning banner ── */
   .banner {
     position: relative; overflow: hidden;
-    background: linear-gradient(90deg, #7B1111 0%, #9B2525 100%);
-    color: #FFE0E0; padding: 11px 22px; border-radius: var(--r-sm);
-    font-weight: 600; font-size: 0.88rem; text-align: center;
-    margin-bottom: 4px; border-left: 4px solid #FF4444;
-    letter-spacing: 0.2px;
-    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.06);
+    background: linear-gradient(90deg, #4A0A14 0%, #6B1020 50%, #4A0A14 100%);
+    background-size: 200% 100%;
+    color: #FFB8C0; padding: 11px 22px; border-radius: var(--r-md);
+    font-size: 0.82rem; font-weight: 500; text-align: center;
+    margin-bottom: 6px;
+    border: 1px solid rgba(244,63,94,0.25);
+    border-left: 3px solid rgba(244,63,94,0.8);
+    box-shadow: 0 0 30px rgba(244,63,94,0.08), var(--shadow-md);
+    letter-spacing: 0.15px;
   }
-  /* a slow diagonal sheen sweeps across the alert to draw the eye without
-     being distracting — disabled under prefers-reduced-motion below */
   .banner::after {
     content: ""; position: absolute; inset: 0;
-    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.10) 50%, transparent 70%);
-    background-size: 200% 100%;
-    animation: bannerSheen 6s linear infinite;
+    background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.07) 50%, transparent 75%);
+    background-size: 250% 100%;
+    animation: bannerSweep 7s linear infinite;
     pointer-events: none;
   }
 
   /* ── KPI cards ── */
   .kpi-card {
-    background:
-      radial-gradient(120% 120% at 0% 0%, rgba(90,90,255,0.10) 0%, transparent 45%),
-      linear-gradient(135deg, #1A1A2E 0%, #14182E 100%);
-    border: 1px solid var(--stroke); border-radius: var(--r-md);
-    padding: 22px 24px; position: relative; overflow: hidden;
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(6px);
+    position: relative; overflow: hidden;
+    background: linear-gradient(145deg, var(--bg-2) 0%, var(--bg-1) 100%);
+    border: 1px solid var(--stroke);
+    border-radius: var(--r-lg);
+    padding: 22px 22px 20px;
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.03);
     transition: transform var(--t-med), border-color var(--t-med), box-shadow var(--t-med);
     animation: riseIn 0.5s var(--ease) both;
-  }
-  /* the top hairline lights up on hover — a quiet, premium tell */
-  .kpi-card::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(120,120,255,0.55), transparent);
-    opacity: 0; transition: opacity var(--t-med);
-  }
-  .kpi-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--stroke-hi);
-    box-shadow: var(--shadow-lg), var(--glow);
-  }
-  .kpi-card:hover::before { opacity: 1; }
-  .kpi-accent {
-    position: absolute; top: 0; left: 0;
-    width: 4px; height: 100%;
-    box-shadow: 0 0 14px 1px currentColor;
-  }
-  .kpi-icon {
-    margin-bottom: 10px; opacity: 0.92; display:flex; align-items:center;
-    transition: transform var(--t-med), opacity var(--t-med);
-  }
-  .kpi-card:hover .kpi-icon { transform: scale(1.08) translateX(2px); opacity: 1; }
-  .kpi-label {
-    font-size: 0.7rem; color: var(--txt-lo); text-transform: uppercase;
-    letter-spacing: 1.2px; margin-bottom: 8px; font-weight: 500;
-  }
-  /* clamp scales value text across sidebar-open/closed layouts without wrapping */
-  .kpi-value {
-    font-size: clamp(1.2rem, 1.4vw, 1.9rem); font-weight: 700;
-    color: var(--txt-hi); line-height: 1.1; white-space: nowrap; overflow: visible;
-    text-shadow: 0 1px 12px rgba(120,120,220,0.18);
-  }
-  /* #9898C0 on #16213E ≈ 6.2:1 — WCAG AA (was #7878A0 ≈ 4.1:1, failing) */
-  .kpi-sub   { font-size: 0.73rem; color: #9898C0; margin-top: 8px; }
-
-  /* ── section headings ── */
-  .section-title {
-    font-size: 1.0rem; font-weight: 600; color: var(--txt-mid);
-    padding-bottom: 10px; margin: 28px 0 16px;
-    border-bottom: 1px solid var(--stroke);
-    display: flex; align-items: center; gap: 9px;
-  }
-  .section-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--accent); display: inline-block; flex-shrink: 0;
-    animation: dotPulse 2.6s var(--ease) infinite;
-  }
-
-  /* ── signal chips ── */
-  .signal-chip {
-    display: inline-flex; align-items: center; padding: 3px 11px;
-    border-radius: var(--r-pill);
-    font-size: 0.71rem; font-weight: 600; margin: 2px 3px 4px;
-    letter-spacing: 0.2px;
-    transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
     cursor: default;
   }
-  .signal-chip:hover { transform: translateY(-1px); filter: brightness(1.12); }
-  .chip-rule     { background: rgba(200,30,30,0.2);  color: #FF8080; border: 1px solid rgba(200,30,30,0.4); }
-  .chip-rule:hover     { box-shadow: 0 4px 12px rgba(200,30,30,0.30); }
-  .chip-peer     { background: rgba(30,100,200,0.2); color: #80AAFF; border: 1px solid rgba(30,100,200,0.4); }
-  .chip-peer:hover     { box-shadow: 0 4px 12px rgba(30,100,200,0.30); }
-  .chip-ml       { background: rgba(0,140,80,0.2);   color: #60DDA0; border: 1px solid rgba(0,140,80,0.4); }
-  .chip-ml:hover       { box-shadow: 0 4px 12px rgba(0,140,80,0.30); }
-  .chip-temporal { background: rgba(200,110,0,0.2);  color: #FFAA55; border: 1px solid rgba(200,110,0,0.4); }
-  .chip-temporal:hover { box-shadow: 0 4px 12px rgba(200,110,0,0.30); }
-  .chip-feedback { background: rgba(120,0,200,0.2);  color: #CC88FF; border: 1px solid rgba(120,0,200,0.4); }
-  .chip-feedback:hover { box-shadow: 0 4px 12px rgba(120,0,200,0.30); }
-
-  /* ── confidence pill ── */
-  .conf-pill {
-    display: inline-block; padding: 3px 12px; border-radius: var(--r-pill);
-    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.3px;
-    box-shadow: var(--shadow-sm);
+  /* gradient top-edge that reveals on hover */
+  .kpi-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--kpi-accent, var(--indigo)) 50%, transparent 100%);
+    opacity: 0; transition: opacity var(--t-med);
   }
-  .conf-HIGH   { background: rgba(180,20,20,0.25);  color: #FF7070; border: 1px solid rgba(180,20,20,0.5); }
-  .conf-MEDIUM { background: rgba(180,150,0,0.25);  color: #FFD040; border: 1px solid rgba(180,150,0,0.5); }
-  .conf-LOW    { background: rgba(20,140,40,0.25);  color: #70DD80; border: 1px solid rgba(20,140,40,0.5); }
+  /* shimmer sweep */
+  .kpi-card::after {
+    content: ""; position: absolute;
+    top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    transition: none;
+  }
+  .kpi-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--stroke-hi);
+    box-shadow: var(--shadow-lg), 0 0 0 1px var(--stroke-hi), 0 0 40px rgba(99,102,241,0.1);
+  }
+  .kpi-card:hover::before { opacity: 1; }
+  .kpi-card:hover::after {
+    left: 120%; transition: left 0.6s ease;
+  }
+  .kpi-icon {
+    margin-bottom: 12px; display: flex; align-items: center;
+    transition: transform var(--t-med);
+  }
+  .kpi-card:hover .kpi-icon { transform: scale(1.1) translateX(2px); }
+  .kpi-label {
+    font-size: 0.65rem; color: var(--txt-lo);
+    text-transform: uppercase; letter-spacing: 1.4px;
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .kpi-value {
+    font-size: clamp(1.15rem, 1.45vw, 1.85rem);
+    font-weight: 800; color: var(--txt-hi);
+    line-height: 1.1; letter-spacing: -0.3px;
+    font-family: 'Inter', sans-serif;
+  }
+  .kpi-sub { font-size: 0.7rem; color: var(--txt-lo); margin-top: 8px; }
 
-  /* ── provider header card ── */
+  /* ── Section headings ── */
+  .section-title {
+    font-size: 0.82rem; font-weight: 700; color: var(--txt-lo);
+    padding-bottom: 10px; margin: 28px 0 18px;
+    border-bottom: 1px solid var(--stroke);
+    display: flex; align-items: center; gap: 10px;
+    text-transform: uppercase; letter-spacing: 1.1px;
+  }
+  .section-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--indigo); display: inline-block; flex-shrink: 0;
+    animation: dotGlow 2.8s var(--ease) infinite;
+    box-shadow: 0 0 8px rgba(99,102,241,0.6);
+  }
+
+  /* ── Signal chips ── */
+  .signal-chip {
+    display: inline-flex; align-items: center; padding: 4px 12px;
+    border-radius: var(--r-pill);
+    font-size: 0.68rem; font-weight: 700; margin: 2px 3px 4px;
+    letter-spacing: 0.3px; font-family: 'Inter', sans-serif;
+    transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
+    cursor: default; white-space: nowrap;
+  }
+  .signal-chip:hover { transform: translateY(-2px); filter: brightness(1.15); }
+
+  .chip-rule     { background: rgba(244,63,94,0.12);  color: #FB7185; border: 1px solid rgba(244,63,94,0.3); }
+  .chip-rule:hover     { box-shadow: 0 4px 16px rgba(244,63,94,0.25); }
+  .chip-peer     { background: rgba(99,102,241,0.12); color: #A5B4FC; border: 1px solid rgba(99,102,241,0.3); }
+  .chip-peer:hover     { box-shadow: 0 4px 16px rgba(99,102,241,0.25); }
+  .chip-ml       { background: rgba(16,185,129,0.12); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.3); }
+  .chip-ml:hover       { box-shadow: 0 4px 16px rgba(16,185,129,0.25); }
+  .chip-temporal { background: rgba(245,158,11,0.12); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
+  .chip-temporal:hover { box-shadow: 0 4px 16px rgba(245,158,11,0.25); }
+  .chip-feedback { background: rgba(139,92,246,0.12); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.3); }
+  .chip-feedback:hover { box-shadow: 0 4px 16px rgba(139,92,246,0.25); }
+
+  /* ── Confidence pills ── */
+  .conf-pill {
+    display: inline-block; padding: 4px 14px; border-radius: var(--r-pill);
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.8px;
+    text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
+  }
+  .conf-HIGH   { background: rgba(244,63,94,0.15);  color: #FB7185; border: 1px solid rgba(244,63,94,0.4);
+                 box-shadow: 0 0 16px rgba(244,63,94,0.2); }
+  .conf-MEDIUM { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.4);
+                 box-shadow: 0 0 16px rgba(245,158,11,0.2); }
+  .conf-LOW    { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.4);
+                 box-shadow: 0 0 16px rgba(16,185,129,0.2); }
+
+  /* ── Provider header card ── */
   .prov-header {
     position: relative; overflow: hidden;
     background:
-      radial-gradient(140% 120% at 100% 0%, rgba(90,90,255,0.12) 0%, transparent 50%),
-      linear-gradient(135deg, #14142A 0%, #1C1C38 100%);
-    border: 1px solid #32325A; border-radius: var(--r-md);
-    padding: 24px 28px; margin-bottom: 18px;
-    box-shadow: var(--shadow-md);
+      radial-gradient(160% 120% at 100% 0%, rgba(99,102,241,0.1) 0%, transparent 55%),
+      radial-gradient(100% 100% at 0% 100%, rgba(6,182,212,0.06) 0%, transparent 50%),
+      linear-gradient(145deg, #0C0C24 0%, #080818 100%);
+    border: 1px solid var(--stroke-hi);
+    border-radius: var(--r-xl);
+    padding: 26px 28px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.04);
     animation: riseIn 0.45s var(--ease) both;
   }
   .prov-header::before {
-    content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
-    background: linear-gradient(180deg, var(--accent), transparent);
+    content: ""; position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.6), rgba(6,182,212,0.4), transparent);
   }
-  .prov-name { font-size: 1.45rem; font-weight: 700; color: #E0E0FF; letter-spacing: -0.2px; }
-  .prov-pid  { font-size: 0.82rem; color: #8A8ABE; margin-top: 2px; font-family: 'Fira Code', monospace; letter-spacing: 0.3px; }
+  .prov-name {
+    font-size: 1.5rem; font-weight: 800; color: var(--txt-hi);
+    letter-spacing: -0.4px; font-family: 'Inter', sans-serif;
+  }
+  .prov-pid {
+    font-size: 0.75rem; color: var(--txt-lo); margin-top: 3px;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px;
+  }
   .prov-stats {
-    display: flex; gap: 0; margin-top: 18px;
-    border-top: 1px solid #2A2A4A; padding-top: 16px; flex-wrap: wrap;
+    display: flex; gap: 0; margin-top: 20px;
+    border-top: 1px solid var(--stroke); padding-top: 18px; flex-wrap: wrap;
   }
-  .prov-stat { flex: 1; min-width: 110px; padding: 0 20px 0 0; }
-  .prov-stat + .prov-stat { border-left: 1px solid #2A2A4A; padding-left: 20px; }
-  .prov-stat-label { font-size: 0.68rem; color: #8A8ABE; text-transform: uppercase; letter-spacing: 0.9px; }
-  .prov-stat-value { font-size: 1.12rem; font-weight: 600; color: #D0D0F0; margin-top: 3px; }
+  .prov-stat { flex: 1; min-width: 100px; padding: 0 20px 0 0; }
+  .prov-stat + .prov-stat { border-left: 1px solid var(--stroke); padding-left: 20px; }
+  .prov-stat-label { font-size: 0.63rem; color: var(--txt-lo); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .prov-stat-value { font-size: 1.1rem; font-weight: 700; color: var(--txt-hi); margin-top: 4px; font-family: 'Inter', sans-serif; }
 
-  /* ── evidence cards ── */
+  /* ── Evidence cards ── */
   .ev-card {
     position: relative;
-    background: linear-gradient(135deg, #15151F 0%, #111119 100%);
-    border-left: 3px solid;
-    border-radius: 0 var(--r-sm) var(--r-sm) 0;
-    padding: 13px 17px; margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-1) 100%);
+    border-left: 2px solid;
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    padding: 14px 18px; margin-bottom: 10px;
     box-shadow: var(--shadow-sm);
     transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
   }
   .ev-card:hover {
-    transform: translateX(4px);
-    background: linear-gradient(135deg, #181826 0%, #131320 100%);
+    transform: translateX(5px);
+    background: linear-gradient(135deg, var(--bg-3) 0%, var(--bg-2) 100%);
     box-shadow: var(--shadow-md);
   }
-  .ev-rule    { border-color: #C83232; }
-  .ev-rule:hover    { box-shadow: -6px 0 18px -8px rgba(200,50,50,0.5), var(--shadow-md); }
-  .ev-peer    { border-color: #2050C8; }
-  .ev-peer:hover    { box-shadow: -6px 0 18px -8px rgba(32,80,200,0.5), var(--shadow-md); }
-  .ev-rule-label { font-size: 0.75rem; font-weight: 700; color: #FF7070; text-transform: uppercase; letter-spacing: 0.6px; }
-  .ev-peer-label { font-size: 0.75rem; font-weight: 700; color: #6A9FFF; text-transform: uppercase; letter-spacing: 0.6px; }
-  .ev-exposure { font-size: 0.78rem; color: #E8C547; font-weight: 600; float: right; }
-  .ev-text    { font-size: 0.86rem; color: #AAAAC0; margin-top: 6px; line-height: 1.5; }
+  .ev-rule { border-color: #F43F5E; }
+  .ev-rule:hover { box-shadow: -4px 0 20px -6px rgba(244,63,94,0.5), var(--shadow-md); }
+  .ev-peer { border-color: #6366F1; }
+  .ev-peer:hover { box-shadow: -4px 0 20px -6px rgba(99,102,241,0.5), var(--shadow-md); }
+  .ev-rule-label { font-size: 0.7rem; font-weight: 800; color: #FB7185; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
+  .ev-peer-label { font-size: 0.7rem; font-weight: 800; color: #A5B4FC; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
+  .ev-exposure { font-size: 0.76rem; color: #FCD34D; font-weight: 700; float: right; font-family: 'JetBrains Mono', monospace; }
+  .ev-text { font-size: 0.84rem; color: var(--txt-mid); margin-top: 7px; line-height: 1.55; }
 
-  /* ── sidebar accent ── */
+  /* ── Sidebar ── */
   [data-testid="stSidebar"] {
     background:
-      radial-gradient(120% 60% at 50% 0%, rgba(40,40,90,0.30) 0%, transparent 60%),
-      #0B0B16;
-    border-right: 1px solid #1E1E36;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+      radial-gradient(140% 80% at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 60%),
+      linear-gradient(180deg, #07071E 0%, #050510 100%);
+    border-right: 1px solid var(--stroke);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.4);
   }
 
-  /* ── buttons — cohesive depth + spring press ── */
-  .stButton > button, [data-testid="stFormSubmitButton"] > button {
-    border-radius: var(--r-sm) !important;
+  /* ── Buttons ── */
+  .stButton > button {
+    border-radius: var(--r-md) !important;
     border: 1px solid var(--stroke) !important;
-    background: linear-gradient(180deg, #1A1A2E, #15151F) !important;
+    background: linear-gradient(180deg, var(--bg-3), var(--bg-2)) !important;
     color: var(--txt-mid) !important;
-    font-weight: 600 !important;
+    font-weight: 600 !important; font-family: 'Inter', sans-serif !important;
+    font-size: 0.83rem !important;
     transition: transform var(--t-fast), border-color var(--t-fast),
                 box-shadow var(--t-fast), background var(--t-fast) !important;
     box-shadow: var(--shadow-sm) !important;
   }
-  .stButton > button:hover, [data-testid="stFormSubmitButton"] > button:hover {
+  .stButton > button:hover {
     border-color: var(--stroke-hi) !important;
     color: var(--txt-hi) !important;
     transform: translateY(-1px) !important;
-    box-shadow: var(--shadow-md), var(--glow) !important;
+    box-shadow: var(--shadow-md), 0 0 16px rgba(99,102,241,0.12) !important;
   }
-  .stButton > button:active, [data-testid="stFormSubmitButton"] > button:active {
-    transform: translateY(0) scale(0.985) !important;
-  }
-  /* primary buttons keep the trust-blue identity but gain the same motion */
+  .stButton > button:active { transform: translateY(0) scale(0.985) !important; }
   .stButton > button[kind="primary"] {
-    background: linear-gradient(180deg, #2D6AF0, #1D4ED8) !important;
-    border-color: transparent !important; color: #fff !important;
+    background: linear-gradient(135deg, #6366F1, #4F46E5) !important;
+    border-color: rgba(99,102,241,0.4) !important; color: #fff !important;
+    box-shadow: 0 0 20px rgba(99,102,241,0.3) !important;
   }
   .stButton > button[kind="primary"]:hover {
-    box-shadow: 0 8px 22px rgba(37,99,235,0.40) !important;
+    box-shadow: 0 0 32px rgba(99,102,241,0.5), 0 8px 20px rgba(0,0,0,0.3) !important;
   }
 
-  /* ── inputs / selects — unify radius, focus ring ── */
+  /* ── Inputs / selects ── */
   [data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {
-    border-radius: var(--r-sm) !important;
+    background: rgba(255,255,255,0.02) !important;
+    border-color: var(--stroke) !important;
+    border-radius: var(--r-md) !important;
+    color: var(--txt-hi) !important;
     transition: border-color var(--t-fast), box-shadow var(--t-fast) !important;
   }
   [data-baseweb="select"] > div:focus-within,
   .stTextInput input:focus, .stNumberInput input:focus {
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.22) !important;
+    border-color: var(--indigo) !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.18) !important;
   }
 
-  /* ── slider — accent the active track + thumb glow ── */
+  /* ── Slider ── */
   [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
-    box-shadow: 0 0 0 4px rgba(90,90,255,0.18), var(--shadow-sm) !important;
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.2), var(--shadow-sm) !important;
+    background: var(--indigo) !important;
     transition: box-shadow var(--t-fast) !important;
   }
   [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]:hover {
-    box-shadow: 0 0 0 7px rgba(90,90,255,0.22), var(--shadow-md) !important;
+    box-shadow: 0 0 0 7px rgba(99,102,241,0.25), var(--glow-ind) !important;
   }
 
-  /* ── dataframe — softer container with depth ── */
+  /* ── Dataframe ── */
   [data-testid="stDataFrame"] {
-    border-radius: var(--r-md) !important;
+    border-radius: var(--r-lg) !important;
     overflow: hidden;
     box-shadow: var(--shadow-md);
-    border: 1px solid var(--stroke);
+    border: 1px solid var(--stroke) !important;
   }
 
-  /* ── plotly charts sit on rounded, shadowed surfaces ── */
+  /* ── Charts ── */
   [data-testid="stPlotlyChart"] {
-    border-radius: var(--r-md);
+    border-radius: var(--r-lg);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--t-med);
+    border: 1px solid var(--stroke);
+    background: var(--bg-1);
+    transition: box-shadow var(--t-med), border-color var(--t-med);
   }
-  [data-testid="stPlotlyChart"]:hover { box-shadow: var(--shadow-md); }
+  [data-testid="stPlotlyChart"]:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--stroke-hi);
+  }
 
-  /* ── alerts / info boxes — rounded + subtle lift ── */
+  /* ── Alerts ── */
   [data-testid="stAlertContainer"] {
-    border-radius: var(--r-sm) !important;
+    border-radius: var(--r-md) !important;
     box-shadow: var(--shadow-sm) !important;
   }
 
-  /* ── tabs — active state indicator ── */
+  /* ── Tabs ── */
   [data-testid="stTabs"] [role="tablist"] {
-    border-bottom: 1px solid #1E2848;
-    gap: 4px;
+    border-bottom: 1px solid var(--stroke);
+    gap: 2px; background: transparent;
   }
   [data-testid="stTabs"] [role="tab"] {
-    font-family: 'Fira Sans', system-ui, sans-serif !important;
-    font-size: 0.85rem !important;
-    font-weight: 500 !important;
-    color: #6878A8 !important;
-    padding: 8px 16px !important;
-    border-radius: 6px 6px 0 0;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.82rem !important; font-weight: 500 !important;
+    color: var(--txt-lo) !important;
+    padding: 9px 18px !important;
+    border-radius: 8px 8px 0 0;
     border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
   }
   [data-testid="stTabs"] [role="tab"]:hover {
-    color: #A0B0D8 !important;
-    background: rgba(37,99,235,0.06) !important;
+    color: var(--txt-mid) !important;
+    background: rgba(99,102,241,0.05) !important;
   }
   [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-    color: #C8D8FF !important;
-    border-bottom: 2px solid #2563EB !important;
-    background: rgba(37,99,235,0.08) !important;
-    font-weight: 600 !important;
+    color: #C8D4FF !important;
+    border-bottom: 2px solid var(--indigo) !important;
+    background: rgba(99,102,241,0.08) !important;
+    font-weight: 700 !important;
   }
 
-  /* ── focus-visible ring for keyboard nav (WCAG 2.1 §2.4.11) ── */
+  /* ── Focus ring ── */
   :focus-visible {
-    outline: 2px solid #2563EB !important;
+    outline: 2px solid var(--indigo) !important;
     outline-offset: 2px !important;
   }
 
-  /* ── scrollbar ── */
-  ::-webkit-scrollbar       { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #0E1117; }
-  ::-webkit-scrollbar-thumb { background: #2A2A4A; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #3A3A6A; }
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--stroke-hi); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3D4A8A; }
 
-  /* ── app background — prevents white bleed behind the main content area ── */
-  .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"],
-  [data-testid="stMainBlockContainer"] {
-    background: #0D0D1A !important;
-  }
-
-  /* ── responsive KPI grid ── */
-  /* On narrow viewports Streamlit's flex row wraps; keep cards legible */
+  /* ── Responsive ── */
   @media (max-width: 768px) {
     .kpi-card { padding: 16px 18px; }
-    .kpi-value { font-size: 1.35rem !important; }
-    .kpi-label { font-size: 0.66rem; letter-spacing: 0.9px; }
-    /* stack provider-stat row on small screens */
+    .kpi-value { font-size: 1.3rem !important; }
     .prov-stats { flex-direction: column; gap: 12px; }
-    .prov-stat + .prov-stat { border-left: none; padding-left: 0; border-top: 1px solid #2A2A4A; padding-top: 12px; }
+    .prov-stat + .prov-stat { border-left: none; padding-left: 0; border-top: 1px solid var(--stroke); padding-top: 12px; }
   }
 
-  @media (max-width: 480px) {
-    .kpi-card { padding: 14px 14px; }
-    .kpi-value { font-size: 1.2rem !important; }
-    .section-title { font-size: 0.9rem; }
-    .prov-name { font-size: 1.2rem; }
-  }
-
-  /* ── reduced-motion: disable decorative transitions & animations ── */
+  /* ── Reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation: none !important;
-      transition: none !important;
-    }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
     .kpi-card:hover { transform: none; }
     .ev-card:hover  { transform: none; }
   }
@@ -521,10 +558,10 @@ METRIC_LABELS = {
 
 _CHART_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="#13131F",
-    font=dict(color="#AAAAC0", size=12),
-    # margin intentionally omitted — every chart passes its own margin explicitly
+    plot_bgcolor="rgba(6,6,20,0.0)",
+    font=dict(family="Inter, system-ui, sans-serif", color="#6A78A8", size=11),
 )
+_AXIS_STYLE = dict(gridcolor="#0E1230", zerolinecolor="#1A2050", linecolor="#0E1230")
 
 
 def peer_comparison_chart(provider_id: str, metrics_df: pd.DataFrame,
@@ -543,26 +580,25 @@ def peer_comparison_chart(provider_id: str, metrics_df: pd.DataFrame,
     med_vals  = [float(peer_med.get(m, 0)) for m in metrics]
     ratio     = [(p / m if m > 0 else 1.0) for p, m in zip(prov_vals, med_vals)]
 
-    colors = ["#FF6B6B" if r > 1.5 else "#FFD93D" if r > 1.0 else "#6BCB77" for r in ratio]
+    colors = ["#F43F5E" if r > 1.5 else "#F59E0B" if r > 1.0 else "#10B981" for r in ratio]
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=ratio, y=labels, orientation="h",
-        marker=dict(color=colors, line=dict(color="rgba(255,255,255,0.05)", width=0.5)),
+        marker=dict(color=colors, line=dict(color="rgba(255,255,255,0.03)", width=0.5),
+                    opacity=0.85),
         text=[f"{v:.2f} (peer {m:.2f})" for v, m in zip(prov_vals, med_vals)],
         textposition="outside",
-        textfont=dict(size=11, color="#AAAAC0"),
+        textfont=dict(size=11, color="#6A78A8", family="JetBrains Mono"),
         hovertemplate="%{y}: %{x:.2f}x peer median<extra></extra>",
     ))
-    fig.add_vline(x=1.0, line_dash="dot", line_color="rgba(255,255,255,0.3)")
+    fig.add_vline(x=1.0, line_dash="dot", line_color="rgba(99,102,241,0.4)")
     fig.update_layout(
         **_CHART_LAYOUT,
-        title=dict(text=f"<b>{specialty}</b> — Provider vs Peer Median", font=dict(size=13)),
-        xaxis=dict(
-            title="Ratio to Peer Median", gridcolor="#181828",
-            zerolinecolor="#2A2A4A",
-        ),
-        yaxis=dict(gridcolor="#181828"),
+        title=dict(text=f"<b>{specialty}</b> — Provider vs Peer Median",
+                   font=dict(size=13, color="#8A96C8")),
+        xaxis=dict(title="Ratio to Peer Median", **_AXIS_STYLE),
+        yaxis=dict(**_AXIS_STYLE),
         height=300,
         margin=dict(l=10, r=100, t=44, b=30),
         showlegend=False,
@@ -584,56 +620,60 @@ def monthly_claims_chart(provider_id: str, claims_df: pd.DataFrame):
     fig.add_trace(go.Bar(
         x=monthly["month"], y=monthly["n_claims"],
         name="Claims",
-        marker=dict(color="#4A90D9", opacity=0.85),
+        marker=dict(color="#6366F1", opacity=0.75,
+                    line=dict(color="rgba(99,102,241,0.3)", width=0.5)),
         hovertemplate="%{x}: %{y} claims<extra></extra>",
     ))
     fig.add_trace(go.Scatter(
         x=monthly["month"], y=monthly["total_billed"],
         name="Total Billed ($)", yaxis="y2",
-        line=dict(color="#E8C547", width=2.5),
+        line=dict(color="#06B6D4", width=2.5),
         mode="lines+markers",
-        marker=dict(size=5),
+        marker=dict(size=5, color="#06B6D4"),
         hovertemplate="%{x}: $%{y:,.0f}<extra></extra>",
     ))
     fig.update_layout(
         **_CHART_LAYOUT,
-        title=dict(text="<b>Monthly Billing Volume</b>", font=dict(size=13)),
+        title=dict(text="<b>Monthly Billing Volume</b>", font=dict(size=13, color="#8A96C8")),
         height=260,
-        xaxis=dict(gridcolor="#181828"),
-        yaxis=dict(title="Claims", gridcolor="#181828"),
-        yaxis2=dict(title="Billed ($)", overlaying="y", side="right"),
+        yaxis=dict(title="Claims", **_AXIS_STYLE),
+        yaxis2=dict(title="Billed ($)", overlaying="y", side="right", **_AXIS_STYLE),
         margin=dict(l=10, r=70, t=44, b=30),
-        legend=dict(orientation="h", y=-0.25, font=dict(size=11)),
+        legend=dict(orientation="h", y=-0.25, font=dict(size=11, color="#6A78A8")),
     )
     return fig
 
 
+_CONF_COLOR_NEW = {"HIGH": "#F43F5E", "MEDIUM": "#F59E0B", "LOW": "#10B981"}
+
 def risk_gauge(score: float, confidence: str) -> go.Figure:
-    color = CONF_COLOR.get(confidence, "#E8C547")
+    color = _CONF_COLOR_NEW.get(confidence, "#6366F1")
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=score,
-        number=dict(suffix="/100", font=dict(size=28, color=color)),
+        number=dict(suffix="/100", font=dict(size=26, color=color,
+                    family="JetBrains Mono")),
         gauge=dict(
-            axis=dict(range=[0, 100], tickfont=dict(size=10, color="#7070A0"),
+            axis=dict(range=[0, 100],
+                      tickfont=dict(size=9, color="#3D4870", family="JetBrains Mono"),
                       tickvals=[0, 25, 50, 75, 100]),
-            bar=dict(color=color, thickness=0.25),
+            bar=dict(color=color, thickness=0.28),
             bgcolor="rgba(0,0,0,0)",
             bordercolor="rgba(0,0,0,0)",
             steps=[
-                dict(range=[0, 33],  color="#0D0D20"),
-                dict(range=[33, 66], color="#12122A"),
-                dict(range=[66, 100], color="#18183A"),
+                dict(range=[0, 33],   color="#08081C"),
+                dict(range=[33, 66],  color="#0A0A22"),
+                dict(range=[66, 100], color="#0E0E2A"),
             ],
             threshold=dict(
-                line=dict(color="white", width=2),
-                thickness=0.8, value=score,
+                line=dict(color=color, width=2),
+                thickness=0.85, value=score,
             ),
         ),
     ))
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#AAAAC0"),
+        font=dict(color="#6A78A8", family="Inter"),
         height=160,
         margin=dict(l=10, r=10, t=10, b=10),
     )
@@ -648,18 +688,20 @@ def exposure_by_specialty_chart(worklist: pd.DataFrame) -> go.Figure:
         orientation="h",
         marker=dict(
             color=grp["estimated_exposure"],
-            colorscale=[[0, "#1A1A4A"], [0.5, "#4A4AFF"], [1, "#FF6B6B"]],
+            colorscale=[[0, "#1A1A4A"], [0.4, "#6366F1"], [0.75, "#8B5CF6"], [1, "#F43F5E"]],
             showscale=False,
+            opacity=0.85,
         ),
         text=["${:,.0f}".format(v) for v in grp["estimated_exposure"]],
         textposition="outside",
-        textfont=dict(size=11, color="#AAAAC0"),
+        textfont=dict(size=11, color="#6A78A8", family="JetBrains Mono"),
         hovertemplate="%{y}: $%{x:,.0f}<extra></extra>",
     ))
     fig.update_layout(
         **_CHART_LAYOUT,
-        title=dict(text="<b>Estimated Exposure by Specialty</b>", font=dict(size=13)),
-        xaxis=dict(title="Estimated Exposure ($)", gridcolor="#181828"),
+        title=dict(text="<b>Estimated Exposure by Specialty</b>",
+                   font=dict(size=13, color="#8A96C8")),
+        xaxis=dict(title="Estimated Exposure ($)", **_AXIS_STYLE),
         yaxis=dict(gridcolor="rgba(0,0,0,0)"),
         height=300,
         margin=dict(l=10, r=90, t=44, b=30),
@@ -671,21 +713,23 @@ def confidence_breakdown_chart(worklist: pd.DataFrame) -> go.Figure:
     counts = worklist["confidence"].value_counts().reindex(
         ["HIGH", "MEDIUM", "LOW"], fill_value=0
     )
-    colors = [CONF_COLOR.get(c, "#888") for c in counts.index]
+    new_colors = {"HIGH": "#F43F5E", "MEDIUM": "#F59E0B", "LOW": "#10B981"}
+    colors = [new_colors.get(c, "#6366F1") for c in counts.index]
     fig = go.Figure(go.Pie(
         labels=counts.index.tolist(),
         values=counts.values.tolist(),
-        marker=dict(colors=colors, line=dict(color="#0D0D1A", width=2)),
+        marker=dict(colors=colors, line=dict(color="#06061A", width=3)),
         textinfo="label+percent",
-        textfont=dict(size=12),
-        hole=0.55,
+        textfont=dict(size=11, family="Inter"),
+        hole=0.6,
         hovertemplate="%{label}: %{value} providers (%{percent})<extra></extra>",
     ))
     fig.update_layout(
         **_CHART_LAYOUT,
-        title=dict(text="<b>Confidence Tier Breakdown</b>", font=dict(size=13)),
+        title=dict(text="<b>Confidence Tier Breakdown</b>",
+                   font=dict(size=13, color="#8A96C8")),
         height=300,
-        legend=dict(orientation="h", y=-0.1, font=dict(size=11)),
+        legend=dict(orientation="h", y=-0.1, font=dict(size=11, color="#6A78A8")),
         margin=dict(l=10, r=10, t=44, b=30),
     )
     return fig
@@ -697,16 +741,18 @@ def score_distribution_chart(worklist: pd.DataFrame) -> go.Figure:
         nbinsx=20,
         marker=dict(
             color=worklist["risk_score"],
-            colorscale=[[0, "#1A2A4A"], [0.5, "#4A6AFF"], [1, "#FF5050"]],
-            line=dict(color="#0D0D1A", width=0.5),
+            colorscale=[[0, "#1A1A4A"], [0.45, "#6366F1"], [0.75, "#8B5CF6"], [1, "#F43F5E"]],
+            line=dict(color="#06061A", width=0.5),
+            opacity=0.85,
         ),
         hovertemplate="Score %{x}: %{y} providers<extra></extra>",
     ))
     fig.update_layout(
         **_CHART_LAYOUT,
-        title=dict(text="<b>Risk Score Distribution</b>", font=dict(size=13)),
-        xaxis=dict(title="Risk Score", gridcolor="#181828"),
-        yaxis=dict(title="Providers",  gridcolor="#181828"),
+        title=dict(text="<b>Risk Score Distribution</b>",
+                   font=dict(size=13, color="#8A96C8")),
+        xaxis=dict(title="Risk Score", **_AXIS_STYLE),
+        yaxis=dict(title="Providers",  **_AXIS_STYLE),
         height=280,
         margin=dict(l=10, r=10, t=44, b=30),
         bargap=0.06,
@@ -715,20 +761,22 @@ def score_distribution_chart(worklist: pd.DataFrame) -> go.Figure:
 
 
 def shap_bar_chart(features: list, values: list) -> go.Figure:
-    colors = ["#FF6B6B" if v > 0 else "#6BCB77" for v in values]
+    colors = ["#F43F5E" if v > 0 else "#10B981" for v in values]
     fig = go.Figure(go.Bar(
         x=values, y=features, orientation="h",
-        marker=dict(color=colors, opacity=0.85),
+        marker=dict(color=colors, opacity=0.82,
+                    line=dict(color="rgba(0,0,0,0.2)", width=0.5)),
         text=[f"{v:+.4f}" for v in values],
         textposition="outside",
-        textfont=dict(size=11, color="#AAAAC0"),
+        textfont=dict(size=11, color="#6A78A8", family="JetBrains Mono"),
         hovertemplate="%{y}: %{x:+.4f}<extra></extra>",
     ))
-    fig.add_vline(x=0, line_color="rgba(255,255,255,0.25)")
+    fig.add_vline(x=0, line_color="rgba(99,102,241,0.35)")
     fig.update_layout(
         **_CHART_LAYOUT,
-        title=dict(text="<b>SHAP Feature Attribution</b>", font=dict(size=13)),
-        xaxis=dict(title="SHAP value (anomaly contribution)", gridcolor="#181828"),
+        title=dict(text="<b>SHAP Feature Attribution</b>",
+                   font=dict(size=13, color="#8A96C8")),
+        xaxis=dict(title="SHAP value (anomaly contribution)", **_AXIS_STYLE),
         yaxis=dict(gridcolor="rgba(0,0,0,0)"),
         height=220,
         margin=dict(l=10, r=80, t=44, b=30),
@@ -743,43 +791,66 @@ def signal_badges(pid: str, rules_df, peer_df, ml_df, worklist_row=None) -> str:
     badges = []
     if not rules_df.empty:
         for r in rules_df[rules_df["provider_id"] == pid]["rule"].unique():
-            label = html.escape(r.replace("_", " ").title())
-            badges.append(f'<span class="signal-chip chip-rule">{_icon("exclamation-triangle",11,"#FF8080","margin-right:3px;")} {label}</span>')
+            label = r.replace("_", " ").title()
+            badges.append(f'<span class="signal-chip chip-rule">{_icon("exclamation-triangle",11,"#FB7185","margin-right:4px;")} {label}</span>')
     if not peer_df.empty:
         n_peer = len(peer_df[peer_df["provider_id"] == pid])
         if n_peer:
-            badges.append(f'<span class="signal-chip chip-peer">{_icon("chart-bar",11,"#80AAFF","margin-right:3px;")} Peer Outlier ({n_peer} metrics)</span>')
+            badges.append(f'<span class="signal-chip chip-peer">{_icon("chart-bar",11,"#A5B4FC","margin-right:4px;")} Peer Outlier ({n_peer} metrics)</span>')
     if not ml_df.empty:
         ml_row = ml_df[ml_df["provider_id"] == pid]
         if not ml_row.empty and ml_row.iloc[0]["ml_is_anomaly"]:
             score = ml_row.iloc[0]["ml_score"]
-            badges.append(f'<span class="signal-chip chip-ml">{_icon("cpu-chip",11,"#60DDA0","margin-right:3px;")} ML Anomaly ({score:.0f}/100)</span>')
+            badges.append(f'<span class="signal-chip chip-ml">{_icon("cpu-chip",11,"#6EE7B7","margin-right:4px;")} ML Anomaly ({score:.0f}/100)</span>')
     if worklist_row is not None:
         if worklist_row.get("codemix_flag", 0):
             kl = worklist_row.get("kl_divergence", 0)
-            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrows-right-left",11,"#FFAA55","margin-right:3px;")} Code-Mix Drift (KL={kl:.3f})</span>')
+            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrows-right-left",11,"#FCD34D","margin-right:4px;")} Code-Mix Drift (KL={kl:.3f})</span>')
         if worklist_row.get("temporal_flag", 0):
-            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrow-trending-up",11,"#FFAA55","margin-right:3px;")} Temporal Change-Point</span>')
+            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrow-trending-up",11,"#FCD34D","margin-right:4px;")} Temporal Change-Point</span>')
         fb = worklist_row.get("feedback_score", 0)
         if fb and float(fb) > 0:
-            badges.append(f'<span class="signal-chip chip-feedback">{_icon("arrow-path",11,"#CC88FF","margin-right:3px;")} Feedback Model ({float(fb):.1f} pts)</span>')
-    return " ".join(badges) if badges else '<span style="color:#555;font-size:0.85rem;font-style:italic">No specific signal</span>'
+            badges.append(f'<span class="signal-chip chip-feedback">{_icon("arrow-path",11,"#C4B5FD","margin-right:4px;")} Feedback Model ({float(fb):.1f} pts)</span>')
+    return " ".join(badges) if badges else '<span style="color:#2D3760;font-size:0.82rem;font-style:italic">No specific signal detected</span>'
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 def render_sidebar(scores: pd.DataFrame):
     with st.sidebar:
+        # ── Brand header ──────────────────────────────────────────────────
         st.markdown(f"""
-        <div style="text-align:center; padding: 10px 0 18px;">
-          <div style="display:flex;justify-content:center;margin-bottom:6px;">{_icon("plus-circle", 40, "#8080D8")}</div>
-          <div style="font-size:1.0rem; font-weight:700; color:#C0C0F0; margin-top:6px;">Billing Anomaly<br>Audit System</div>
-          <div style="font-size:0.7rem; color:#8080B8; margin-top:4px; letter-spacing:0.8px;">DECISION SUPPORT ONLY</div>
-        </div>
-        """, unsafe_allow_html=True)
+<div style="padding:20px 4px 18px; text-align:center;">
+  <div style="display:inline-flex;align-items:center;justify-content:center;
+       width:52px;height:52px;
+       background:linear-gradient(145deg,#1E1B55,#2D2A7A);
+       border-radius:16px;
+       border:1px solid rgba(99,102,241,0.4);
+       box-shadow:0 0 24px rgba(99,102,241,0.2);
+       margin-bottom:12px;">
+    {_icon("clipboard-list", 24, "url(#sb-grad)")}
+    <svg width="0" height="0"><defs>
+      <linearGradient id="sb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#A5B4FC"/><stop offset="100%" stop-color="#67E8F9"/>
+      </linearGradient>
+    </defs></svg>
+  </div>
+  <div style="font-size:0.95rem;font-weight:800;
+       background:linear-gradient(130deg,#EEF0FF,#A5B4FC 60%,#67E8F9);
+       -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+       letter-spacing:-0.3px;line-height:1.2;margin-bottom:4px;">
+    Billing Anomaly<br>Audit System
+  </div>
+  <div style="font-size:0.58rem;color:#2D3760;letter-spacing:2px;text-transform:uppercase;
+       font-family:'JetBrains Mono',monospace;">
+    Decision Support Only
+  </div>
+</div>
+<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:0 4px 18px;"></div>
+""", unsafe_allow_html=True)
 
-        st.markdown("---")
-        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">FILTERS</div>', unsafe_allow_html=True)
+        # ── Filters ───────────────────────────────────────────────────────
+        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;font-family:\'JetBrains Mono\',monospace;">Filters</div>', unsafe_allow_html=True)
 
         specs = ["All"] + sorted(scores["specialty"].unique().tolist())
         sel_spec = st.selectbox("Specialty", specs, key="sb_spec")
@@ -789,60 +860,72 @@ def render_sidebar(scores: pd.DataFrame):
 
         min_score = st.slider("Min Risk Score", 0, 100, RISK_THRESHOLD, 5, key="sb_score")
 
-        st.markdown("---")
-        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">QUICK STATS</div>', unsafe_allow_html=True)
+        # ── Quick stats ───────────────────────────────────────────────────
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:18px 4px 16px;"></div>""", unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;font-family:\'JetBrains Mono\',monospace;">Confidence Breakdown</div>', unsafe_allow_html=True)
 
         flagged = scores[scores["risk_score"] >= RISK_THRESHOLD]
         hi = len(flagged[flagged["confidence"] == "HIGH"])
         me = len(flagged[flagged["confidence"] == "MEDIUM"])
         lo = len(flagged[flagged["confidence"] == "LOW"])
+        total = hi + me + lo or 1
 
-        st.markdown(f"""
-        <div style="display:flex; flex-direction:column; gap:6px; font-size:0.82rem;">
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:#FF6B6B; font-weight:600;">HIGH</span>
-            <span style="color:#CCC;">{hi} providers</span>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:#FFD93D; font-weight:600;">MEDIUM</span>
-            <span style="color:#CCC;">{me} providers</span>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span style="color:#6BCB77; font-weight:600;">LOW</span>
-            <span style="color:#CCC;">{lo} providers</span>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+        for label, count, color, bg in [
+            ("High",   hi, "#FB7185", "rgba(244,63,94,0.1)"),
+            ("Medium", me, "#FCD34D", "rgba(245,158,11,0.1)"),
+            ("Low",    lo, "#6EE7B7", "rgba(16,185,129,0.1)"),
+        ]:
+            pct = int(count / total * 100)
+            st.markdown(f"""
+<div style="margin-bottom:8px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <span style="font-size:0.72rem;font-weight:700;color:{color};letter-spacing:0.5px;">{label}</span>
+    <span style="font-size:0.72rem;color:#3D4870;font-family:'JetBrains Mono',monospace;">{count}</span>
+  </div>
+  <div style="background:{bg};border-radius:999px;height:4px;overflow:hidden;">
+    <div style="width:{pct}%;height:100%;background:{color};border-radius:999px;
+         box-shadow:0 0 8px {color}66;transition:width 0.6s;"></div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-        st.markdown("---")
+        # ── User card ─────────────────────────────────────────────────────
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:18px 4px 16px;"></div>""", unsafe_allow_html=True)
 
-        # ── Logged-in user + role badge ───────────────────────────────────
         _role    = auth_mock.current_role() or "?"
         _display = auth_mock.current_display_name()
-        _role_colors = {
-            "auditor":    ("#4A4AFF", "#1A1A5A"),
-            "supervisor": ("#FF9F40", "#4A2A00"),
-            "admin":      ("#FF5A5A", "#4A0000"),
+        _role_meta = {
+            "auditor":    ("#6366F1", "rgba(99,102,241,0.08)"),
+            "supervisor": ("#F59E0B", "rgba(245,158,11,0.08)"),
+            "admin":      ("#F43F5E", "rgba(244,63,94,0.08)"),
         }
-        _rc, _bg = _role_colors.get(_role, ("#888", "#222"))
+        _rc, _rbg = _role_meta.get(_role, ("#888", "rgba(100,100,100,0.08)"))
+        _initials = "".join(p[0].upper() for p in _display.split()[:2])
         st.markdown(f"""
-<div style="background:{_bg}; border:1px solid {_rc}44; border-radius:8px;
-     padding:8px 12px; margin-bottom:8px;">
-  <div style="font-size:0.68rem; color:#6A6A9A; text-transform:uppercase;
-       letter-spacing:0.8px; margin-bottom:3px;">SIGNED IN AS</div>
-  <div style="font-size:0.88rem; font-weight:600; color:#D0D0F0;">{_display}</div>
-  <div style="font-size:0.7rem; color:{_rc}; margin-top:2px; font-family:monospace;
-       text-transform:uppercase; letter-spacing:0.5px;">{_role}</div>
+<div style="background:{_rbg};border:1px solid {_rc}30;border-radius:12px;
+     padding:12px 14px;margin-bottom:10px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:34px;height:34px;border-radius:10px;
+         background:linear-gradient(135deg,{_rc}30,{_rc}18);
+         border:1px solid {_rc}40;
+         display:flex;align-items:center;justify-content:center;
+         font-size:0.72rem;font-weight:800;color:{_rc};flex-shrink:0;">
+      {_initials}
+    </div>
+    <div>
+      <div style="font-size:0.82rem;font-weight:700;color:#C8D4F0;letter-spacing:-0.1px;">{_display}</div>
+      <div style="font-size:0.6rem;color:{_rc};font-family:'JetBrains Mono',monospace;
+           text-transform:uppercase;letter-spacing:1px;margin-top:1px;">{_role}</div>
+    </div>
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
         if st.button("Sign Out", icon=":material/logout:", use_container_width=True, key="btn_logout"):
-            auth_mock.logout()   # clears ALL session state, then st.rerun()
+            auth_mock.logout()
 
-        st.markdown("---")
-        st.markdown('<div style="font-size:0.75rem; font-weight:600; color:#9090B8; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">AUDITOR ID</div>', unsafe_allow_html=True)
-        # Auditor ID is pre-filled from the logged-in username; allow override for
-        # cases where a shared account acts on behalf of another named auditor.
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:16px 4px 14px;"></div>""", unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">Auditor ID</div>', unsafe_allow_html=True)
         auditor_id = st.text_input(
             "Your ID (for audit log)",
             value=st.session_state.get("auditor_id", auth_mock.current_user() or "auditor"),
@@ -851,12 +934,12 @@ def render_sidebar(scores: pd.DataFrame):
         )
         st.session_state["auditor_id"] = auditor_id
 
-        st.markdown("---")
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:14px 4px 14px;"></div>""", unsafe_allow_html=True)
         if st.button("Clear Cache & Reload", icon=":material/refresh:", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
-        st.markdown('<div style="font-size:0.65rem; color:#7878A8; text-align:center; margin-top:20px;">SYNTHETIC DATA ONLY<br>All providers and claims are fictional.</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.58rem;color:#1A2050;text-align:center;margin-top:20px;font-family:\'JetBrains Mono\',monospace;letter-spacing:0.5px;">SYNTHETIC DATA ONLY<br>All entities are fictional.</div>', unsafe_allow_html=True)
 
     return sel_spec, sel_conf, min_score
 
@@ -891,18 +974,32 @@ def main():
 
     # ── Warning banner ────────────────────────────────────────────────────────
     st.markdown(
-        f'<div class="banner">{_icon("exclamation-triangle",15,"#FFD0D0","margin-right:6px;")} SYNTHETIC DATA — Decision-support tool for human auditors. '
+        f'<div class="banner">{_icon("exclamation-triangle",14,"#FCA5A5","margin-right:7px;")} '
+        '<strong>SYNTHETIC DATA</strong> — Decision-support tool for human auditors only. '
         'No automated decisions or penalties are applied. All providers and claims are entirely fictional.</div>',
         unsafe_allow_html=True,
     )
 
-    st.markdown('<div style="height:6px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:4px;"></div>', unsafe_allow_html=True)
 
     # ── Page header ───────────────────────────────────────────────────────────
-    col_h, col_sub = st.columns([3, 1])
-    with col_h:
-        st.markdown('<h1 style="font-size:1.7rem; font-weight:700; margin:0; letter-spacing:-0.4px; background:linear-gradient(92deg,#E8E8FF 0%,#A9B6FF 55%,#7FA8FF 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Physician Billing Anomaly Detection</h1>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size:0.82rem; color:#5A5A8A; margin-top:4px;">Dollar-ranked proactive audit worklist · Rules + Peer Stats + ML Ensemble</p>', unsafe_allow_html=True)
+    st.markdown("""
+<div style="padding: 18px 0 6px;">
+  <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
+    <h1 style="font-size:clamp(1.5rem,2.2vw,2.1rem); font-weight:800; margin:0;
+               letter-spacing:-0.6px; line-height:1.1;
+               background:linear-gradient(130deg,#EEF0FF 0%,#A5B4FC 38%,#67E8F9 72%,#A5B4FC 100%);
+               background-size:300%;
+               -webkit-background-clip:text; background-clip:text;
+               -webkit-text-fill-color:transparent;">
+      Physician Billing Anomaly Detection
+    </h1>
+  </div>
+  <p style="font-size:0.78rem; color:#2D3760; margin-top:6px; letter-spacing:0.2px;">
+    Dollar-ranked proactive audit worklist &nbsp;·&nbsp; Rules + Peer Stats + ML Ensemble &nbsp;·&nbsp; Human review required for all flags
+  </p>
+</div>
+""", unsafe_allow_html=True)
 
     # ── KPI cards ─────────────────────────────────────────────────────────────
     all_flagged = scores[scores["risk_score"] >= RISK_THRESHOLD]
@@ -914,18 +1011,20 @@ def main():
     ])
     top_exposure = all_flagged["estimated_exposure"].max()
 
-    st.markdown('<div style="height:14px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     kpis = [
-        (c1, _icon("banknotes",28,"#A0D8A0"),         "Total Flagged Exposure", f"${total_exposure:,.0f}", "exposure", "sum of est. exposure for all flagged providers"),
-        (c2, _icon("bell-alert",28,"#FF9090"),        "Providers Flagged",       str(n_flagged),            "flagged",  f"risk score ≥ {RISK_THRESHOLD}"),
-        (c3, _icon("magnifying-glass",28,"#90B8FF"),  "Proactive Finds",          str(n_proactive),          "proactive","stats/ML — not complaint-driven"),
-        (c4, _icon("map-pin",28,"#FFB060"),           "Top Single Exposure",      f"${top_exposure:,.0f}",   "exposure", "highest individual estimated exposure"),
+        (c1, _icon("banknotes",26,"#6EE7B7"),          "#10B981", "Total Flagged Exposure", f"${total_exposure:,.0f}", "Sum of est. exposure for all flagged providers"),
+        (c2, _icon("bell-alert",26,"#FB7185"),         "#F43F5E", "Providers Flagged",       str(n_flagged),            f"Risk score ≥ {RISK_THRESHOLD}"),
+        (c3, _icon("magnifying-glass",26,"#A5B4FC"),   "#6366F1", "Proactive Finds",          str(n_proactive),          "Stats/ML — not complaint-driven"),
+        (c4, _icon("map-pin",26,"#FCD34D"),            "#F59E0B", "Top Single Exposure",      f"${top_exposure:,.0f}",   "Highest individual estimated exposure"),
     ]
-    for col, icon, label, value, cls, sub in kpis:
+    for col, icon, accent, label, value, sub in kpis:
         with col:
             st.markdown(f"""
-            <div class="kpi-card">
+            <div class="kpi-card" style="--kpi-accent:{accent};">
+              <div style="position:absolute;top:0;left:0;bottom:0;width:3px;
+                background:linear-gradient(180deg,{accent},transparent);border-radius:4px 0 0 4px;"></div>
               <div class="kpi-icon">{icon}</div>
               <div class="kpi-label">{label}</div>
               <div class="kpi-value">{value}</div>
@@ -934,9 +1033,9 @@ def main():
             """, unsafe_allow_html=True)
 
     # ── Tabs ─────────────────────────────────────────────────────────────────
-    st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
-    tab_ohip, tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
-        ["OHIP Casebook", "Worklist", "Analytics", "Model Card", "Audit Trail"]
+    st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
+    tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
+        ["🗂 Worklist", "📊 Analytics", "🧠 Model Card", "📋 Audit Trail"]
     )
     # Role labels for the access-denied banners below
     _can_model = auth_mock.has_permission("view_model_card")
@@ -1314,7 +1413,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
       <div class="prov-stats">
         <div class="prov-stat">
           <div class="prov-stat-label">Risk Score</div>
-          <div class="prov-stat-value" style="color:{{'HIGH':'#FF6B6B','MEDIUM':'#FFD93D','LOW':'#6BCB77'}}.get('{confidence}','#CCC')">{risk_score:.0f} / 100</div>
+          <div class="prov-stat-value" style="color:{{'HIGH':'#FB7185','MEDIUM':'#FCD34D','LOW':'#6EE7B7'}}.get('{confidence}','#CCC')">{risk_score:.0f} / 100</div>
         </div>
         <div class="prov-stat">
           <div class="prov-stat-label">Est. Exposure</div>
@@ -1333,14 +1432,15 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     """, unsafe_allow_html=True)
 
     # Signals
-    st.markdown("**Active signals:**")
+    st.markdown('<div style="font-size:0.62rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">Active Signals</div>', unsafe_allow_html=True)
     st.markdown(signal_badges(pid, rules, peer, ml, prow), unsafe_allow_html=True)
-    st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="height:12px;"></div>', unsafe_allow_html=True)
 
     # ── Auditor action buttons ────────────────────────────────────────────────
     st.markdown(
-        '<div style="font-size:0.78rem; font-weight:600; color:#7070A0; '
-        'margin-bottom:6px;">Record disposition (logged to audit trail):</div>',
+        '<div style="font-size:0.62rem;font-weight:700;color:#2D3760;text-transform:uppercase;'
+        'letter-spacing:1.3px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">'
+        'Record Disposition (logged to audit trail)</div>',
         unsafe_allow_html=True,
     )
     _user = st.session_state.get("auditor_id", "auditor")
@@ -1435,7 +1535,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
 
     with tabs_col:
         tab1, tab2, tab3, tab4 = st.tabs(
-            ["Rule Evidence", "Peer Comparison", "Monthly Volume", "Explanation"]
+            ["⚠ Rule Evidence", "📈 Peer Comparison", "📅 Monthly Volume", "🔍 Explanation"]
         )
 
         # ── Tab 1: Rule Evidence ─────────────────────────────────────────────

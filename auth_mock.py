@@ -232,172 +232,334 @@ def render_login_screen() -> None:
     """Render the full-page login form.  Calls st.stop() until login succeeds."""
     st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600;700&family=Fira+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-  /* ── motion ── */
-  @keyframes lgRise  { from { opacity: 0; transform: translateY(14px); }
-                       to   { opacity: 1; transform: translateY(0); } }
-  @keyframes lgGlow  { 0%,100% { box-shadow: 0 0 22px rgba(37,99,235,0.18),
-                                              inset 0 0 0 1px rgba(96,160,232,0.12); }
-                       50%     { box-shadow: 0 0 34px rgba(37,99,235,0.34),
-                                              inset 0 0 0 1px rgba(96,160,232,0.22); } }
-  @keyframes lgFloat { 0%,100% { transform: translateY(0); }
-                       50%     { transform: translateY(-3px); } }
-
-  /* ── page chrome ── */
-  [data-testid="stSidebar"]  { display: none !important; }
-  .stAppHeader               { visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
-  .stApp                     { background: #060610 !important; min-height: 100vh; font-family: 'Fira Sans', system-ui, sans-serif !important; }
-
-  /* ── remove sidebar space so main takes full width ── */
-  [data-testid="stAppViewContainer"] > section[data-testid="stMain"] {
-    margin-left: 0 !important;
-    width: 100% !important;
-    min-width: 100% !important;
+  /* ── Keyframes ── */
+  @keyframes orbDrift1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    25%     { transform: translate(90px,-70px) scale(1.12); }
+    50%     { transform: translate(-50px,80px) scale(0.9); }
+    75%     { transform: translate(70px,50px) scale(1.07); }
+  }
+  @keyframes orbDrift2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%     { transform: translate(-110px,60px) scale(1.1); }
+    66%     { transform: translate(80px,-90px) scale(1.18); }
+  }
+  @keyframes orbDrift3 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%     { transform: translate(60px,70px) scale(1.12); }
+  }
+  @keyframes cardRise {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); filter: blur(3px); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }
+  }
+  @keyframes logoGlow {
+    0%,100% { box-shadow: 0 0 0 0   rgba(99,102,241,0.5),
+                          0 0 32px  rgba(99,102,241,0.2),
+                          inset 0 1px 0 rgba(255,255,255,0.12); }
+    50%     { box-shadow: 0 0 0 16px rgba(99,102,241,0),
+                          0 0 60px  rgba(99,102,241,0.4),
+                          inset 0 1px 0 rgba(255,255,255,0.12); }
+  }
+  @keyframes ringPop {
+    0%   { transform: scale(0.8); opacity: 0.7; }
+    100% { transform: scale(2.0); opacity: 0; }
+  }
+  @keyframes gradTitle {
+    0%,100% { background-position: 0% 50%; }
+    50%     { background-position: 100% 50%; }
+  }
+  @keyframes shimmerBtn {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(120%); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scanLine {
+    0%   { top: -2px; }
+    100% { top: 100%; }
   }
 
-  /* ── centre the content column ── */
+  /* ── Page reset ── */
+  [data-testid="stSidebar"] { display: none !important; }
+  .stAppHeader { visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
+
+  .stApp {
+    background: #02020C !important;
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  }
+  [data-testid="stAppViewContainer"] > section[data-testid="stMain"] {
+    margin-left: 0 !important; width: 100% !important; min-width: 100% !important;
+  }
   div[data-testid="stMainBlockContainer"] {
-    max-width: 440px !important;
-    padding: 40px 1.5rem 2rem !important;
+    max-width: 460px !important;
+    padding: 0 1.5rem 2.5rem !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    position: relative; z-index: 10;
   }
 
-  /* ── logo / title block ── */
-  .lg-header {
+  /* ── Ambient background ── */
+  .lg-bg {
+    position: fixed; inset: 0; overflow: hidden;
+    pointer-events: none; z-index: 0;
+  }
+  .lg-noise {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(99,102,241,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.035) 1px, transparent 1px);
+    background-size: 52px 52px;
+    mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, black 20%, transparent 75%);
+  }
+  .lg-orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(90px); will-change: transform;
+  }
+  .lg-orb-a {
+    width: 700px; height: 700px;
+    background: radial-gradient(circle at 40% 40%, #6366F1 0%, #4338CA 40%, transparent 70%);
+    top: -280px; left: -200px; opacity: 0.45;
+    animation: orbDrift1 20s ease-in-out infinite;
+  }
+  .lg-orb-b {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle at 60% 60%, #06B6D4 0%, #0891B2 40%, transparent 70%);
+    bottom: -200px; right: -150px; opacity: 0.35;
+    animation: orbDrift2 26s ease-in-out infinite;
+  }
+  .lg-orb-c {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle at 50% 50%, #8B5CF6 0%, #7C3AED 40%, transparent 70%);
+    top: 38%; left: 52%; opacity: 0.3;
+    animation: orbDrift3 17s ease-in-out infinite;
+  }
+  .lg-orb-d {
+    width: 280px; height: 280px;
+    background: radial-gradient(circle at 50% 50%, #F43F5E 0%, transparent 70%);
+    top: 10%; right: 15%; opacity: 0.18;
+    animation: orbDrift1 23s ease-in-out infinite reverse;
+  }
+
+  /* ── Logo area ── */
+  .lg-hero {
     text-align: center;
-    margin-bottom: 32px;
+    padding-top: 64px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.7s ease both;
   }
-  .lg-icon {
+  .lg-ring-wrap {
+    display: inline-block; position: relative; margin-bottom: 22px;
+  }
+  .lg-ring {
+    position: absolute; inset: -12px; border-radius: 50%;
+    border: 1px solid rgba(99,102,241,0.45);
+    animation: ringPop 3.2s ease-out infinite;
+  }
+  .lg-ring:nth-child(2) { inset: -8px;  animation-delay: 1.1s; }
+  .lg-ring:nth-child(3) { inset: -4px;  animation-delay: 2.2s; border-color: rgba(6,182,212,0.3); }
+  .lg-icon-box {
+    position: relative; z-index: 1;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 56px; height: 56px;
-    background: linear-gradient(135deg, #0F2744, #1E3A5F);
-    border: 1px solid #2563EB44;
-    border-radius: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 0 20px rgba(37,99,235,0.15);
-    animation: lgGlow 4s ease-in-out infinite, lgFloat 6s ease-in-out infinite;
+    width: 76px; height: 76px;
+    background: linear-gradient(145deg, #1E1B55 0%, #2D2A7A 50%, #1E1B55 100%);
+    border-radius: 24px;
+    border: 1px solid rgba(99,102,241,0.55);
+    box-shadow: 0 0 0 1px rgba(99,102,241,0.1),
+                0 0 40px rgba(99,102,241,0.25),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+    animation: logoGlow 4.5s ease-in-out infinite;
   }
-  .lg-title {
-    font-family: 'Fira Code', monospace !important;
-    font-size: 1.4rem; font-weight: 600;
-    color: #E8EEFF; letter-spacing: -0.3px;
-    margin-bottom: 6px;
+  .lg-app-name {
+    font-size: 1.75rem; font-weight: 800;
+    letter-spacing: -0.6px; line-height: 1.1;
+    background: linear-gradient(135deg, #EEF0FF 0%, #A5B4FC 40%, #67E8F9 80%, #A5B4FC 100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradTitle 5s ease infinite;
+    margin-bottom: 8px;
   }
-  .lg-sub {
-    font-size: 0.68rem; color: #4A5A7A;
-    letter-spacing: 1.2px; text-transform: uppercase;
+  .lg-tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem; color: #2D3760;
+    letter-spacing: 2.5px; text-transform: uppercase;
   }
+  .lg-tagline em { color: #6366F1; font-style: normal; }
 
-  /* ── form card ── */
+  /* ── Form card ── */
   [data-testid="stForm"] {
-    position: relative;
-    background: linear-gradient(160deg, #0C0C20 0%, #090916 100%);
-    border: 1px solid #1E2848;
-    border-radius: 16px;
-    padding: 32px 28px 28px !important;
-    box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 0 0 1px rgba(37,99,235,0.08);
-    animation: lgRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    position: relative; overflow: hidden;
+    background: linear-gradient(160deg, #0A0A20 0%, #06061A 100%) !important;
+    border-radius: 20px !important;
+    padding: 38px 34px 32px !important;
+    border: 1px solid rgba(99,102,241,0.25) !important;
+    box-shadow:
+      0 0 0 1px rgba(6,182,212,0.08),
+      0 0 80px rgba(99,102,241,0.12),
+      0 40px 80px rgba(0,0,0,0.75),
+      inset 0 1px 0 rgba(255,255,255,0.04) !important;
+    animation: cardRise 0.75s cubic-bezier(0.16,1,0.3,1) 0.05s both !important;
   }
-  /* a faint top hairline gives the card a crafted, lit-from-above edge */
   [data-testid="stForm"]::before {
-    content: ""; position: absolute; top: 0; left: 16px; right: 16px; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(96,160,232,0.55), transparent);
+    content: '';
+    position: absolute; top: 0; left: 18px; right: 18px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.7), rgba(6,182,212,0.5), transparent);
+  }
+  /* subtle scan-line shimmer over the card */
+  [data-testid="stForm"]::after {
+    content: '';
+    position: absolute; left: 0; right: 0; height: 40px;
+    background: linear-gradient(transparent, rgba(99,102,241,0.04), transparent);
+    pointer-events: none;
+    animation: scanLine 5s linear infinite;
   }
 
-  /* ── input labels ── */
+  /* ── Labels ── */
   [data-testid="stForm"] label p {
-    color: #6878A8 !important;
-    font-size: 0.78rem !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
+    font-size: 0.71rem !important; font-weight: 600 !important;
+    color: #3D4870 !important;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 7px;
   }
 
-  /* ── text inputs ── */
+  /* ── Inputs ── */
   [data-testid="stForm"] input {
-    background: #07071A !important;
-    border: 1px solid #1E2848 !important;
-    border-radius: 8px !important;
-    color: #D0D8F0 !important;
-    padding: 11px 14px !important;
+    background: rgba(255,255,255,0.025) !important;
+    border: 1px solid #181D40 !important;
+    border-radius: 10px !important;
+    color: #C8D4F8 !important;
+    padding: 13px 16px !important;
     font-size: 0.9rem !important;
-    font-family: 'Fira Sans', sans-serif !important;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: 'Inter', sans-serif !important;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
+    caret-color: #6366F1;
   }
+  [data-testid="stForm"] input::placeholder { color: #222840 !important; }
   [data-testid="stForm"] input:focus {
-    border-color: #2563EB !important;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.2) !important;
+    background: rgba(99,102,241,0.05) !important;
+    border-color: #6366F1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.18), 0 0 20px rgba(99,102,241,0.12) !important;
     outline: none !important;
   }
 
-  /* ── password eye toggle — match input background ── */
+  /* ── Password toggle ── */
   [data-testid="stForm"] [data-testid="InputInstructions"] { display: none !important; }
   [data-testid="stForm"] button[kind="secondary"],
   [data-testid="stForm"] [data-testid="baseButton-secondary"] {
-    background: #07071A !important;
-    border: none !important;
-    color: #4A5A7A !important;
+    background: transparent !important; border: none !important; color: #303660 !important;
   }
-  [data-testid="stForm"] button[kind="secondary"]:hover {
-    background: #0E0E2A !important;
-    color: #8898C8 !important;
-  }
+  [data-testid="stForm"] button[kind="secondary"]:hover { color: #6366F1 !important; }
 
-  /* ── sign-in button (professional trust-blue) ── */
+  /* ── Sign-in button ── */
   [data-testid="stFormSubmitButton"] button {
-    background: #2563EB !important;
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 60%, #4338CA 100%) !important;
     color: #FFFFFF !important;
-    border: none !important;
-    border-radius: 9px !important;
-    font-weight: 600 !important;
-    font-size: 0.9rem !important;
-    font-family: 'Fira Sans', sans-serif !important;
-    padding: 12px !important;
-    margin-top: 8px;
-    width: 100%;
-    letter-spacing: 0.4px;
-    transition: background 0.2s, transform 0.1s;
+    border: 1px solid rgba(99,102,241,0.4) !important;
+    border-radius: 11px !important;
+    font-weight: 700 !important; font-size: 0.92rem !important;
+    font-family: 'Inter', sans-serif !important;
+    padding: 14px !important;
+    margin-top: 12px; width: 100%;
+    letter-spacing: 0.2px;
+    transition: transform 0.15s, box-shadow 0.2s !important;
     cursor: pointer;
+    box-shadow: 0 0 24px rgba(99,102,241,0.35),
+                0 4px 12px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.18) !important;
   }
   [data-testid="stFormSubmitButton"] button:hover {
-    background: #1D4ED8 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 0 40px rgba(99,102,241,0.55),
+                0 8px 24px rgba(0,0,0,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.18) !important;
   }
-  [data-testid="stFormSubmitButton"] button:active {
-    transform: scale(0.99) !important;
+  [data-testid="stFormSubmitButton"] button:active { transform: translateY(0) scale(0.985) !important; }
+  [data-testid="stFormSubmitButton"] button::after {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 55%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    animation: shimmerBtn 3.5s ease infinite;
   }
 
-  /* ── notice banner ── */
+  /* ── Divider ── */
+  .lg-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 22px 0 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem; color: #1A2048; letter-spacing: 2px; text-transform: uppercase;
+    animation: fadeUp 0.9s ease 0.3s both;
+  }
+  .lg-divider::before, .lg-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, #151A3A, transparent);
+  }
+
+  /* ── Credential pills ── */
+  .lg-pill-row {
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    animation: fadeUp 0.9s ease 0.4s both;
+  }
+  .lg-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(99,102,241,0.07);
+    border: 1px solid rgba(99,102,241,0.18);
+    border-radius: 999px; padding: 5px 13px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.63rem; color: #3D4870; cursor: default;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .lg-pill:hover { border-color: rgba(99,102,241,0.4); background: rgba(99,102,241,0.12); color: #6878B8; }
+  .lg-pill-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* ── Warning notice ── */
   .lg-notice {
     display: flex; align-items: flex-start; gap: 10px;
-    background: rgba(120,90,0,0.09);
-    border: 1px solid rgba(120,90,0,0.22);
-    border-radius: 10px;
-    padding: 11px 14px;
-    margin-top: 16px;
-    font-size: 0.71rem; color: #8A7020; line-height: 1.6;
-  }
-  .lg-creds {
-    text-align: center;
-    font-size: 0.67rem; color: #2A2A50;
-    margin-top: 10px; letter-spacing: 0.3px;
+    background: rgba(245,158,11,0.04);
+    border: 1px solid rgba(245,158,11,0.13);
+    border-radius: 11px; padding: 12px 15px;
+    margin-top: 22px;
+    font-size: 0.7rem; color: #5A4A20; line-height: 1.65;
+    animation: fadeUp 1s ease 0.5s both;
   }
 
-  /* ── error state ── */
+  /* ── Error/success alerts ── */
   [data-testid="stAlertContainer"] {
-    border-radius: 8px !important; margin-top: 8px !important;
+    border-radius: 10px !important; margin-top: 10px !important;
+    animation: fadeUp 0.3s ease both !important;
   }
 
-  /* ── reduced motion ── */
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1A1F3A; border-radius: 4px; }
+
+  /* ── Reduced motion ── */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 """, unsafe_allow_html=True)
 
-    # ── JS injection: runs after Emotion, guarantees header/container override ─
+    # Ambient animated background
+    st.markdown("""
+<div class="lg-bg">
+  <div class="lg-noise"></div>
+  <div class="lg-orb lg-orb-a"></div>
+  <div class="lg-orb lg-orb-b"></div>
+  <div class="lg-orb lg-orb-c"></div>
+  <div class="lg-orb lg-orb-d"></div>
+</div>
+""", unsafe_allow_html=True)
+
+    # JS: force container width + hide header after React hydration
     import streamlit.components.v1 as _components
     _components.html("""
 <script>
@@ -406,42 +568,49 @@ def render_login_screen() -> None:
     var s = document.createElement('style');
     s.innerHTML = `
       .stAppHeader { visibility: hidden !important; height: 0 !important; min-height: 0 !important; overflow: hidden !important; }
-      div[data-testid="stMainBlockContainer"] { max-width: 440px !important; margin-left: auto !important; margin-right: auto !important; padding-top: 32px !important; }
+      div[data-testid="stMainBlockContainer"] { max-width: 460px !important; margin-left: auto !important; margin-right: auto !important; padding-top: 0 !important; }
     `;
     document.head.appendChild(s);
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyStyles);
-  } else {
-    applyStyles();
-  }
-  // Re-apply after short delay to beat React re-renders
-  setTimeout(applyStyles, 300);
-  setTimeout(applyStyles, 800);
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', applyStyles); }
+  else { applyStyles(); }
+  setTimeout(applyStyles, 200);
+  setTimeout(applyStyles, 700);
 })();
 </script>
 """, height=0)
 
-    # ── logo + title (pure HTML — renders fine as markdown) ──────────────────
+    # Hero / branding
     st.markdown("""
-<div class="lg-header">
-  <div class="lg-icon">
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
-         fill="none" stroke="#60A0E8" stroke-width="1.5"
-         stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
+<div class="lg-hero">
+  <div class="lg-ring-wrap">
+    <div class="lg-ring"></div>
+    <div class="lg-ring"></div>
+    <div class="lg-ring"></div>
+    <div class="lg-icon-box">
+      <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24"
+           fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <defs>
+          <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#A5B4FC"/>
+            <stop offset="100%" stop-color="#67E8F9"/>
+          </linearGradient>
+        </defs>
+        <path stroke="url(#g1)"
+          d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>
+      </svg>
+    </div>
   </div>
-  <div class="lg-title">Billing Anomaly Audit</div>
-  <div class="lg-sub">Decision support only &nbsp;·&nbsp; Synthetic data</div>
+  <div class="lg-app-name">Billing Anomaly Audit</div>
+  <div class="lg-tagline">Decision Support &nbsp;<em>·</em>&nbsp; Synthetic Data Only</div>
 </div>
 """, unsafe_allow_html=True)
 
-    # ── form (Streamlit renders this in [data-testid="stForm"], styled above) ─
+    # Login form
     with st.form("login_form", clear_on_submit=False):
-        username  = st.text_input("Username")
-        password  = st.text_input("Password", type="password")
-        submitted = st.form_submit_button("Sign in", use_container_width=True, type="primary")
+        username  = st.text_input("Username", placeholder="Enter username")
+        password  = st.text_input("Password", type="password", placeholder="••••••••••••")
+        submitted = st.form_submit_button("Sign In  →", use_container_width=True, type="primary")
 
     if submitted:
         now = time.time()
@@ -465,15 +634,21 @@ def render_login_screen() -> None:
                 st.error(f"Invalid username or password. "
                          f"({_MAX_FAILS - fails} attempt(s) left)")
 
-    # ── disclaimer ────────────────────────────────────────────────────────────
+    # Demo credentials + disclaimer
     st.markdown("""
+<div class="lg-divider">Demo Access</div>
+<div class="lg-pill-row">
+  <span class="lg-pill"><span class="lg-pill-dot" style="background:#6366F1;"></span>auditor1</span>
+  <span class="lg-pill"><span class="lg-pill-dot" style="background:#F59E0B;"></span>supervisor1</span>
+  <span class="lg-pill"><span class="lg-pill-dot" style="background:#F43F5E;"></span>admin1</span>
+</div>
 <div class="lg-notice">
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-       fill="none" stroke="#9A7820" stroke-width="1.5"
-       stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+       fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+       style="flex-shrink:0;margin-top:2px;">
     <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
   </svg>
-  <span>Mock authentication — demo credentials only. Not suitable for real healthcare data.</span>
+  <span>Mock authentication only — demo credentials, not suitable for real healthcare data. All providers and claims are entirely fictional.</span>
 </div>
 """, unsafe_allow_html=True)
 
