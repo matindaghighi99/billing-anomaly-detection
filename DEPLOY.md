@@ -36,7 +36,29 @@ export BAAD_USERS_JSON='{"jane": {"salt":"...","hash":"...","role":"supervisor",
 export HIDE_DEMO_CREDS=1
 ```
 
-## Option A — Docker (recommended)
+## Deploy to Render (configured — recommended)
+
+This repo ships a Render Blueprint (`render.yaml`) that builds the Dockerfile and
+serves the app over HTTPS. No credentials live in the repo.
+
+One-time setup (≈3 minutes):
+1. Push the branch (done) and sign in at https://render.com (GitHub login).
+2. **New → Blueprint** → select this repository. Render reads `render.yaml`,
+   creates the `billing-anomaly-audit` web service, and starts the first build
+   (it runs the full pipeline at build, ~3–5 min the first time).
+3. When prompted for the `sync:false` env vars, set:
+   - `BAAD_USERS_JSON` — your real users (generate records with the
+     `make_user_record()` helper shown above). Optional for a demo; leave blank
+     to use the bundled demo accounts (already hashed; the on-screen hint is
+     hidden because `HIDE_DEMO_CREDS=1`).
+   - `ANTHROPIC_API_KEY` — optional, enables AI-enriched explanations.
+4. Render gives you `https://billing-anomaly-audit.onrender.com`. Every push to
+   the configured branch auto-redeploys.
+
+The free plan spins down when idle (first request after idle is slow); switch
+`plan: free` → `starter` in `render.yaml` for an always-on instance.
+
+## Option A — Docker (any host)
 
 The image regenerates the dataset and runs the full pipeline at build time, so
 it ships ready to serve. It runs as a non-root user with a health check.

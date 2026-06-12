@@ -30,8 +30,9 @@ USER appuser
 
 EXPOSE 8501
 
+# Bind to ${PORT:-8501} so the same image runs locally and on platforms that
+# inject a dynamic port (Render, Cloud Run, App Runner …).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD curl -fsS http://localhost:8501/_stcore/health || exit 1
+    CMD curl -fsS "http://localhost:${PORT:-8501}/_stcore/health" || exit 1
 
-CMD ["streamlit", "run", "app.py", \
-     "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["sh", "entrypoint.sh"]
