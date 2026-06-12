@@ -946,10 +946,31 @@ def render_sidebar(scores: pd.DataFrame):
 
 # ── Main app ──────────────────────────────────────────────────────────────────
 
+@st.cache_resource(show_spinner=False)
+def _ensure_demo_data():
+    """Generate any missing pipeline data once per server process.
+
+    Makes the app self-sufficient on a fresh deployment where the gitignored
+    raw claims file (and, in the worst case, the scored outputs) may be absent.
+    """
+    try:
+        import bootstrap
+        with st.spinner("First-time setup — preparing demonstration data… "
+                        "(this runs once and may take ~30s)"):
+            bootstrap.ensure_data()
+    except Exception as exc:
+        # Never block the app on bootstrap; surface a hint instead.
+        st.warning(f"Automatic data setup did not complete ({exc}). "
+                   "The dashboard will use whatever data is present.")
+    return True
+
+
 def main():
     # ── Authentication gate ───────────────────────────────────────────────────
     if not auth_mock.is_authenticated():
         auth_mock.render_login_screen()   # calls st.stop() if not yet logged in
+
+    _ensure_demo_data()   # self-heal: generate any missing data on first run
 
     scores  = load_scores()
     rules   = load_rules()
