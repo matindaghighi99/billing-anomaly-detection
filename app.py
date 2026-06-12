@@ -1055,8 +1055,8 @@ def main():
 
     # ── Tabs ─────────────────────────────────────────────────────────────────
     st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
-    tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
-        ["🗂 Worklist", "📊 Analytics", "🧠 Model Card", "📋 Audit Trail"]
+    tab_ohip, tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
+        ["🏛 OHIP Casebook", "🗂 Worklist", "📊 Analytics", "🧠 Model Card", "📋 Audit Trail"]
     )
     # Role labels for the access-denied banners below
     _can_model = auth_mock.has_permission("view_model_card")
