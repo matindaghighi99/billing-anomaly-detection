@@ -4,6 +4,7 @@ Single-screen decision-support tool for human billing auditors.
 NEVER makes automated decisions — all outputs are for human review only.
 """
 
+import html
 import json
 import os
 
@@ -742,7 +743,7 @@ def signal_badges(pid: str, rules_df, peer_df, ml_df, worklist_row=None) -> str:
     badges = []
     if not rules_df.empty:
         for r in rules_df[rules_df["provider_id"] == pid]["rule"].unique():
-            label = r.replace("_", " ").title()
+            label = html.escape(r.replace("_", " ").title())
             badges.append(f'<span class="signal-chip chip-rule">{_icon("exclamation-triangle",11,"#FF8080","margin-right:3px;")} {label}</span>')
     if not peer_df.empty:
         n_peer = len(peer_df[peer_df["provider_id"] == pid])
@@ -1305,8 +1306,8 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     <div class="prov-header">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div>
-          <div class="prov-name">{prow['provider_name']}</div>
-          <div class="prov-pid">{pid} · {prow['specialty']}</div>
+          <div class="prov-name">{html.escape(str(prow['provider_name']))}</div>
+          <div class="prov-pid">{html.escape(str(pid))} · {html.escape(str(prow['specialty']))}</div>
         </div>
         <span class="conf-pill conf-{confidence}">{confidence} CONFIDENCE</span>
       </div>
@@ -1325,7 +1326,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
         </div>
         <div class="prov-stat">
           <div class="prov-stat-label">Specialty</div>
-          <div class="prov-stat-value">{prow['specialty']}</div>
+          <div class="prov-stat-value">{html.escape(str(prow['specialty']))}</div>
         </div>
       </div>
     </div>
@@ -1446,9 +1447,9 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                 for _, r in rule_rows.iterrows():
                     st.markdown(f"""
                     <div class="ev-card ev-rule">
-                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#FF7070","margin-right:3px;")} {r['rule'].replace('_', ' ').upper()}</span>
+                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#FF7070","margin-right:3px;")} {html.escape(str(r['rule']).replace('_', ' ').upper())}</span>
                       <span class="ev-exposure">${r['estimated_exposure']:,.2f}</span>
-                      <div class="ev-text">{r['evidence']}</div>
+                      <div class="ev-text">{html.escape(str(r['evidence']))}</div>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -1459,7 +1460,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                     direction = "above" if r["z_score"] > 0 else "below"
                     st.markdown(f"""
                     <div class="ev-card ev-peer">
-                      <span class="ev-peer-label">{_icon("chart-bar",12,"#6A9FFF","margin-right:3px;")} {r['metric'].replace('_', ' ').upper()}</span>
+                      <span class="ev-peer-label">{_icon("chart-bar",12,"#6A9FFF","margin-right:3px;")} {html.escape(str(r['metric']).replace('_', ' ').upper())}</span>
                       <div class="ev-text">
                         Provider: <strong style="color:#D0D0F0">{r['provider_value']:.2f}</strong> &nbsp;·&nbsp;
                         z = <strong style="color:#FFD93D">{r['z_score']:.2f}</strong> &nbsp;·&nbsp;

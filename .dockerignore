@@ -1,0 +1,23 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+*.db
+# Regenerated inside the image at build time:
+claims.csv
+claims_large.csv
+*_large.csv
+explanations*.json
+shap_values.csv
+shap_explanations.csv
+fraud_evidence.csv
+moh_recovery_summary.csv
+audit_log_export.csv
+# Docs/reports not needed at runtime
+*_REPORT.md
