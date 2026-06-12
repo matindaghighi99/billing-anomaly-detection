@@ -22,9 +22,39 @@ import streamlit as st
 # for a demo.  In production these would live in an identity provider, not here.
 # ---------------------------------------------------------------------------
 _DEMO_USERS: dict[str, dict] = {
-    "auditor1":    {"password": "demo_auditor1",    "role": "auditor",    "display": "Alex Auditor"},    # pragma: allowlist secret
-    "supervisor1": {"password": "demo_supervisor1", "role": "supervisor", "display": "Sam Supervisor"},  # pragma: allowlist secret
-    "admin1":      {"password": "demo_admin1",      "role": "admin",      "display": "Admin User"},      # pragma: allowlist secret
+    # ── original accounts ──
+    "auditor1":    {"password": "demo_auditor1",    "role": "auditor",    "display": "Alex Auditor"},       # pragma: allowlist secret
+    "supervisor1": {"password": "demo_supervisor1", "role": "supervisor", "display": "Sam Supervisor"},     # pragma: allowlist secret
+    "admin1":      {"password": "demo_admin1",      "role": "admin",      "display": "Admin User"},         # pragma: allowlist secret
+    # ── auditors (accounts 2-15) ──
+    "auditor2":    {"password": "demo_auditor2",    "role": "auditor",    "display": "Blake Auditor"},      # pragma: allowlist secret
+    "auditor3":    {"password": "demo_auditor3",    "role": "auditor",    "display": "Casey Auditor"},      # pragma: allowlist secret
+    "auditor4":    {"password": "demo_auditor4",    "role": "auditor",    "display": "Dana Auditor"},       # pragma: allowlist secret
+    "auditor5":    {"password": "demo_auditor5",    "role": "auditor",    "display": "Ellis Auditor"},      # pragma: allowlist secret
+    "auditor6":    {"password": "demo_auditor6",    "role": "auditor",    "display": "Finley Auditor"},     # pragma: allowlist secret
+    "auditor7":    {"password": "demo_auditor7",    "role": "auditor",    "display": "Gray Auditor"},       # pragma: allowlist secret
+    "auditor8":    {"password": "demo_auditor8",    "role": "auditor",    "display": "Harper Auditor"},     # pragma: allowlist secret
+    "auditor9":    {"password": "demo_auditor9",    "role": "auditor",    "display": "Indira Auditor"},     # pragma: allowlist secret
+    "auditor10":   {"password": "demo_auditor10",   "role": "auditor",    "display": "Jordan Auditor"},     # pragma: allowlist secret
+    "auditor11":   {"password": "demo_auditor11",   "role": "auditor",    "display": "Kai Auditor"},        # pragma: allowlist secret
+    "auditor12":   {"password": "demo_auditor12",   "role": "auditor",    "display": "Lee Auditor"},        # pragma: allowlist secret
+    "auditor13":   {"password": "demo_auditor13",   "role": "auditor",    "display": "Morgan Auditor"},     # pragma: allowlist secret
+    "auditor14":   {"password": "demo_auditor14",   "role": "auditor",    "display": "Nico Auditor"},       # pragma: allowlist secret
+    "auditor15":   {"password": "demo_auditor15",   "role": "auditor",    "display": "Oakley Auditor"},     # pragma: allowlist secret
+    # ── supervisors (accounts 2-8) ──
+    "supervisor2": {"password": "demo_supervisor2", "role": "supervisor", "display": "Pat Supervisor"},     # pragma: allowlist secret
+    "supervisor3": {"password": "demo_supervisor3", "role": "supervisor", "display": "Quinn Supervisor"},   # pragma: allowlist secret
+    "supervisor4": {"password": "demo_supervisor4", "role": "supervisor", "display": "Riley Supervisor"},   # pragma: allowlist secret
+    "supervisor5": {"password": "demo_supervisor5", "role": "supervisor", "display": "Sage Supervisor"},    # pragma: allowlist secret
+    "supervisor6": {"password": "demo_supervisor6", "role": "supervisor", "display": "Taylor Supervisor"},  # pragma: allowlist secret
+    "supervisor7": {"password": "demo_supervisor7", "role": "supervisor", "display": "Uma Supervisor"},     # pragma: allowlist secret
+    "supervisor8": {"password": "demo_supervisor8", "role": "supervisor", "display": "Val Supervisor"},     # pragma: allowlist secret
+    # ── admins (accounts 2-4) ──
+    "admin2":      {"password": "demo_admin2",      "role": "admin",      "display": "Winter Admin"},       # pragma: allowlist secret
+    "admin3":      {"password": "demo_admin3",      "role": "admin",      "display": "Xander Admin"},       # pragma: allowlist secret
+    "admin4":      {"password": "demo_admin4",      "role": "admin",      "display": "Yara Admin"},         # pragma: allowlist secret
+    # ── read-only service account ──
+    "readonly1":   {"password": "demo_readonly1",   "role": "auditor",    "display": "Read Only"},          # pragma: allowlist secret
 }
 
 # ---------------------------------------------------------------------------
