@@ -1,0 +1,31 @@
+provider_id,specialty,scheme,evidence,estimated_extra_revenue,support_claims
+PRV0084,Neurology,Phantom / excessive claim volume,"24.2 claims/active-day vs Neurology cohort median 1.2 (~9,319 excess claims)",2379889.8,9797
+PRV0008,Psychiatry,Phantom / excessive claim volume,"24.0 claims/active-day vs Psychiatry cohort median 1.2 (~7,857 excess claims)",979153.81,8263
+PRV0216,Ophthalmology,Unit / dosage inflation,Inflated units on dose-based codes: 67028(avg 4.4u vs 1),85252.51,101
+PRV0280,Ophthalmology,Unit / dosage inflation,Inflated units on dose-based codes: 67028(avg 3.8u vs 1),68361.47,99
+PRV0069,Radiology,Weekend / closed-office billing,"192 claims ($63,692) billed on weekends — unusual for an outpatient Radiology practice",63691.97,192
+PRV0279,Gastroenterology,Impossible day (>24h billed),"6 day(s) over 1440 service-minutes; worst: 1,510 min across 38 claims on 2023-05-23",46747.79,6
+PRV0264,Family Medicine,Impossible day (>24h billed),"6 day(s) over 1440 service-minutes; worst: 1,530 min across 39 claims on 2023-08-31",45601.83,6
+PRV0296,Family Medicine,Upcoding (E/M complexity inflation),Top-tier E/M codes on 86% of 694 office visits vs Family Medicine cohort median 26%; avg E/M $181 vs cohort $118,43149.09,694
+PRV0256,Family Medicine,Upcoding (E/M complexity inflation),Top-tier E/M codes on 87% of 664 office visits vs Family Medicine cohort median 26%; avg E/M $182 vs cohort $118,42339.13,664
+PRV0061,Radiology,Duplicate claim resubmission,"123 claim(s) resubmitted with identical patient, code, date and units (paid more than once)",38679.16,123
+PRV0158,Pulmonology,Weekend / closed-office billing,"207 claims ($36,830) billed on weekends — unusual for an outpatient Pulmonology practice",36829.79,207
+PRV0252,Family Medicine,Upcoding (E/M complexity inflation),Top-tier E/M codes on 87% of 572 office visits vs Family Medicine cohort median 26%; avg E/M $181 vs cohort $118,35970.41,572
+PRV0008,Psychiatry,Impossible day (>24h billed),"10 day(s) over 1440 service-minutes; worst: 1,535 min across 29 claims on 2023-11-22",35369.68,10
+PRV0145,Orthopedic Surgery,Self-referral out-of-specialty imaging,"Billed 50 high-value MRI/CT studies ($19,533) under the Orthopedic Surgery specialty — imaging normally read by Radiology",19532.91,50
+PRV0162,Orthopedic Surgery,Self-referral out-of-specialty imaging,"Billed 50 high-value MRI/CT studies ($19,373) under the Orthopedic Surgery specialty — imaging normally read by Radiology",19373.49,50
+PRV0264,Family Medicine,Upcoding (E/M complexity inflation),Top-tier E/M codes on 49% of 708 office visits vs Family Medicine cohort median 26%; avg E/M $144 vs cohort $118,18088.19,708
+PRV0279,Gastroenterology,Upcoding (E/M complexity inflation),Top-tier E/M codes on 65% of 344 office visits vs Gastroenterology cohort median 0%; avg E/M $175 vs cohort $130,15602.47,344
+PRV0043,Dermatology,Modifier-25 separate-E/M abuse,"104 office visits billed with modifier 25 (separately-payable E/M) stacked onto same-day procedures ($13,492)",13491.51,104
+PRV0262,Dermatology,Modifier-25 separate-E/M abuse,"96 office visits billed with modifier 25 (separately-payable E/M) stacked onto same-day procedures ($12,511)",12511.09,96
+PRV0122,Family Medicine,Duplicate claim resubmission,"103 claim(s) resubmitted with identical patient, code, date and units (paid more than once)",11469.31,103
+PRV0009,Orthopedic Surgery,Duplicate claim resubmission,"50 claim(s) resubmitted with identical patient, code, date and units (paid more than once)",10837.66,50
+PRV0046,Internal Medicine,Upcoding (E/M complexity inflation),Top-tier E/M codes on 71% of 231 office visits vs Internal Medicine cohort median 27%; avg E/M $172 vs cohort $131,9605.16,231
+PRV0055,Internal Medicine,Upcoding (E/M complexity inflation),Top-tier E/M codes on 63% of 243 office visits vs Internal Medicine cohort median 27%; avg E/M $165 vs cohort $131,8434.96,243
+PRV0125,Psychiatry,Psychotherapy time inflation,Billed 60-min psychotherapy (90837) on 91% of 181 sessions vs cohort median 28%,6600.0,181
+PRV0279,Gastroenterology,Escalating upcoding over time,Top-tier E/M share climbed from 40% (early) to 73% (late); avg visit $158 → $182,5894.09,344
+PRV0268,Psychiatry,Psychotherapy time inflation,Billed 60-min psychotherapy (90837) on 87% of 164 sessions vs cohort median 28%,5680.0,164
+PRV0055,Internal Medicine,Escalating upcoding over time,Top-tier E/M share climbed from 44% (early) to 82% (late); avg visit $146 → $185,4659.08,243
+PRV0046,Internal Medicine,Escalating upcoding over time,Top-tier E/M share climbed from 53% (early) to 89% (late); avg visit $155 → $189,4028.55,231
+PRV0039,Cardiology,Unbundling component codes,122 patient-dates billed 93005+93010 separately instead of bundle 93000 (ECG Complete),1220.92,122
+PRV0012,Cardiology,Unbundling component codes,116 patient-dates billed 93005+93010 separately instead of bundle 93000 (ECG Complete),1152.45,116

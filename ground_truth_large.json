@@ -1,0 +1,95 @@
+{
+  "schemes": {
+    "upcoding": [
+      "PRV0252",
+      "PRV0296",
+      "PRV0256"
+    ],
+    "psych_time": [
+      "PRV0268",
+      "PRV0125"
+    ],
+    "unbundling": [
+      "PRV0012",
+      "PRV0039"
+    ],
+    "duplicate": [
+      "PRV0122",
+      "PRV0009",
+      "PRV0061"
+    ],
+    "impossible_day": [
+      "PRV0264",
+      "PRV0279"
+    ],
+    "phantom_volume": [
+      "PRV0008",
+      "PRV0084"
+    ],
+    "self_referral": [
+      "PRV0162",
+      "PRV0145"
+    ],
+    "modifier_25": [
+      "PRV0262",
+      "PRV0043"
+    ],
+    "unit_inflation": [
+      "PRV0216",
+      "PRV0280"
+    ],
+    "escalating": [
+      "PRV0055",
+      "PRV0046"
+    ],
+    "weekend": [
+      "PRV0069",
+      "PRV0158"
+    ]
+  },
+  "scheme_labels": {
+    "upcoding": "Upcoding (E/M complexity inflation)",
+    "psych_time": "Psychotherapy time inflation",
+    "unbundling": "Unbundling component codes",
+    "duplicate": "Duplicate claim resubmission",
+    "impossible_day": "Impossible day (>24h billed)",
+    "phantom_volume": "Phantom / excessive claim volume",
+    "self_referral": "Self-referral out-of-specialty imaging",
+    "modifier_25": "Modifier-25 separate-E/M abuse",
+    "unit_inflation": "Unit / dosage inflation",
+    "escalating": "Escalating upcoding over time",
+    "weekend": "Weekend / closed-office billing"
+  },
+  "all_bad_actors": [
+    "PRV0008",
+    "PRV0009",
+    "PRV0012",
+    "PRV0039",
+    "PRV0043",
+    "PRV0046",
+    "PRV0055",
+    "PRV0061",
+    "PRV0069",
+    "PRV0084",
+    "PRV0122",
+    "PRV0125",
+    "PRV0145",
+    "PRV0158",
+    "PRV0162",
+    "PRV0216",
+    "PRV0252",
+    "PRV0256",
+    "PRV0262",
+    "PRV0264",
+    "PRV0268",
+    "PRV0279",
+    "PRV0280",
+    "PRV0296"
+  ],
+  "n_providers": 300,
+  "n_claims": 188947,
+  "date_range": [
+    "2023-01-02",
+    "2024-12-31"
+  ]
+}
