@@ -1,0 +1,301 @@
+provider_id,ml_score,ml_is_anomaly,vote_count,if_score,if_flag,lof_score,lof_flag,ocsvm_score,ocsvm_flag,provider_name,specialty
+PRV0001,10.28,0,0,14.61,0,0.15,0,14.63,0,Kim Diaz,Endocrinology
+PRV0002,22.26,0,0,38.35,0,0.27,0,15.04,0,Carol Holloway,Cardiology
+PRV0003,15.07,0,0,22.98,0,0.16,0,17.66,0,Richard Dorsey,Endocrinology
+PRV0004,8.8,0,0,15.35,0,0.12,0,5.44,0,Willie Harris,Pulmonology
+PRV0005,10.29,0,0,15.61,0,0.2,0,12.17,0,Susan Rodriguez,Emergency Medicine
+PRV0006,13.73,0,0,20.94,0,0.28,0,15.89,0,Jennifer Jones,Internal Medicine
+PRV0007,24.3,0,1,41.75,1,0.27,0,16.7,0,Hannah Powell,Cardiology
+PRV0008,93.44,1,3,98.96,1,79.85,1,100.0,1,Rebecca Alvarado,Psychiatry
+PRV0009,70.02,1,3,61.19,1,70.67,1,91.12,1,Linda Murray,Orthopedic Surgery
+PRV0010,12.03,0,0,18.23,0,0.15,0,14.33,0,Rebecca Edwards,Endocrinology
+PRV0011,3.96,0,0,4.85,0,0.45,0,7.02,0,Suzanne Bryant,Family Medicine
+PRV0012,85.29,1,3,75.41,1,96.46,1,93.23,1,Curtis Jones,Cardiology
+PRV0013,8.04,0,0,11.51,0,0.11,0,11.26,0,Lisa Ray,Emergency Medicine
+PRV0014,17.7,0,0,29.34,0,0.15,0,14.94,0,Jason Delgado,Dermatology
+PRV0015,5.87,0,0,8.71,0,0.49,0,6.84,0,Megan Reid,Family Medicine
+PRV0016,13.94,0,0,21.68,0,0.19,0,15.22,0,Dustin Chavez,Dermatology
+PRV0017,16.11,0,0,28.01,0,0.52,0,9.74,0,Rebecca Edwards,Psychiatry
+PRV0018,4.81,0,0,6.32,0,0.0,0,8.27,0,Lisa Reynolds,Family Medicine
+PRV0019,11.36,0,0,16.11,0,0.15,0,16.31,0,Krista Parsons,Endocrinology
+PRV0020,3.17,0,0,3.73,0,0.11,0,6.34,0,Maria Allison,Family Medicine
+PRV0021,10.27,0,0,14.07,0,0.06,0,16.08,0,William Rice,Emergency Medicine
+PRV0022,20.12,0,0,32.89,0,0.21,0,18.06,0,Patricia Williams,Dermatology
+PRV0023,5.67,0,0,9.23,0,0.26,0,4.88,0,Noah Gibson PhD,Family Medicine
+PRV0024,11.77,0,0,16.61,0,0.09,0,17.18,0,Katherine Goodwin,Emergency Medicine
+PRV0025,12.05,0,0,17.33,0,0.12,0,16.75,0,Heather Grant,Emergency Medicine
+PRV0026,21.66,0,0,37.36,0,0.75,0,13.8,0,Dawn Jones,OB/GYN
+PRV0027,4.42,0,0,5.32,0,0.02,0,8.77,0,Anthony Jackson,Family Medicine
+PRV0028,8.96,0,0,12.4,0,0.09,0,13.64,0,Cheryl Cisneros,Ophthalmology
+PRV0029,9.21,0,0,15.9,0,0.13,0,6.11,0,Sherry Spencer,Pulmonology
+PRV0030,11.4,0,0,18.09,0,0.41,0,11.17,0,Larry Ibarra,Neurology
+PRV0031,21.8,0,0,36.9,0,0.3,0,16.32,0,Jessica Figueroa,Cardiology
+PRV0032,1.38,0,0,0.0,0,0.16,0,6.63,0,Mark Reed,Family Medicine
+PRV0033,11.21,0,0,19.54,0,0.12,0,7.02,0,Harold Rhodes,Pulmonology
+PRV0034,11.27,0,0,17.47,0,0.45,0,11.98,0,Michelle Lee,Neurology
+PRV0035,8.94,0,0,16.06,0,0.11,0,4.36,0,Mr. Juan Moore,Pulmonology
+PRV0036,9.77,0,0,14.74,0,0.06,0,11.91,0,Sarah Long,Emergency Medicine
+PRV0037,11.28,0,0,17.58,0,0.17,0,12.21,0,Phillip Weber,Internal Medicine
+PRV0038,12.22,0,0,18.39,0,0.37,0,14.56,0,Christopher Harrison,Internal Medicine
+PRV0039,86.92,1,3,76.8,1,99.59,1,93.23,1,Erica Johnson,Cardiology
+PRV0040,9.11,0,0,13.57,0,0.15,0,11.42,0,Margaret Parker,Ophthalmology
+PRV0041,20.28,0,0,34.11,0,0.71,0,15.04,0,Kimberly Norman,OB/GYN
+PRV0042,13.69,0,0,21.29,0,0.53,0,14.44,0,Courtney Torres,Neurology
+PRV0043,23.11,0,1,38.51,0,0.69,0,18.22,1,James Fields,Dermatology
+PRV0044,17.75,0,0,31.34,0,0.56,0,9.54,0,Robert Farmer,Psychiatry
+PRV0045,10.16,0,0,13.48,0,0.15,0,16.87,0,Robert Miller,Endocrinology
+PRV0046,16.5,0,0,25.67,0,0.59,0,17.42,0,Grace Skinner,Internal Medicine
+PRV0047,25.49,0,1,44.31,1,0.35,0,16.14,0,Joseph Wheeler,Cardiology
+PRV0048,14.11,0,0,25.49,0,0.17,0,6.57,0,Charles Trevino,Radiology
+PRV0049,11.41,0,0,17.88,0,0.15,0,12.13,0,Jamie Fowler,Emergency Medicine
+PRV0050,13.14,0,0,24.62,0,0.34,0,3.67,0,David Williams,Orthopedic Surgery
+PRV0051,11.34,0,1,14.89,0,0.97,1,18.04,0,Christy Nichols,Emergency Medicine
+PRV0052,11.02,0,0,15.69,0,0.15,0,15.66,0,Lauren Garcia,Endocrinology
+PRV0053,11.98,0,0,20.42,0,0.08,0,8.75,0,Tiffany Wagner,Radiology
+PRV0054,14.12,0,0,25.21,0,0.33,0,7.09,0,Maria Davidson,Radiology
+PRV0055,15.89,0,0,24.86,0,0.47,0,16.58,0,Alan Hernandez DVM,Internal Medicine
+PRV0056,8.79,0,0,11.84,0,0.26,0,13.96,0,Marie Gilbert,Internal Medicine
+PRV0057,13.3,0,0,19.28,0,0.26,0,17.92,0,Nancy Smith,Emergency Medicine
+PRV0058,14.62,0,1,21.72,0,0.43,0,18.15,1,Carla Walton,Radiology
+PRV0059,3.12,0,0,1.97,0,0.59,0,9.81,0,Michelle Lloyd,Family Medicine
+PRV0060,10.77,0,0,15.87,0,0.15,0,13.97,0,Robert Nunez,Endocrinology
+PRV0061,73.65,1,3,67.97,1,71.27,1,91.45,1,Allison Simmons,Radiology
+PRV0062,10.18,0,0,15.19,0,0.09,0,12.79,0,Ashley Jackson,Emergency Medicine
+PRV0063,5.21,0,0,7.47,0,0.21,0,7.07,0,Susan Mccoy,Family Medicine
+PRV0064,25.78,1,3,41.81,1,1.01,1,22.84,1,Brooke Gonzalez,OB/GYN
+PRV0065,3.89,0,0,5.0,0,0.15,0,6.71,0,Joshua Barr,Family Medicine
+PRV0066,16.44,0,0,26.41,0,0.24,0,15.84,0,Danielle Rocha,Dermatology
+PRV0067,19.29,0,0,34.04,0,0.59,0,10.47,0,Darren French,Psychiatry
+PRV0068,16.48,0,0,25.9,0,0.32,0,17.17,0,Juan Kennedy,Radiology
+PRV0069,26.82,1,2,39.13,0,1.43,1,34.14,1,Benjamin Charles,Radiology
+PRV0070,28.08,0,1,48.73,1,0.31,0,18.14,0,Heather Carpenter,Cardiology
+PRV0071,21.25,0,0,36.78,0,0.72,0,13.23,0,Timothy Shelton,OB/GYN
+PRV0072,10.73,0,0,15.13,0,0.21,0,15.52,0,Amy Pierce,Internal Medicine
+PRV0073,7.54,0,0,10.56,0,0.15,0,11.1,0,Matthew Sanders,Ophthalmology
+PRV0074,12.31,0,0,18.91,0,0.19,0,14.01,0,Justin Mitchell,Internal Medicine
+PRV0075,7.3,0,0,13.21,0,0.12,0,3.29,0,Adriana York,Pulmonology
+PRV0076,8.19,0,0,11.6,0,0.16,0,11.72,0,Jacob Saunders,Ophthalmology
+PRV0077,22.56,0,1,37.49,0,0.9,1,17.74,0,Peter Brown,General Surgery
+PRV0078,7.37,0,0,10.0,0,0.14,0,11.67,0,Amy Gill,Ophthalmology
+PRV0079,18.81,0,0,30.5,0,0.42,0,17.18,0,Lisa Sanders,Dermatology
+PRV0080,12.56,0,0,19.39,0,0.52,0,13.58,0,Jonathan Leonard,Neurology
+PRV0081,14.84,0,0,27.86,0,0.34,0,4.07,0,Benjamin Lopez,Orthopedic Surgery
+PRV0082,8.43,0,0,12.38,0,0.15,0,10.96,0,Margaret Mueller,Ophthalmology
+PRV0083,8.19,0,0,11.02,0,0.2,0,13.13,0,Daniel Morrison,Internal Medicine
+PRV0084,100.0,1,3,100.0,1,100.0,1,100.0,1,Danny Lopez,Neurology
+PRV0085,23.26,0,1,40.5,0,0.99,1,13.56,0,Tyler Mills,General Surgery
+PRV0086,25.13,0,1,43.04,1,0.28,0,17.65,0,Ashley Glass,Cardiology
+PRV0087,14.5,0,0,22.32,0,0.08,0,16.59,0,Anthony Mckinney,Dermatology
+PRV0088,14.83,0,0,25.72,0,0.17,0,9.58,0,Ronald Nguyen DDS,Gastroenterology
+PRV0089,5.62,0,0,8.54,0,0.25,0,6.39,0,Erin Hale,Family Medicine
+PRV0090,9.54,0,0,12.84,0,0.15,0,15.38,0,Joshua Terry,Endocrinology
+PRV0091,15.17,0,0,25.78,0,0.15,0,11.16,0,Michael Sanders,Gastroenterology
+PRV0092,15.54,0,0,24.35,0,0.19,0,16.56,0,James Baird,Radiology
+PRV0093,7.64,0,0,10.21,0,0.12,0,12.47,0,Lucas Hamilton,Ophthalmology
+PRV0094,5.48,0,0,6.92,0,0.03,0,10.05,0,Willie Harper,Family Medicine
+PRV0095,23.66,0,1,39.67,0,0.29,0,18.7,1,Kristina Huber,Cardiology
+PRV0096,7.1,0,0,9.23,0,0.12,0,12.23,0,William Nunez,Ophthalmology
+PRV0097,9.39,0,0,13.66,0,0.2,0,12.48,0,Nichole Johnson,Internal Medicine
+PRV0098,11.13,0,0,20.17,0,0.11,0,5.04,0,Darren Oliver,Pulmonology
+PRV0099,13.0,0,0,20.12,0,0.17,0,14.45,0,Dakota Morrow,Endocrinology
+PRV0100,16.68,0,0,26.46,0,0.08,0,17.15,0,Gerald Brooks,Dermatology
+PRV0101,13.62,0,0,20.89,0,0.24,0,15.51,0,Roger Humphrey,Internal Medicine
+PRV0102,15.7,0,0,26.91,0,0.11,0,11.09,0,Joshua Miller,Pulmonology
+PRV0103,21.96,0,1,37.65,0,0.96,1,14.23,0,Kari Hernandez,General Surgery
+PRV0104,25.2,1,2,42.63,1,0.8,0,18.24,1,Daniel Yoder,OB/GYN
+PRV0105,24.92,1,2,41.81,1,1.27,1,18.14,0,Carla Williams,General Surgery
+PRV0106,12.85,0,0,18.68,0,0.16,0,17.34,0,David Bell,Radiology
+PRV0107,11.53,0,0,18.36,0,0.04,0,11.68,0,Matthew Cross,Radiology
+PRV0108,18.31,0,0,29.32,0,0.09,0,18.14,0,Joseph Leblanc,Dermatology
+PRV0109,13.3,0,0,21.91,0,0.05,0,11.63,0,Jennifer Gonzalez,Radiology
+PRV0110,26.98,1,3,45.79,1,1.04,1,18.87,1,Ronnie Reeves,General Surgery
+PRV0111,12.39,0,0,20.61,0,0.05,0,10.36,0,Kerri Stanley,Radiology
+PRV0112,23.52,0,1,39.39,0,0.95,1,17.7,0,Thomas Garcia,General Surgery
+PRV0113,20.98,0,0,36.17,0,0.3,0,14.02,0,Donna Hutchinson,Cardiology
+PRV0114,21.51,0,0,36.6,0,0.31,0,15.55,0,Dawn Flores,Cardiology
+PRV0115,24.62,1,2,41.12,0,0.94,1,18.89,1,Maria Weaver,OB/GYN
+PRV0116,12.4,0,0,19.38,0,0.28,0,13.12,0,Kimberly Johnson,Ophthalmology
+PRV0117,10.43,0,0,15.25,0,0.18,0,13.76,0,Ross Donovan,Emergency Medicine
+PRV0118,17.71,0,0,27.96,0,0.43,0,18.0,0,Stephen Schneider,Dermatology
+PRV0119,9.19,0,0,13.79,0,0.13,0,11.25,0,Caroline Bennett,Ophthalmology
+PRV0120,9.58,0,0,17.31,0,0.12,0,4.45,0,Alisha Jones,Pulmonology
+PRV0121,6.94,0,0,9.01,0,0.12,0,11.98,0,Michael Reyes,Ophthalmology
+PRV0122,61.21,1,3,43.38,1,71.66,1,90.08,1,Robert Burns,Family Medicine
+PRV0123,9.13,0,0,12.58,0,0.14,0,13.97,0,Jennifer Chavez,Ophthalmology
+PRV0124,10.99,0,0,19.88,0,0.13,0,5.04,0,Bethany Gray,Pulmonology
+PRV0125,31.02,1,3,49.61,1,2.47,1,27.37,1,Billy Rivera,Psychiatry
+PRV0126,11.85,0,0,18.1,0,0.08,0,13.87,0,Keith Joseph,Emergency Medicine
+PRV0127,13.75,1,2,19.33,0,0.92,1,19.07,1,Brian Lopez,Radiology
+PRV0128,15.14,0,0,23.9,0,0.07,0,15.82,0,Jason Hunt,Dermatology
+PRV0129,13.53,0,0,20.74,0,0.17,0,15.53,0,Kathy Hale,Internal Medicine
+PRV0130,7.37,0,0,9.28,0,0.11,0,13.48,0,Maureen Arnold,Ophthalmology
+PRV0131,10.96,0,0,19.93,0,0.13,0,4.76,0,Elizabeth Cruz,Pulmonology
+PRV0132,11.97,0,0,17.41,0,0.22,0,15.99,0,Jose Saunders,Internal Medicine
+PRV0133,8.69,0,0,15.85,0,0.12,0,3.66,0,Timothy Young,Pulmonology
+PRV0134,8.36,0,0,11.6,0,0.11,0,12.67,0,Michael Erickson,Emergency Medicine
+PRV0135,10.17,0,0,14.4,0,0.27,0,14.43,0,Theresa Brown,Internal Medicine
+PRV0136,2.17,0,0,2.15,0,0.06,0,5.41,0,Amber Blevins,Family Medicine
+PRV0137,16.57,0,0,26.87,0,0.11,0,15.48,0,Laura Marks,Dermatology
+PRV0138,21.93,0,0,37.7,0,0.67,0,14.38,0,Lisa Cooper,OB/GYN
+PRV0139,11.24,0,0,17.78,0,0.2,0,11.42,0,Michael Pace,Emergency Medicine
+PRV0140,3.17,0,0,2.2,0,0.53,0,9.57,0,Traci Foster,Family Medicine
+PRV0141,11.69,0,0,19.76,0,0.11,0,8.89,0,Michelle Johnson,Radiology
+PRV0142,10.3,0,0,17.72,0,0.07,0,7.11,0,Sharon Lozano,Radiology
+PRV0143,22.79,0,0,38.71,0,0.33,0,16.67,0,James West,Cardiology
+PRV0144,8.66,0,0,15.12,0,0.12,0,5.32,0,Cynthia Mccarthy,Pulmonology
+PRV0145,26.98,0,1,49.32,1,0.72,0,10.54,0,Jennifer Potter,Orthopedic Surgery
+PRV0146,14.33,0,0,26.63,0,0.36,0,4.51,0,Dawn Thompson,Orthopedic Surgery
+PRV0147,14.54,0,0,23.76,0,0.03,0,13.25,0,Mark Edwards,Radiology
+PRV0148,11.95,0,0,18.29,0,0.43,0,13.36,0,Dustin Walker,Neurology
+PRV0149,13.05,0,0,20.16,0,0.16,0,14.64,0,Brian Williams,Endocrinology
+PRV0150,26.47,1,3,44.17,1,0.9,1,20.58,1,David Montgomery,OB/GYN
+PRV0151,12.81,0,0,19.62,0,0.15,0,14.77,0,Diane Gonzales,Endocrinology
+PRV0152,17.16,0,0,26.9,0,0.48,0,17.84,0,Allison Santiago,Radiology
+PRV0153,9.14,0,0,12.65,0,0.09,0,13.9,0,Joel Harper,Ophthalmology
+PRV0154,13.89,0,0,22.96,0,0.12,0,11.84,0,Sara Sims,Radiology
+PRV0155,2.64,0,0,2.62,0,0.03,0,6.6,0,Tammy Fields,Family Medicine
+PRV0156,12.01,0,0,17.28,0,0.15,0,16.65,0,Karen Oconnor,Endocrinology
+PRV0157,14.84,0,0,27.16,0,0.28,0,5.87,0,Kenneth Mcclure,Orthopedic Surgery
+PRV0158,11.21,0,0,22.35,0,0.12,0,0.0,0,Elizabeth Foster,Pulmonology
+PRV0159,1.68,0,0,1.56,0,0.11,0,4.33,0,Zachary Rose,Family Medicine
+PRV0160,10.36,0,0,15.83,0,0.11,0,12.08,0,Charles Maldonado,Ophthalmology
+PRV0161,11.08,0,1,14.48,0,0.7,0,18.14,1,Lisa Cooper DVM,Emergency Medicine
+PRV0162,28.67,0,1,53.04,1,0.71,0,9.68,0,Taylor Perez,Orthopedic Surgery
+PRV0163,9.65,0,0,13.71,0,0.1,0,13.83,0,Mark Lozano,Emergency Medicine
+PRV0164,15.97,0,0,25.69,0,0.1,0,15.48,0,Ashley Collins,Dermatology
+PRV0165,21.82,0,0,37.7,0,0.74,0,13.73,0,Kristin Rodriguez,General Surgery
+PRV0166,8.51,0,0,15.66,0,0.11,0,3.22,0,Stephanie Lee,Pulmonology
+PRV0167,10.7,0,0,14.85,0,0.22,0,16.04,0,Lauren Jenkins,Internal Medicine
+PRV0168,9.12,0,0,16.73,0,0.14,0,3.56,0,Dr. Shelby Herring MD,Pulmonology
+PRV0169,12.41,0,0,19.11,0,0.5,0,13.54,0,Michael Carroll,Neurology
+PRV0170,15.98,0,0,27.58,0,0.58,0,10.08,0,Justin Pittman,Psychiatry
+PRV0171,12.37,0,0,18.93,0,0.39,0,13.93,0,Amber Jones,Neurology
+PRV0172,3.16,0,0,4.09,0,0.06,0,5.47,0,Sandra Anderson,Family Medicine
+PRV0173,19.46,0,0,32.44,0,0.09,0,16.08,0,Ms. Vanessa Nelson DDS,Dermatology
+PRV0174,3.37,0,0,3.62,0,0.17,0,7.52,0,Mrs. Ashley Mitchell,Family Medicine
+PRV0175,11.6,0,0,19.12,0,0.1,0,10.05,0,Amanda Harris,Radiology
+PRV0176,15.42,0,0,26.19,0,0.17,0,11.38,0,Diana Hill,Gastroenterology
+PRV0177,9.18,0,0,12.6,0,0.2,0,14.1,0,Beth Hernandez,Emergency Medicine
+PRV0178,10.3,0,0,14.41,0,0.2,0,15.16,0,Anne Taylor,Internal Medicine
+PRV0179,18.53,0,0,31.18,0,0.47,0,13.97,0,Debra Jones,Psychiatry
+PRV0180,10.19,0,0,14.54,0,0.1,0,14.48,0,Tracey Ortiz,Ophthalmology
+PRV0181,5.07,0,0,7.34,0,0.01,0,7.01,0,Jeffrey English,Family Medicine
+PRV0182,12.93,0,0,19.37,0,0.16,0,15.98,0,Desiree Parker,Endocrinology
+PRV0183,24.45,0,1,42.14,1,0.78,0,15.74,0,Deborah Lozano,OB/GYN
+PRV0184,13.87,0,0,21.0,0,0.43,0,16.22,0,Marc Oneill,Neurology
+PRV0185,11.41,0,0,17.83,0,0.43,0,11.84,0,Shannon White,Neurology
+PRV0186,23.12,0,0,39.22,0,0.28,0,17.12,0,Evelyn Riddle,Cardiology
+PRV0187,15.85,0,0,27.83,0,0.68,0,8.66,0,Victoria Bryant,Radiology
+PRV0188,11.76,0,1,16.18,0,0.15,0,18.15,1,Douglas Lowe,Endocrinology
+PRV0189,4.21,0,0,4.75,0,0.31,0,8.73,0,Bonnie Mitchell,Family Medicine
+PRV0190,14.3,0,0,21.39,0,0.23,0,17.67,0,Margaret Carr,Emergency Medicine
+PRV0191,18.92,0,0,32.02,0,0.09,0,14.4,0,Mr. Joshua Thomas,Dermatology
+PRV0192,19.91,0,0,34.3,0,0.64,0,12.86,0,Edward Bentley,OB/GYN
+PRV0193,10.16,0,0,13.89,0,0.15,0,15.88,0,Robert Gray,Endocrinology
+PRV0194,11.21,0,0,16.3,0,0.16,0,15.06,0,Cathy Chen,Endocrinology
+PRV0195,23.21,0,0,38.97,0,0.34,0,18.14,0,Scott Nichols,Cardiology
+PRV0196,11.68,0,0,17.27,0,0.19,0,14.96,0,Jacob Savage,Internal Medicine
+PRV0197,14.21,0,0,22.37,0,0.1,0,15.0,0,Margaret Cook,Dermatology
+PRV0198,11.34,0,0,17.73,0,0.41,0,11.78,0,Lauren Hall,Neurology
+PRV0199,27.61,1,2,47.23,1,0.77,0,18.8,1,Tracy Scott,OB/GYN
+PRV0200,10.91,0,0,16.23,0,0.08,0,13.84,0,Michael Shelton,Emergency Medicine
+PRV0201,8.89,0,0,15.01,0,0.07,0,6.85,0,Mary Hopkins,Radiology
+PRV0202,6.71,0,0,8.63,0,0.12,0,11.81,0,Mark Rhodes,Ophthalmology
+PRV0203,11.48,0,0,17.48,0,0.46,0,13.01,0,Joseph Townsend,Neurology
+PRV0204,14.48,0,0,24.92,0,0.27,0,9.72,0,Michelle Fuller,Gastroenterology
+PRV0205,9.76,0,0,17.96,0,0.13,0,3.67,0,Timothy Romero,Pulmonology
+PRV0206,7.54,0,0,9.92,0,0.12,0,12.71,0,Kathryn Espinoza,Ophthalmology
+PRV0207,18.25,0,0,29.63,0,0.15,0,16.97,0,Kristi Jenkins,Dermatology
+PRV0208,15.66,0,0,27.64,0,0.25,0,8.82,0,David Case,Gastroenterology
+PRV0209,22.78,0,0,39.36,0,0.31,0,15.03,0,Victoria Lopez,Cardiology
+PRV0210,11.31,0,0,16.86,0,0.19,0,14.1,0,Shawn Callahan DDS,Internal Medicine
+PRV0211,13.94,0,0,25.98,0,0.19,0,4.49,0,Kenneth Sanders,Orthopedic Surgery
+PRV0212,16.34,0,0,28.07,0,0.62,0,10.57,0,Donald Barnes,Psychiatry
+PRV0213,19.15,0,0,33.88,0,0.81,0,9.8,0,Megan Paul,Psychiatry
+PRV0214,12.05,0,0,21.64,0,0.11,0,6.0,0,Marcus Stone,Radiology
+PRV0215,22.35,0,0,38.49,0,0.73,0,14.46,0,Gerald Russell,OB/GYN
+PRV0216,22.73,1,2,37.11,0,1.19,1,19.09,1,Janet Harrison,Ophthalmology
+PRV0217,13.96,0,0,25.26,0,0.3,0,6.17,0,Thomas Baker,Orthopedic Surgery
+PRV0218,24.93,0,1,43.18,1,0.73,0,15.59,0,Jordan Williams,OB/GYN
+PRV0219,3.81,0,0,4.34,0,0.29,0,7.77,0,Stephen Rodriguez,Family Medicine
+PRV0220,19.17,0,1,34.12,0,0.85,1,9.26,0,Anna Odonnell,Psychiatry
+PRV0221,4.61,0,0,5.21,0,0.36,0,9.48,0,Karen Barton,Family Medicine
+PRV0222,10.99,0,0,19.91,0,0.11,0,4.99,0,Stephanie Vazquez,Pulmonology
+PRV0223,22.79,0,0,39.15,0,0.33,0,15.57,0,Frederick Morris,Cardiology
+PRV0224,11.18,0,0,17.38,0,0.24,0,12.1,0,Joshua Flores,Emergency Medicine
+PRV0225,12.22,0,0,18.8,0,0.19,0,13.83,0,Robert Johnson,Ophthalmology
+PRV0226,16.6,0,0,26.17,0,0.12,0,17.42,0,Henry Richards,Dermatology
+PRV0227,15.17,0,0,25.63,0,0.32,0,11.29,0,Guy Green,Gastroenterology
+PRV0228,11.88,0,0,17.42,0,0.15,0,15.63,0,Samantha Thomas,Endocrinology
+PRV0229,11.53,0,0,16.56,0,0.14,0,16.02,0,Dean Hall,Endocrinology
+PRV0230,16.04,0,0,29.47,0,0.3,0,6.06,0,William Smith,Orthopedic Surgery
+PRV0231,10.68,0,0,17.59,0,0.11,0,9.26,0,Tammy Graham,Radiology
+PRV0232,22.07,0,0,41.05,0,0.52,0,6.93,0,Mark Ortiz,Orthopedic Surgery
+PRV0233,13.77,0,0,21.21,0,0.18,0,15.55,0,Juan Gonzalez,Dermatology
+PRV0234,11.29,0,0,17.42,0,0.02,0,12.86,0,Catherine Morris,Radiology
+PRV0235,14.03,0,0,24.16,0,0.08,0,9.65,0,Brent Jenkins,Radiology
+PRV0236,5.68,0,0,7.33,0,0.73,0,8.97,0,Ann Mooney,Family Medicine
+PRV0237,9.9,0,0,14.33,0,0.08,0,13.54,0,Andrew Sanchez,Emergency Medicine
+PRV0238,11.6,0,0,18.34,0,0.16,0,11.9,0,Christy Lowery,Emergency Medicine
+PRV0239,17.11,0,0,27.23,0,0.21,0,17.16,0,Jasmine Sanchez,Dermatology
+PRV0240,8.68,0,0,11.72,0,0.2,0,13.84,0,Thomas Oliver,Internal Medicine
+PRV0241,20.91,0,0,35.05,0,0.29,0,16.48,0,Elizabeth Conner,Cardiology
+PRV0242,13.06,0,0,24.39,0,0.29,0,3.9,0,Erika Miller,Orthopedic Surgery
+PRV0243,3.78,0,0,4.55,0,0.14,0,7.32,0,Austin Jenkins,Family Medicine
+PRV0244,15.93,0,0,28.28,0,0.22,0,8.64,0,Mark Walsh,Gastroenterology
+PRV0245,10.8,0,0,18.81,0,0.12,0,6.79,0,Ashley Fuller,Pulmonology
+PRV0246,1.71,0,0,0.87,0,0.17,0,6.14,0,Holly Martin,Family Medicine
+PRV0247,22.26,0,0,37.94,0,0.28,0,16.04,0,Jesus Erickson,Cardiology
+PRV0248,14.96,0,0,23.12,0,0.08,0,16.87,0,Aaron Wilcox,Dermatology
+PRV0249,12.66,0,0,23.63,0,0.33,0,3.73,0,Robert Lawson,Orthopedic Surgery
+PRV0250,9.86,0,0,17.03,0,0.1,0,6.55,0,Amanda Taylor,Radiology
+PRV0251,15.61,0,0,25.98,0,0.09,0,12.94,0,Angela Hernandez,Radiology
+PRV0252,29.82,1,3,44.25,1,5.57,1,30.15,1,Sharon Kim,Family Medicine
+PRV0253,4.48,0,0,5.77,0,0.14,0,7.75,0,Hunter Snow,Family Medicine
+PRV0254,11.1,0,0,16.75,0,0.16,0,13.36,0,Richard English,Internal Medicine
+PRV0255,7.16,0,0,9.54,0,0.12,0,11.76,0,Daniel Wright,Ophthalmology
+PRV0256,28.66,1,3,42.42,1,6.11,1,28.06,1,Michael Mckinney,Family Medicine
+PRV0257,24.12,0,1,41.25,0,0.9,1,16.09,0,Stephanie Sutton,General Surgery
+PRV0258,10.17,0,0,18.26,0,0.11,0,5.03,0,Robert Lewis,Pulmonology
+PRV0259,2.14,0,0,1.96,0,0.11,0,5.63,0,Ricardo Edwards,Family Medicine
+PRV0260,11.52,0,0,19.23,0,0.11,0,9.38,0,Teresa Wilkerson,Radiology
+PRV0261,16.12,0,0,25.23,0,0.19,0,17.26,0,Alyssa Burke,Dermatology
+PRV0262,22.37,0,0,38.8,0,0.07,0,14.73,0,Francisco Davis,Dermatology
+PRV0263,11.51,0,0,18.88,0,0.18,0,10.08,0,Donna Jones,Radiology
+PRV0264,51.93,1,3,54.07,1,20.38,1,93.93,1,Ronald Nelson,Family Medicine
+PRV0265,8.88,0,0,12.7,0,0.09,0,12.54,0,Denise Williams,Emergency Medicine
+PRV0266,1.67,0,0,0.93,0,0.13,0,5.8,0,Shannon Mayo,Family Medicine
+PRV0267,15.03,0,0,25.42,0,0.2,0,11.29,0,Ryan Barker,Gastroenterology
+PRV0268,27.76,1,3,44.9,1,2.16,1,23.29,1,Mark Mcintyre,Psychiatry
+PRV0269,10.47,0,0,15.12,0,0.15,0,14.32,0,David White,Emergency Medicine
+PRV0270,8.31,0,0,11.79,0,0.12,0,11.88,0,Michelle Houston,Ophthalmology
+PRV0271,12.24,0,0,18.46,0,0.1,0,14.89,0,Justin Vasquez,Emergency Medicine
+PRV0272,26.61,0,1,46.01,1,0.34,0,17.52,0,Angela Garcia,Cardiology
+PRV0273,25.29,0,1,43.51,1,0.74,0,16.58,0,Anthony Patel,General Surgery
+PRV0274,2.06,0,0,1.35,0,0.17,0,6.67,0,Jacob Smith,Family Medicine
+PRV0275,9.53,0,0,13.82,0,0.21,0,12.8,0,Amy Silva,Emergency Medicine
+PRV0276,15.88,0,0,24.98,0,0.12,0,16.78,0,Darius Patterson,Dermatology
+PRV0277,18.92,0,0,32.09,0,0.47,0,13.68,0,Deanna Herrera,Psychiatry
+PRV0278,6.21,0,0,8.23,0,0.35,0,9.93,0,Joel Thompson,Family Medicine
+PRV0279,55.82,1,3,61.33,1,21.32,1,93.79,1,Nicole Thomas,Gastroenterology
+PRV0280,20.11,0,1,32.61,0,0.59,0,18.14,1,Darrell Mcgrath,Ophthalmology
+PRV0281,10.3,0,0,15.24,0,0.2,0,13.11,0,Bailey Johnson,Internal Medicine
+PRV0282,14.06,0,0,24.25,0,0.25,0,9.31,0,Breanna Wiggins,Gastroenterology
+PRV0283,21.71,0,0,36.77,0,0.3,0,16.15,0,Kristina Hicks,Cardiology
+PRV0284,13.7,0,0,20.02,0,0.19,0,18.14,0,Darren West,Radiology
+PRV0285,19.9,1,2,31.0,0,0.9,1,20.67,1,Taylor Navarro,Dermatology
+PRV0286,14.28,0,0,21.82,0,0.09,0,16.7,0,Jamie White,Dermatology
+PRV0287,8.74,0,0,12.94,0,0.12,0,11.14,0,Megan George,Emergency Medicine
+PRV0288,6.15,0,0,7.37,0,0.12,0,12.16,0,Jacob Bauer,Ophthalmology
+PRV0289,14.54,0,0,22.55,0,0.12,0,16.14,0,Curtis Taylor,Dermatology
+PRV0290,10.73,0,0,15.67,0,0.2,0,14.15,0,Marissa Pineda,Internal Medicine
+PRV0291,13.2,0,1,18.99,0,0.15,0,18.32,1,Benjamin Hayden,Endocrinology
+PRV0292,15.55,0,0,26.37,0,0.56,0,10.97,0,Cynthia Douglas,Psychiatry
+PRV0293,3.83,0,0,5.16,0,0.11,0,6.1,0,Jamie Lewis,Family Medicine
+PRV0294,10.06,0,0,14.01,0,0.06,0,15.18,0,Connie Huber,Emergency Medicine
+PRV0295,15.32,0,0,23.7,0,0.07,0,17.26,0,Claire Saunders MD,Dermatology
+PRV0296,29.63,1,3,43.05,1,6.61,1,30.59,1,Ronald Walters,Family Medicine
+PRV0297,9.5,0,0,13.8,0,0.1,0,12.84,0,Scott Johnson,Emergency Medicine
+PRV0298,4.5,0,0,4.84,0,0.07,0,10.27,0,Tammy Nelson,Family Medicine
+PRV0299,15.88,0,0,27.92,0,0.26,0,9.22,0,William Bradford,Gastroenterology
+PRV0300,4.96,0,0,7.26,0,0.13,0,6.46,0,Cynthia Fuentes,Family Medicine

@@ -34,12 +34,14 @@ from scipy.special import rel_entr
 
 from validators import validate_claims_df
 
-INPUT_CSV         = "claims.csv"
+from dataset_config import CLAIMS_FILE, out
+
+INPUT_CSV         = CLAIMS_FILE
 
 logger = logging.getLogger(__name__)
-METRICS_CSV       = "provider_metrics.csv"   # for practice_setting / cohort_key
-OUTPUT_FLAGS_CSV  = "codemix_flags.csv"
-OUTPUT_SCORES_CSV = "provider_codemix.csv"
+METRICS_CSV       = out("provider_metrics.csv")   # for practice_setting / cohort_key
+OUTPUT_FLAGS_CSV  = out("codemix_flags.csv")
+OUTPUT_SCORES_CSV = out("provider_codemix.csv")
 
 # ── Calibrated thresholds ────────────────────────────────────────────────────
 KL_THRESHOLD     = 0.10

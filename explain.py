@@ -24,14 +24,16 @@ import pandas as pd
 # never needs a code change when a model is retired or upgraded.
 _ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-4-7")
 
-RULES_CSV   = "rules_flags.csv"
-PEER_CSV    = "peer_flags.csv"
-ML_CSV      = "ml_scores.csv"
-SCORES_CSV  = "risk_scores.csv"
-CLAIMS_CSV  = "claims.csv"
-OUTPUT_JSON = "explanations.json"
-OUTPUT_SHAP_CSV = "shap_values.csv"
-OUTPUT_EXPL_CSV = "shap_explanations.csv"
+from dataset_config import CLAIMS_FILE, out
+
+RULES_CSV   = out("rules_flags.csv")
+PEER_CSV    = out("peer_flags.csv")
+ML_CSV      = out("ml_scores.csv")
+SCORES_CSV  = out("risk_scores.csv")
+CLAIMS_CSV  = CLAIMS_FILE
+OUTPUT_JSON = out("explanations.json")
+OUTPUT_SHAP_CSV = out("shap_values.csv")
+OUTPUT_EXPL_CSV = out("shap_explanations.csv")
 
 TOP_N = 20   # only explain the top-N ranked providers
 

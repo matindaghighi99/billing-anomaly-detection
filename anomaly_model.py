@@ -36,12 +36,14 @@ from sklearn.svm import OneClassSVM
 
 from validators import validate_claims_df
 
+from dataset_config import CLAIMS_FILE, out
+
 SEED       = 42
-INPUT_CSV  = "claims.csv"
+INPUT_CSV  = CLAIMS_FILE
 
 logger = logging.getLogger(__name__)
-METRICS_CSV = "provider_metrics.csv"
-OUTPUT_CSV = "ml_scores.csv"
+METRICS_CSV = out("provider_metrics.csv")
+OUTPUT_CSV = out("ml_scores.csv")
 
 # ── DuckDB helper ─────────────────────────────────────────────────────────────
 

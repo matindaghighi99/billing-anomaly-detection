@@ -1,0 +1,24 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# One-time setup: Render Dashboard → New → Blueprint → connect this repo.
+# Render reads this file, builds the Dockerfile, and deploys with HTTPS.
+services:
+  - type: web
+    name: billing-anomaly-audit
+    runtime: docker
+    plan: free                      # bump to "starter" to avoid idle spin-down
+    branch: claude/project-setup-x11b0o
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /_stcore/health
+    autoDeploy: true                # redeploy on every push to the branch
+    envVars:
+      - key: DATASET
+        value: large
+      - key: HIDE_DEMO_CREDS
+        value: "1"
+      # Set your own users in the Render dashboard (JSON of PBKDF2 records):
+      #   python -c "import auth_mock; print(auth_mock.make_user_record('pw','supervisor','Name'))"
+      - key: BAAD_USERS_JSON
+        sync: false
+      # Optional — enables AI-enriched explanations:
+      - key: ANTHROPIC_API_KEY
+        sync: false

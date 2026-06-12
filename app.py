@@ -4,11 +4,18 @@ Single-screen decision-support tool for human billing auditors.
 NEVER makes automated decisions — all outputs are for human review only.
 """
 
+import html
 import json
 import os
 
 from dotenv import load_dotenv
 load_dotenv()
+
+# Consolidated on the expanded MOH dataset (claims_large.csv → *_large outputs)
+# so every tab — worklist, analytics, and the OHIP casebook — shows the same
+# 300-physician / 15-specialty universe. Set DATASET=demo to use the original
+# curated 6-specialty set instead.
+os.environ.setdefault("DATASET", "large")
 
 import pandas as pd
 import plotly.express as px
@@ -50,14 +57,16 @@ def _icon(name: str, size: int = 16, color: str = "currentColor", style: str = "
         f'<path d="{path}"/></svg>'
     )
 
-SCORES_CSV  = "risk_scores.csv"
-RULES_CSV   = "rules_flags.csv"
-PEER_CSV    = "peer_flags.csv"
-ML_CSV      = "ml_scores.csv"
-METRICS_CSV = "provider_metrics.csv"
-EXPLS_JSON  = "explanations.json"
-CLAIMS_CSV  = "claims.csv"
-SHAP_CSV    = "shap_explanations.csv"
+from dataset_config import CLAIMS_FILE, out
+
+SCORES_CSV  = out("risk_scores.csv")
+RULES_CSV   = out("rules_flags.csv")
+PEER_CSV    = out("peer_flags.csv")
+ML_CSV      = out("ml_scores.csv")
+METRICS_CSV = out("provider_metrics.csv")
+EXPLS_JSON  = out("explanations.json")
+CLAIMS_CSV  = CLAIMS_FILE
+SHAP_CSV    = out("shap_explanations.csv")
 
 RISK_THRESHOLD = 10
 
@@ -1032,6 +1041,14 @@ def main():
     _can_model = auth_mock.has_permission("view_model_card")
     _can_audit = auth_mock.has_permission("view_audit_trail")
 
+    # ═══════════════ OHIP CASEBOOK TAB ════════════════════════════════════════
+    with tab_ohip:
+        try:
+            import moh_dashboard
+            moh_dashboard.render_ohip_tab(_icon)
+        except Exception as exc:
+            st.warning(f"OHIP casebook unavailable: {exc}")
+
     # ═══════════════ WORKLIST TAB ═════════════════════════════════════════════
     with tab_wl:
         st.markdown(
@@ -1388,8 +1405,8 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     <div class="prov-header">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div>
-          <div class="prov-name">{prow['provider_name']}</div>
-          <div class="prov-pid">{pid} · {prow['specialty']}</div>
+          <div class="prov-name">{html.escape(str(prow['provider_name']))}</div>
+          <div class="prov-pid">{html.escape(str(pid))} · {html.escape(str(prow['specialty']))}</div>
         </div>
         <span class="conf-pill conf-{confidence}">{confidence} CONFIDENCE</span>
       </div>
@@ -1408,7 +1425,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
         </div>
         <div class="prov-stat">
           <div class="prov-stat-label">Specialty</div>
-          <div class="prov-stat-value">{prow['specialty']}</div>
+          <div class="prov-stat-value">{html.escape(str(prow['specialty']))}</div>
         </div>
       </div>
     </div>
@@ -1530,9 +1547,9 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                 for _, r in rule_rows.iterrows():
                     st.markdown(f"""
                     <div class="ev-card ev-rule">
-                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#FF7070","margin-right:3px;")} {r['rule'].replace('_', ' ').upper()}</span>
+                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#FF7070","margin-right:3px;")} {html.escape(str(r['rule']).replace('_', ' ').upper())}</span>
                       <span class="ev-exposure">${r['estimated_exposure']:,.2f}</span>
-                      <div class="ev-text">{r['evidence']}</div>
+                      <div class="ev-text">{html.escape(str(r['evidence']))}</div>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -1543,7 +1560,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                     direction = "above" if r["z_score"] > 0 else "below"
                     st.markdown(f"""
                     <div class="ev-card ev-peer">
-                      <span class="ev-peer-label">{_icon("chart-bar",12,"#6A9FFF","margin-right:3px;")} {r['metric'].replace('_', ' ').upper()}</span>
+                      <span class="ev-peer-label">{_icon("chart-bar",12,"#6A9FFF","margin-right:3px;")} {html.escape(str(r['metric']).replace('_', ' ').upper())}</span>
                       <div class="ev-text">
                         Provider: <strong style="color:#D0D0F0">{r['provider_value']:.2f}</strong> &nbsp;·&nbsp;
                         z = <strong style="color:#FFD93D">{r['z_score']:.2f}</strong> &nbsp;·&nbsp;

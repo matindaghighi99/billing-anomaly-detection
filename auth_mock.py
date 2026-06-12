@@ -15,17 +15,72 @@ auth_mock.py — Mock role-based access control for the Billing Anomaly Dashboar
     • All auth events (login, logout, failures) recorded in the audit trail
 """
 
+import hashlib
+import hmac
+import json
+import os
+import time
+
 import streamlit as st
 
 # ---------------------------------------------------------------------------
-# Demo credentials — readable by anyone with file access; that is intentional
-# for a demo.  In production these would live in an identity provider, not here.
+# Credentials
 # ---------------------------------------------------------------------------
+# Passwords are NEVER stored in plaintext. Each record holds a PBKDF2-HMAC-SHA256
+# salt + hash; attempt_login() recomputes the hash and compares in constant time.
+#
+# For real deployments, override the user store entirely via the BAAD_USERS_JSON
+# environment variable (a JSON object of the same shape):
+#   {"alice": {"salt": "<hex>", "hash": "<hex>", "role": "supervisor",
+#              "display": "Alice A."}}
+# Generate records with:  python -c "import auth_mock,sys;
+#   print(auth_mock.make_user_record(*sys.argv[1:]))"  <password> <role> <name>
+#
+# This remains a DEMO mock (session-dict RBAC). Production still requires a real
+# IdP (SSO/OAuth/SAML) with server-signed sessions — see MOH_ALIGNMENT.md §7.
+# ---------------------------------------------------------------------------
+
+_PBKDF2_ITERATIONS = 200_000
+
+# Login throttling (configurable via env). Enforced in render_login_screen().
+_MAX_FAILS = int(os.environ.get("BAAD_MAX_LOGIN_FAILS", "5"))
+_LOCKOUT_SECONDS = int(os.environ.get("BAAD_LOCKOUT_SECONDS", "60"))
+
+# Hide the on-screen demo-credential hint in production deployments.
+_HIDE_DEMO_CREDS = os.environ.get("HIDE_DEMO_CREDS", "").strip().lower() \
+    not in ("", "0", "false", "no")
+
 _DEMO_USERS: dict[str, dict] = {
-    "auditor1":    {"password": "demo_auditor1",    "role": "auditor",    "display": "Alex Auditor"},    # pragma: allowlist secret
-    "supervisor1": {"password": "demo_supervisor1", "role": "supervisor", "display": "Sam Supervisor"},  # pragma: allowlist secret
-    "admin1":      {"password": "demo_admin1",      "role": "admin",      "display": "Admin User"},      # pragma: allowlist secret
+    "auditor1":    {"salt": "9213dbdab5577b620a9173520e739d58", "hash": "026a3cfd9db5e2d4b14c2429d765331e40601cfc5b03677e19def470745c5638", "role": "auditor",    "display": "Alex Auditor"},    # pragma: allowlist secret
+    "supervisor1": {"salt": "c6927a10fca0e48f16e3803e9e30bec4", "hash": "f7e9bb242eea2b14caddea63be30a9271a964fef61beaab2d75429c3de19dfb1", "role": "supervisor", "display": "Sam Supervisor"},  # pragma: allowlist secret
+    "admin1":      {"salt": "7390674ea4874089de59c0ce0299d7b4", "hash": "2f2efdb0fe6f05dba51f3bed5b62f02f7ddf0b17414d9a34684b72e039221136", "role": "admin",      "display": "Admin User"},      # pragma: allowlist secret
 }
+
+
+def _hash_pw(password: str, salt: bytes) -> str:
+    return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt,
+                               _PBKDF2_ITERATIONS).hex()
+
+
+def make_user_record(password: str, role: str, display: str) -> str:
+    """Print a JSON user record (salt+hash) for use in BAAD_USERS_JSON."""
+    salt = os.urandom(16)
+    return json.dumps({"salt": salt.hex(), "hash": _hash_pw(password, salt),
+                       "role": role, "display": display})
+
+
+def _load_users() -> dict:
+    """Demo store by default; full override via BAAD_USERS_JSON env var."""
+    raw = os.environ.get("BAAD_USERS_JSON")
+    if raw:
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return _DEMO_USERS
+    return _DEMO_USERS
+
+
+_USERS = _load_users()
 
 # ---------------------------------------------------------------------------
 # Permission matrix
@@ -138,8 +193,15 @@ def attempt_login(username: str, password: str) -> bool:
 
     Returns True on success, False on bad credentials.
     """
-    user_record = _DEMO_USERS.get(username)
-    if user_record is None or user_record["password"] != password:
+    user_record = _USERS.get(username)
+    # Always run a PBKDF2 verification — even for unknown usernames against a
+    # throwaway salt — so response time does not reveal whether a username
+    # exists (mitigates username enumeration via timing).
+    if user_record is None:
+        _hash_pw(password, b"\x00" * 16)  # dummy work
+        return False
+    computed = _hash_pw(password, bytes.fromhex(user_record["salt"]))
+    if not hmac.compare_digest(computed, user_record["hash"]):
         return False
 
     st.session_state[_KEY_VERIFIED] = True
@@ -551,10 +613,26 @@ def render_login_screen() -> None:
         submitted = st.form_submit_button("Sign In  →", use_container_width=True, type="primary")
 
     if submitted:
-        if attempt_login(username, password):
+        now = time.time()
+        lock_until = st.session_state.get("_login_lock_until", 0)
+        if now < lock_until:
+            st.error(f"Too many failed attempts. Try again in "
+                     f"{int(lock_until - now)}s.")
+        elif attempt_login(username, password):
+            st.session_state.pop("_login_fails", None)
+            st.session_state.pop("_login_lock_until", None)
             st.rerun()
         else:
-            st.error("Invalid username or password.")
+            fails = st.session_state.get("_login_fails", 0) + 1
+            if fails >= _MAX_FAILS:
+                st.session_state["_login_lock_until"] = now + _LOCKOUT_SECONDS
+                st.session_state["_login_fails"] = 0
+                st.error(f"Too many failed attempts. Locked for "
+                         f"{_LOCKOUT_SECONDS}s.")
+            else:
+                st.session_state["_login_fails"] = fails
+                st.error(f"Invalid username or password. "
+                         f"({_MAX_FAILS - fails} attempt(s) left)")
 
     # Demo credentials + disclaimer
     st.markdown("""
@@ -573,5 +651,13 @@ def render_login_screen() -> None:
   <span>Mock authentication only — demo credentials, not suitable for real healthcare data. All providers and claims are entirely fictional.</span>
 </div>
 """, unsafe_allow_html=True)
+
+    # Demo-credential hint — suppressed in production (HIDE_DEMO_CREDS=1)
+    if not _HIDE_DEMO_CREDS:
+        st.markdown(
+            '<div class="lg-creds">auditor1 &nbsp;/&nbsp; supervisor1 '
+            '&nbsp;/&nbsp; admin1</div>',
+            unsafe_allow_html=True,
+        )
 
     st.stop()   # halt page rendering until login succeeds and st.rerun() fires
