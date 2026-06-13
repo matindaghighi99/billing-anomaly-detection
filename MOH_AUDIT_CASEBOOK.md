@@ -2,14 +2,18 @@
 
 > **Decision-support, synthetic data.** Prepared to mirror the Ministry of Health *Physician Fee-for-Service Post-Payment Audit Process* (OHIP Division). No determination is made here — under the HIA only the OHIP General Manager forms an Opinion and only the HSARB can order recovery.
 
+> ⚠ **INDICATIVE FIGURES — NOT FOR A GM'S OPINION.** INDICATIVE ONLY — based on a demonstration fee schedule (not the authoritative Schedule of Benefits / Regulation 552) and recovery has not been validated against adjudicated outcomes. Not for use in a GM's Opinion or HSARB referral. Fee schedule in use: *synthetic_demo (demo-1) — NOT authoritative*. Replace with the authoritative Schedule of Benefits and validate against adjudicated outcomes before any dollar figure informs a determination (see DEPLOY.md).
+
 ## Portfolio summary
 
 | Metric | Value |
 |---|---|
 | Physicians with a Potential Billing Concern | 24 |
 | Total estimated billing exposure | $4,069,218 |
-| **Statutorily recoverable (HSARB 24-mo / 5-yr cap)** | **$4,069,218** |
+| **Statutorily recoverable (INDICATIVE) (HSARB 24-mo / 5-yr cap)** | **$4,069,218** |
 | Amount barred by statutory limits | $0 |
+| Fee schedule | synthetic_demo (demo-1) — NOT authoritative |
+| Figure status | INDICATIVE |
 | Assumed GM review-request date | 2025-01-01 |
 | Target audit duration (ministry SLA) | < 12 months |
 

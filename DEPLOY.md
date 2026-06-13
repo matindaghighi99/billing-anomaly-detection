@@ -24,6 +24,26 @@ must set for anything beyond a local demo.
 | `BAAD_MAX_LOGIN_FAILS` | Failed logins before lockout | `5` |
 | `BAAD_LOCKOUT_SECONDS` | Lockout duration after too many fails | `60` |
 | `ANTHROPIC_API_KEY` | Enables AI-enriched explanations (optional) | unset (templates) |
+| `FEE_SCHEDULE_CSV` | Path to the fee schedule (fee_code,description,amount,tier,minutes) | `fee_schedule.csv` (demo subset) |
+| `FEE_SCHEDULE_META` | Provenance sidecar (source/version/effective_date/authoritative) | `fee_schedule_meta.json` |
+| `RECOVERY_VALIDATED` | Recovery validated against adjudicated outcomes | unset (off) |
+
+### Fee schedule & recovery defensibility
+
+Recovery figures are derived from a fee schedule. The bundled
+`fee_schedule.csv` is a **representative DEMO subset**, not the authoritative
+Ontario Schedule of Benefits (Regulation 552), so every figure in the casebook,
+the recovery CSV, and the dashboard is stamped **INDICATIVE — not for a GM's
+Opinion**. To make figures defensible:
+
+1. Replace `fee_schedule.csv` with a Schedule of Benefits export (same columns).
+2. Edit `fee_schedule_meta.json`: `{"authoritative": true, "version": "...",
+   "effective_date": "YYYY-MM-DD", "source": "Schedule of Benefits ..."}`.
+3. Validate recovery against adjudicated outcomes, then set `RECOVERY_VALIDATED=1`.
+
+Only when the schedule is **authoritative AND** `RECOVERY_VALIDATED=1` do the
+figures switch to **DEFENSIBLE**. This is enforced in code (`fee_schedule.py`),
+not just documented.
 
 ### Authentication
 

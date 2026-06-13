@@ -154,15 +154,37 @@ def render_ohip_tab(icon):
         "to Health Insurance Act s.18(8). Decision-support only — no determinations."
     )
 
+    # ── Fee-schedule provenance / defensibility banner ──────────────────────────
+    import fee_schedule as fs
+    if fs.is_recovery_defensible():
+        st.markdown(
+            f'<div style="background:rgba(20,140,40,0.14);border:1px solid '
+            f'rgba(20,140,40,0.45);border-radius:10px;padding:11px 16px;margin:4px 0 14px;'
+            f'font-size:0.8rem;color:#86E59B;"><b>Defensible figures.</b> '
+            f'{html.escape(fs.status_detail())} Fee schedule: '
+            f'<b>{html.escape(fs.provenance_label())}</b>.</div>',
+            unsafe_allow_html=True)
+    else:
+        st.markdown(
+            f'<div style="background:rgba(200,120,0,0.14);border:1px solid '
+            f'rgba(220,150,0,0.5);border-radius:10px;padding:11px 16px;margin:4px 0 14px;'
+            f'font-size:0.8rem;color:#F0C060;"><b>⚠ Indicative figures — not for a '
+            f'GM\'s Opinion.</b> {html.escape(fs.status_detail())} '
+            f'Fee schedule: <b>{html.escape(fs.provenance_label())}</b>.</div>',
+            unsafe_allow_html=True)
+
     # ── Portfolio KPIs ─────────────────────────────────────────────────────────
+    _stat = fs.figure_status()             # DEFENSIBLE | INDICATIVE
+    _rec_label = "Statutorily Recoverable" if fs.is_recovery_defensible() \
+        else "Recoverable (indicative)"
     exposure    = float(rec["estimated_exposure"].sum())
     recoverable = float(rec["statutory_recoverable"].sum())
     barred      = float(rec.get("barred_by_statute", pd.Series([0])).sum())
     c1, c2, c3, c4 = st.columns(4)
     cards = [
         (c1, icon("clipboard-list", 28, "#90B8FF"), "Physicians w/ Concern", str(len(rec)), "≥1 Potential Billing Concern"),
-        (c2, icon("banknotes", 28, "#A0D8A0"), "Estimated Exposure", f"${exposure:,.0f}", "billing above cohort baseline"),
-        (c3, icon("lock-closed", 28, "#FFB060"), "Statutorily Recoverable", f"${recoverable:,.0f}", "HSARB 24-mo / 5-yr cap applied"),
+        (c2, icon("banknotes", 28, "#A0D8A0"), "Estimated Exposure", f"${exposure:,.0f}", f"{_stat.lower()} · above cohort baseline"),
+        (c3, icon("lock-closed", 28, "#FFB060"), _rec_label, f"${recoverable:,.0f}", "HSARB 24-mo / 5-yr cap applied"),
         (c4, icon("exclamation-triangle", 28, "#FF9090"), "Barred by Statute", f"${barred:,.0f}", "outside recoverable window"),
     ]
     for col, ic, label, value, sub in cards:

@@ -35,6 +35,8 @@ import os
 
 import pandas as pd
 
+import fee_schedule as fs
+
 # ── Legislative framework (HIA s.18(8) circumstances) ─────────────────────────
 # The six circumstances under which the GM may refer a matter to HSARB.
 HIA_S18_8 = {
@@ -264,17 +266,33 @@ def build_casebook(findings: pd.DataFrame, claims: pd.DataFrame,
     # ── Header ────────────────────────────────────────────────────────────────
     total_exposure = per_rec["exposure"].sum()
     total_recoverable = per_rec["recoverable"].sum()
+    defensible = fs.is_recovery_defensible()
+    status = fs.figure_status()            # DEFENSIBLE | INDICATIVE
+    rec_label = "Statutorily recoverable" if defensible \
+        else "Statutorily recoverable (INDICATIVE)"
     md.append("# OHIP Provider Audit — Post-Payment Casebook\n")
     md.append("> **Decision-support, synthetic data.** Prepared to mirror the Ministry "
               "of Health *Physician Fee-for-Service Post-Payment Audit Process* (OHIP "
               "Division). No determination is made here — under the HIA only the OHIP "
               "General Manager forms an Opinion and only the HSARB can order recovery.\n")
+    # ── Fee-schedule provenance gate ────────────────────────────────────────
+    if not defensible:
+        md.append(f"> ⚠ **{status} FIGURES — NOT FOR A GM'S OPINION.** "
+                  f"{fs.status_detail()} Fee schedule in use: "
+                  f"*{fs.provenance_label()}*. Replace with the authoritative "
+                  f"Schedule of Benefits and validate against adjudicated outcomes "
+                  f"before any dollar figure informs a determination (see DEPLOY.md).\n")
+    else:
+        md.append(f"> ✅ **DEFENSIBLE FIGURES.** {fs.status_detail()} "
+                  f"Fee schedule: *{fs.provenance_label()}*.\n")
     md.append("## Portfolio summary\n")
     md.append("| Metric | Value |\n|---|---|")
     md.append(f"| Physicians with a Potential Billing Concern | {len(per_rec)} |")
     md.append(f"| Total estimated billing exposure | ${total_exposure:,.0f} |")
-    md.append(f"| **Statutorily recoverable (HSARB 24-mo / 5-yr cap)** | **${total_recoverable:,.0f}** |")
+    md.append(f"| **{rec_label} (HSARB 24-mo / 5-yr cap)** | **${total_recoverable:,.0f}** |")
     md.append(f"| Amount barred by statutory limits | ${per_rec['outside_window'].sum():,.0f} |")
+    md.append(f"| Fee schedule | {fs.provenance_label()} |")
+    md.append(f"| Figure status | {status} |")
     md.append(f"| Assumed GM review-request date | {pd.Timestamp(request_date).date()} |")
     md.append(f"| Target audit duration (ministry SLA) | < {SLA['total_target_months']} months |\n")
     md.append("_Recoverable amount applies HIA / Schedule 1: HSARB may order repayment "
@@ -339,6 +357,11 @@ def build_casebook(findings: pd.DataFrame, claims: pd.DataFrame,
                                          for c in r["concerns"]),
             "recommended_next_step": r["next_step"],
             "potential_outcome": r["potential_outcome"],
+            # Provenance stamp travels with every recovery figure.
+            "figure_status": status,
+            "fee_schedule": fs.provenance_label(),
+            "fee_schedule_authoritative": fs.is_authoritative(),
+            "recovery_defensible": defensible,
         })
 
     return "\n".join(md), pd.DataFrame(rows)
@@ -363,6 +386,10 @@ def main():
 
     print("OHIP Provider Audit — Post-Payment Casebook Builder")
     print("=" * 64)
+    print(f"  Fee schedule       : {fs.provenance_label()}")
+    print(f"  Figure status      : {fs.figure_status()}")
+    if not fs.is_recovery_defensible():
+        print(f"  ⚠ {fs.status_detail()}")
     findings = pd.read_csv(args.findings, dtype={"provider_id": str})
     claims = pd.read_csv(args.claims, parse_dates=["service_date"],
                          dtype={"provider_id": str, "fee_code": str})

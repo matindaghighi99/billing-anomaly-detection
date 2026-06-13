@@ -1,0 +1,70 @@
+fee_code,description,amount,tier,minutes
+99211,Office Visit Minimal,25.0,1,5
+99212,Office Visit Limited,55.0,1,10
+99213,Office Visit Brief,85.0,1,15
+99214,Office Visit Moderate,130.0,2,25
+99215,Office Visit Complex,200.0,3,40
+99202,New Patient Limited,75.0,1,10
+99203,New Patient Low,120.0,2,20
+99204,New Patient Moderate,190.0,3,40
+99205,New Patient High,260.0,3,60
+99221,Initial Hospital Care Low,150.0,2,30
+99223,Initial Hospital Care High,230.0,3,50
+99232,Subsequent Hospital Care,110.0,2,20
+99233,Subsequent Hospital Care High,160.0,3,35
+99283,ER Visit Moderate,130.0,2,30
+99284,ER Visit High,210.0,3,45
+99285,ER Visit Critical,320.0,3,60
+93000,ECG Complete,70.0,2,20
+93005,ECG Tracing Only,35.0,1,10
+93010,ECG Interpretation Only,45.0,1,10
+93306,Echocardiogram Complete,300.0,3,45
+93350,Stress Echocardiogram,420.0,3,60
+93458,Cardiac Catheterization,1500.0,3,90
+72148,MRI Lumbar Spine,350.0,3,45
+70553,MRI Brain w/ Contrast,450.0,3,60
+74177,CT Abdomen/Pelvis w/ Contrast,400.0,3,40
+71250,CT Chest,300.0,3,30
+73721,MRI Lower Extremity Joint,340.0,3,45
+76700,Abdominal Ultrasound,180.0,2,25
+90791,Psychiatric Diagnostic Eval,220.0,3,60
+90832,Psychotherapy 30 min,90.0,1,30
+90834,Psychotherapy 45 min,140.0,2,45
+90837,Psychotherapy 60 min,180.0,3,60
+90853,Group Psychotherapy,60.0,1,60
+11100,Skin Biopsy First Lesion,150.0,2,20
+11101,Skin Biopsy Additional Lesion,75.0,1,10
+17000,Destruction Lesion First,120.0,2,15
+17003,Destruction Lesion 2-14,30.0,1,5
+96372,Therapeutic Injection,40.0,1,10
+27447,Total Knee Replacement,1200.0,3,120
+29881,Knee Arthroscopy,900.0,3,90
+20610,Major Joint Injection,120.0,2,15
+73564,Knee X-Ray,60.0,1,10
+43239,Upper GI Endoscopy w/ Biopsy,380.0,3,30
+45380,Colonoscopy w/ Biopsy,500.0,3,45
+47562,Laparoscopic Cholecystectomy,1400.0,3,120
+49505,Inguinal Hernia Repair,900.0,3,90
+45378,Colonoscopy Diagnostic,420.0,3,40
+43235,Upper Endoscopy Diagnostic,320.0,3,25
+91110,Capsule Endoscopy,700.0,3,30
+92014,Eye Exam Comprehensive,140.0,2,30
+66984,Cataract Surgery,1100.0,3,60
+92134,OCT Retina Imaging,80.0,1,15
+67028,Intravitreal Injection,250.0,3,20
+59400,Routine Obstetric Care (Global),2500.0,3,180
+58300,IUD Insertion,150.0,2,20
+57454,Colposcopy w/ Biopsy,260.0,3,30
+95910,Nerve Conduction Study,400.0,3,60
+95816,Electroencephalogram (EEG),300.0,3,60
+64483,Epidural Steroid Injection,350.0,3,30
+00790,Anesthesia Upper Abdomen,500.0,3,60
+00810,Anesthesia Lower Intestinal,400.0,3,45
+01402,Anesthesia Knee,600.0,3,90
+95251,CGM Interpretation,120.0,2,20
+83036,Hemoglobin A1c,30.0,1,5
+94010,Spirometry,110.0,2,20
+94060,Bronchodilator Responsiveness,160.0,2,30
+31628,Bronchoscopy w/ Biopsy,650.0,3,45
+96413,Chemotherapy Infusion 1st Hr,350.0,3,60
+96415,Chemotherapy Infusion Add'l Hr,150.0,2,60
