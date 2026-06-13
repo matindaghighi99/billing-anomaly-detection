@@ -24,7 +24,17 @@ IS_PRODUCTION = APP_ENV == "production"
 DATA_DIR      = os.environ.get("DATA_DIR", ".")
 AUDIT_DB_PATH = os.environ.get("AUDIT_DB_PATH", os.path.join(DATA_DIR, "audit_log.db"))
 CASE_DB_PATH  = os.environ.get("CASE_DB_PATH",  os.path.join(DATA_DIR, "audit_cases.db"))
+CLINICAL_DB_PATH = os.environ.get("CLINICAL_DB_PATH", os.path.join(DATA_DIR, "clinical_reviews.db"))
 BACKUP_DIR    = os.environ.get("BACKUP_DIR",    os.path.join(DATA_DIR, "backups"))
+
+# Real adjudicated outcomes (provider_id, outcome[, recovered_amount]) for
+# accuracy validation. When present, validation is on REAL labels, not synthetic.
+VALIDATION_OUTCOMES_CSV = os.environ.get("VALIDATION_OUTCOMES_CSV",
+                                         "adjudicated_outcomes.csv")
+# Treat auditor dispositions / outcomes as trusted real labels (off by default,
+# since demo dispositions are seeded from the synthetic answer key).
+VALIDATION_TRUSTED = os.environ.get("VALIDATION_TRUSTED", "").strip().lower() \
+    in ("1", "true", "yes")
 
 
 def _is_off(name: str, default: str = "") -> bool:

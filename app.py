@@ -1223,6 +1223,41 @@ def main():
             )
         else:
 
+            # ── Detection accuracy validation ─────────────────────────────────
+            st.markdown(
+                '<div class="section-title"><span class="section-dot"></span>'
+                'Detection Accuracy Validation</div>',
+                unsafe_allow_html=True,
+            )
+            try:
+                import validation as _val
+                _, _vres = _val.build_report()
+                _m = _vres.get("metrics", {})
+                if _vres["validated"]:
+                    st.success(f"Validated against {_vres['basis']}.")
+                else:
+                    st.warning(
+                        f"NOT validated for production — basis: **{_vres['basis']}**. "
+                        "Metrics below are measured on the synthetic answer key, not "
+                        "real adjudicated outcomes. Provide `adjudicated_outcomes.csv` "
+                        "and set `VALIDATION_TRUSTED=1` once accuracy is confirmed."
+                    )
+                if _m:
+                    vc1, vc2, vc3, vc4 = st.columns(4)
+                    vc1.metric("Precision", _m.get("precision"))
+                    vc2.metric("Recall", _m.get("recall"))
+                    vc3.metric("F1", _m.get("f1"))
+                    vc4.metric("Flagged", _vres.get("n_flagged"))
+                    st.caption(
+                        f"TP {_m['tp']} · FP {_m['fp']} · FN {_m['fn']} · TN {_m['tn']} "
+                        f"over {_m['n_labelled']} labelled providers. Recovery-estimate "
+                        "calibration requires actual recovered amounts (real outcomes)."
+                    )
+            except Exception as _exc:
+                st.caption(f"Validation unavailable: {_exc}")
+
+            st.markdown("---")
+
             # ── Model registry section ───────────────────────────────────────
             st.markdown(
                 '<div class="section-title"><span class="section-dot"></span>'

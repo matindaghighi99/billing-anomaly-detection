@@ -138,7 +138,7 @@ demonstrator to a production deployment handling real OHIP data:
 - **Records & correspondence workflow:** integrate records intake, the 2-week acknowledgement, extension tracking, physician written submissions, and letter generation; persist case state across the three stages.
 - **Referral routing:** structured CPSO / OPP / program-area referral packages.
 - **Privacy & residency:** Ontario data-residency, PHIPA alignment, formal privacy-budget management (the demo's noise is demo-grade, clearly labelled).
-- **Validation:** clinical/medical-consultant review loop and accuracy validation against adjudicated outcomes before any figure informs a GM's Opinion.
+- **Validation:** *framework in place.* `validation.py` computes provider-level precision/recall/F1 and recovery calibration, and **stamps the basis** — SYNTHETIC vs real ADJUDICATED_OUTCOMES — gating `is_validated()` so metrics on synthetic data are never presented as production accuracy (current demo: recall 0.96, precision 1.0 on the synthetic key, flagged NOT validated). `clinical_review.py` provides the HIA s.18(8)(e) medical-consultant loop (queue → recorded opinion → case + label), gated by a new `clinical_review` permission. Remaining work: supply real adjudicated outcomes (`adjudicated_outcomes.csv`, optionally with recovered amounts), set `VALIDATION_TRUSTED=1`, and run the consultant review before any figure informs a GM's Opinion.
 
 ---
 
