@@ -7,6 +7,12 @@ NEVER makes automated decisions — all outputs are for human review only.
 import html
 import json
 import os
+import sys
+
+# Make the section folders importable as flat modules regardless of how the
+# app is launched (`streamlit run dashboard/app.py`, Docker, etc.).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 
 from dotenv import load_dotenv
 load_dotenv()

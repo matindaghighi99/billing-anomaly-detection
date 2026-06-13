@@ -32,6 +32,11 @@ under the HIA only the GM forms an Opinion and only the HSARB can order recovery
 
 import argparse
 import os
+import sys
+
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 
 import pandas as pd
 

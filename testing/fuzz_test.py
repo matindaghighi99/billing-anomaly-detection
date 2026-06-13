@@ -13,6 +13,10 @@ import tempfile
 import traceback
 import warnings
 
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
+
 import numpy as np
 import pandas as pd
 

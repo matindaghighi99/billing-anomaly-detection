@@ -134,10 +134,10 @@ Cloud Run, or a plain VM.
 ## Reproduce the data locally
 
 ```bash
-DATASET=large python run_pipeline.py   # data + detection pipeline
-python fraud_evidence.py               # revenue-inflation evidence
-python moh_audit.py                    # OHIP casebook + recovery summary
-streamlit run app.py
+DATASET=large python data_pipeline/run_pipeline.py   # data + detection pipeline
+python audit/fraud_evidence.py                       # revenue-inflation evidence
+python audit/moh_audit.py                            # OHIP casebook + recovery summary
+streamlit run dashboard/app.py
 ```
 
 ## Operational hardening
@@ -157,7 +157,7 @@ provisioned in **your** cloud account and wired in via environment variables.
   persistent disk / managed volume so the tamper-evident trail and case
   workflow survive restarts. For a clustered deployment, point these at managed
   Postgres (the access is centralised in `audit_log.py` / `case_management.py`).
-- **Backups.** `python backup.py` writes an integrity-checked snapshot of the
+- **Backups.** `python ops/backup.py` writes an integrity-checked snapshot of the
   audit + case DBs (and a CSV export) to `BACKUP_DIR`. Schedule it (e.g. a Render
   Cron Job) and sync `BACKUP_DIR` to object storage (S3 / Azure Blob / GCS).
 - **Monitoring.** `observability.py` emits structured JSON logs to stdout (wire a
