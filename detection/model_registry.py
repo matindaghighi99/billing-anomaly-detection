@@ -222,7 +222,7 @@ def register_model(
     _ensure_dir()
     registry = _load_registry()
     version_id = _next_version_id(registry)
-    ts = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z"
 
     version_dir = os.path.join(REGISTRY_DIR, version_id)
     os.makedirs(version_dir, exist_ok=True)

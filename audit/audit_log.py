@@ -106,7 +106,9 @@ def append_event(
         raise ValueError(f"event_type must be one of {valid}, got {event_type!r}")
 
     conn = _open_db()
-    ts   = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    # Timezone-aware UTC (datetime.utcnow() is deprecated in 3.12+). strftime
+    # preserves the existing "…Z" string format, so the hash chain is unaffected.
+    ts   = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z"
     sigs = json.dumps(signals_shown) if signals_shown is not None else None
 
     # Acquire an exclusive append lock before reading the previous hash, so two

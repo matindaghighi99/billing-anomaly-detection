@@ -18,8 +18,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+      - name: Install dependencies (pinned + hash-locked)
+        run: pip install --require-hashes -r requirements.txt -r requirements-dev.txt
       - name: Run test suite
         run: python -m pytest tests/ -q
 
@@ -78,8 +78,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install dependencies + Postgres driver
-        run: pip install -r requirements.txt pytest "psycopg[binary]"
+      - name: Install dependencies (pinned + hash-locked; psycopg is in the runtime lock)
+        run: pip install --require-hashes -r requirements.txt -r requirements-dev.txt
       - name: Run PostgreSQL store integration tests
         env:
           # Throwaway credential for the ephemeral CI service container only.

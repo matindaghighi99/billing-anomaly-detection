@@ -17,7 +17,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+# --require-hashes: reproducible, supply-chain-integrity-checked install from the
+# pinned + hash-locked lockfile (generated from requirements.in via pip-compile).
+RUN pip install --require-hashes -r requirements.txt
 
 COPY . .
 

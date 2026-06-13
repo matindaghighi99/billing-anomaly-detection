@@ -146,9 +146,15 @@ code.
   proxy), TLS termination + WAF, vulnerability scanning and patching, a secrets
   vault (Key Vault), and platform monitoring/alerting.
 
-**Recommended additions during pilot hardening (not yet in repo):**
-- A CI security stage (`pip-audit`, `bandit`, image scan).
-- Pinned, hash-locked dependencies.
+**Done:**
+- CI security stage on every push/PR — `pip-audit` (dependency CVEs), `bandit`
+  (static analysis, fails on medium+), `detect-secrets`, and a Trivy image scan
+  (`.github/workflows/ci.yml`).
+- **Pinned + hash-locked dependencies** — `requirements.in` is compiled to a
+  fully pinned, `--generate-hashes` `requirements.txt`; the image installs with
+  `pip install --require-hashes`, so the build is reproducible and
+  integrity-checked. Regenerate after editing `requirements.in` with
+  `pip-compile --generate-hashes --allow-unsafe`.
 
 ---
 

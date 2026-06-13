@@ -82,6 +82,18 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+`requirements.txt` is a pinned, hash-locked lockfile generated from
+`requirements.in` (reproducible, integrity-checked builds). To change a
+dependency, edit `requirements.in` and regenerate:
+
+```bash
+pip install pip-tools
+pip-compile --generate-hashes --allow-unsafe --output-file=requirements.txt requirements.in
+pip-compile --generate-hashes --allow-unsafe --output-file=requirements-dev.txt requirements-dev.in
+```
+
+Production/CI installs verify hashes with `pip install --require-hashes`.
+
 ---
 
 ## Quickstart

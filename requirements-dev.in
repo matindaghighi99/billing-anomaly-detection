@@ -1,0 +1,9 @@
+# requirements-dev.in — test/CI tooling, locked separately from runtime.
+#
+# Regenerate with:
+#   pip-compile --generate-hashes --output-file=requirements-dev.txt requirements-dev.in
+#
+# Constrained to the runtime lock so shared transitive deps stay on identical
+# versions.
+-c requirements.txt
+pytest
