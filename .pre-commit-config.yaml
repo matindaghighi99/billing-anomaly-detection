@@ -7,9 +7,9 @@ repos:
         exclude: |
           (?x)^(
             \.env\.example|
-            SECRETS_REPORT\.md|
-            SECURITY_REPORT\.md|
-            ROLEACCESS_REPORT\.md
+            docs/SECRETS_REPORT\.md|
+            docs/SECURITY_REPORT\.md|
+            docs/ROLEACCESS_REPORT\.md
           )$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks

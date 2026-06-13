@@ -63,6 +63,11 @@ _CASE_COLS = ["provider_id", "stage", "status", "review_request_date",
               "records_requested_date", "ack_due_date", "ack_received_date",
               "findings_date", "gm_opinion_date", "assigned_to", "updated_utc"]
 
+# Precomputed from the fixed column list above (no runtime string interpolation
+# in the execute() call), so the query is a static constant.
+_SELECT_CASE_SQL = ("SELECT " + ",".join(_CASE_COLS)
+                    + " FROM audit_cases WHERE provider_id=?")
+
 
 def _now() -> str:
     return datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
@@ -84,18 +89,14 @@ def get_case(provider_id: str) -> dict:
     """Return the case row (creating a default Initial-Action row if absent)."""
     conn = _open()
     try:
-        row = conn.execute(
-            f"SELECT {','.join(_CASE_COLS)} FROM audit_cases WHERE provider_id=?",
-            (provider_id,)).fetchone()
+        row = conn.execute(_SELECT_CASE_SQL, (provider_id,)).fetchone()
         if row is None:
             conn.execute(
                 "INSERT INTO audit_cases (provider_id, stage, status, updated_utc) "
                 "VALUES (?,?,?,?)",
                 (provider_id, "Initial Action", "preliminary_review", _now()))
             conn.commit()
-            row = conn.execute(
-                f"SELECT {','.join(_CASE_COLS)} FROM audit_cases WHERE provider_id=?",
-                (provider_id,)).fetchone()
+            row = conn.execute(_SELECT_CASE_SQL, (provider_id,)).fetchone()
         return dict(zip(_CASE_COLS, row))
     finally:
         conn.close()
@@ -124,9 +125,10 @@ def set_stage(provider_id: str, stage: str, user: str = "system") -> dict:
 
     conn = _open()
     try:
+        # `updates` keys are internal literals (set above); values parameterised.
         sets = ", ".join(f"{k}=?" for k in updates)
-        conn.execute(f"UPDATE audit_cases SET {sets} WHERE provider_id=?",
-                     (*updates.values(), provider_id))
+        _sql = f"UPDATE audit_cases SET {sets} WHERE provider_id=?"
+        conn.execute(_sql, (*updates.values(), provider_id))  # nosec B608
         conn.commit()
     finally:
         conn.close()
@@ -142,8 +144,9 @@ def mark_date(provider_id: str, field: str, value: str | None = None) -> None:
     value = value or _today().isoformat()
     conn = _open()
     try:
-        conn.execute(f"UPDATE audit_cases SET {field}=?, updated_utc=? WHERE provider_id=?",
-                     (value, _now(), provider_id))
+        # `field` is validated against the allowlist above; values parameterised.
+        _sql = f"UPDATE audit_cases SET {field}=?, updated_utc=? WHERE provider_id=?"
+        conn.execute(_sql, (value, _now(), provider_id))  # nosec B608
         conn.commit()
     finally:
         conn.close()

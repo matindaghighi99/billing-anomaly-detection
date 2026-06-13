@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Functional gate: the full test suite ────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run test suite
+        run: python -m pytest tests/ -q
+
+  # ── Security gate: dependency audit + static analysis + secret scan ─────────
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install security tools
+        run: pip install pip-audit bandit detect-secrets
+
+      - name: Dependency vulnerability audit (pip-audit)
+        # Audits the project's declared dependency closure. Deterministic on a
+        # clean runner (unlike auditing the ambient environment).
+        run: pip-audit -r requirements.txt --progress-spinner off
+
+      - name: Static security scan (bandit)
+        # Fail on medium+ severity AND confidence. Low-severity items (asserts in
+        # self-tests, demo TOTP secrets, intentional try/except/pass) are
+        # reported but do not fail the build; verified false positives are
+        # annotated inline with `# nosec <id>`.
+        run: >
+          bandit -r common detection data_pipeline dashboard auth audit ops
+          --severity-level medium --confidence-level medium
+
+      - name: Secret scan (detect-secrets)
+        # Fails if a committed file contains a secret not present in the
+        # reviewed .secrets.baseline (and not annotated `# pragma: allowlist secret`).
+        run: git ls-files | xargs detect-secrets-hook --baseline .secrets.baseline
+
+  # ── Container image scan (informational) ────────────────────────────────────
+  # Builds the production image and scans the OS + Python layers. Reported, not
+  # gating, until the base image's findings are triaged by the hosting team;
+  # set exit-code to "1" to enforce. (Not validated in this offline change.)
+  image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t baad:ci .
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: baad:ci
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"

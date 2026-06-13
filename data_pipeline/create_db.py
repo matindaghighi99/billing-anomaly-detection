@@ -512,7 +512,8 @@ def main():
     for table in _SUMMARY_TABLES:
         if table not in _SUMMARY_TABLES:
             raise ValueError(f"Unexpected table name: {table!r}")
-        n = conn.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]  # nosec B608 — table is a hardcoded tuple literal above, not user input
+        # `table` is validated against a hardcoded tuple above (never user input).
+        n = conn.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]  # nosec B608
         print(f"  {table:<25}: {n:>8,} rows")
 
     conn.close()
