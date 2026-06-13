@@ -19,6 +19,8 @@ import datetime
 import os
 import sqlite3
 
+import db   # storage backend seam (SQLite default; PostgreSQL via DATABASE_URL)
+
 try:
     from config import CASE_DB_PATH as DB_PATH
 except Exception:
@@ -70,13 +72,10 @@ def _today() -> datetime.date:
     return datetime.datetime.now(datetime.timezone.utc).date()
 
 
-def _open() -> sqlite3.Connection:
+def _open():
     # Resolve the path at call time so a runtime CASE_DB_PATH (managed volume,
     # or per-test override) is always honoured.
-    conn = sqlite3.connect(os.environ.get("CASE_DB_PATH", DB_PATH))
-    conn.executescript(_SCHEMA)
-    conn.commit()
-    return conn
+    return db.connect(os.environ.get("CASE_DB_PATH", DB_PATH), _SCHEMA)
 
 
 # ── Case state ──────────────────────────────────────────────────────────────

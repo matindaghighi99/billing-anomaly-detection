@@ -1432,11 +1432,14 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                     auth_mock.require_permission("verify_integrity")
                     import audit_log as _al
                     res = _al.verify_integrity()
+                    _obs.log_action("verify_integrity", target="audit_log",
+                                    outcome="ok" if res["ok"] else "integrity_break")
                     if res["ok"]:
                         st.success(res['message'])
                     else:
                         st.error(res['message'])
                 except PermissionError as pe:
+                    _obs.log_action("verify_integrity", outcome="denied")
                     st.error(f"Access denied: {pe}")
                 except Exception as exc:
                     st.error(f"Audit log error: {exc}")
@@ -1447,8 +1450,11 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                     auth_mock.require_permission("export_audit_log")
                     import audit_log as _al
                     n = _al.export_to_csv()
+                    _obs.log_action("export_audit_log", target="audit_log_export.csv",
+                                    rows=n)
                     st.success(f"Exported {n} records → audit_log_export.csv")
                 except PermissionError as pe:
+                    _obs.log_action("export_audit_log", outcome="denied")
                     st.error(f"Access denied: {pe}")
                 except Exception as exc:
                     st.error(f"Export error: {exc}")
@@ -1573,6 +1579,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             record_disposition(pid, "confirmed",
                                notes=f"Confirmed via dashboard by {_user}",
                                source="dashboard")
+            _obs.log_action("take_action", target=pid, disposition="confirmed")
             st.success(f"Recorded: {pid} confirmed")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
@@ -1595,6 +1602,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             record_disposition(pid, "cleared",
                                notes=f"Cleared via dashboard by {_user}",
                                source="dashboard")
+            _obs.log_action("take_action", target=pid, disposition="cleared")
             st.success(f"Recorded: {pid} cleared")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
@@ -1613,6 +1621,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                 action_taken="investigating",
                 reasoning=f"Auditor {_user} opened investigation",
             )
+            _obs.log_action("take_action", target=pid, disposition="investigating")
             st.info(f"Recorded: {pid} under investigation")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")

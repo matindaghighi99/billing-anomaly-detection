@@ -24,6 +24,8 @@ import sqlite3
 import datetime
 from typing import Optional
 
+import db   # storage backend seam (SQLite default; PostgreSQL via DATABASE_URL)
+
 # Storage location is configurable so the tamper-evident trail can live on a
 # managed/persistent volume (or be repointed at managed storage) in production.
 try:
@@ -60,11 +62,8 @@ _CONTENT_FIELDS = [
 ]
 
 
-def _open_db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute(_SCHEMA)
-    conn.commit()
-    return conn
+def _open_db():
+    return db.connect(DB_PATH, _SCHEMA)
 
 
 def _content_str(record: dict) -> str:
@@ -110,11 +109,12 @@ def append_event(
     ts   = datetime.datetime.utcnow().isoformat(timespec="seconds") + "Z"
     sigs = json.dumps(signals_shown) if signals_shown is not None else None
 
-    # BEGIN IMMEDIATE acquires a write lock before we read the previous hash,
-    # so two concurrent callers cannot both read the same tail hash and then
-    # each insert a row that claims a different predecessor — which would
-    # silently fork the chain and make verify_integrity() report a false break.
-    conn.execute("BEGIN IMMEDIATE")
+    # Acquire an exclusive append lock before reading the previous hash, so two
+    # concurrent callers cannot both read the same tail hash and then each
+    # insert a row claiming a different predecessor — which would silently fork
+    # the chain and make verify_integrity() report a false break. Maps to
+    # BEGIN IMMEDIATE on SQLite and LOCK TABLE ... EXCLUSIVE on PostgreSQL.
+    db.begin_exclusive(conn, "audit_log")
     try:
         prev = _last_hash(conn)
 

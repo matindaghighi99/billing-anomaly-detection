@@ -10,10 +10,24 @@ import json
 import logging
 import os
 import sys
+import uuid
+
+# Standard LogRecord attributes — anything else attached via `extra=` is treated
+# as a structured field and emitted in the JSON payload.
+_STD_LOGRECORD = set(vars(logging.makeLogRecord({})))
+
+# Dedicated logger for the security/audit event stream a SIEM subscribes to.
+audit_logger = logging.getLogger("baad.audit")
 
 
 def configure_logging(level: str | None = None) -> None:
-    """Install a JSON stdout formatter once (idempotent)."""
+    """Install a JSON stdout formatter once (idempotent).
+
+    Emits one JSON object per line to stdout — the 12-factor convention — so the
+    platform's log drain forwards it to a SIEM (Splunk / Microsoft Sentinel /
+    ELK). Any keyword passed via `extra=` (actor, action, correlation_id, …)
+    appears as a top-level field, so security events are queryable downstream.
+    """
     root = logging.getLogger()
     if getattr(root, "_baad_configured", False):
         return
@@ -27,15 +41,70 @@ def configure_logging(level: str | None = None) -> None:
                 "logger": record.name,
                 "msg": record.getMessage(),
             }
+            # Promote structured `extra=` fields to the top level.
+            for k, v in record.__dict__.items():
+                if k not in _STD_LOGRECORD and not k.startswith("_"):
+                    payload[k] = v
             if record.exc_info:
                 payload["exc"] = self.formatException(record.exc_info)
-            return json.dumps(payload)
+            return json.dumps(payload, default=str)
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(_JsonFormatter())
     root.handlers[:] = [handler]
     root.setLevel(getattr(logging, lvl, logging.INFO))
     root._baad_configured = True
+
+
+def correlation_id() -> str:
+    """A stable id for the current Streamlit session, for log correlation.
+
+    Ties every event from one user session together in the SIEM. Falls back to
+    a fresh uuid when no Streamlit session is available (CLI/tests).
+    """
+    try:
+        import streamlit as st
+        cid = st.session_state.get("_correlation_id")
+        if not cid:
+            cid = uuid.uuid4().hex
+            st.session_state["_correlation_id"] = cid
+        return cid
+    except Exception:
+        return uuid.uuid4().hex
+
+
+def _actor() -> dict:
+    """Best-effort identity of the acting user, from the verified session."""
+    try:
+        import auth_mock
+        return {"actor": auth_mock.current_user() or "anonymous",
+                "actor_role": auth_mock.current_role() or "none"}
+    except Exception:
+        return {"actor": "system", "actor_role": "none"}
+
+
+def action_event(action: str, *, target: str | None = None,
+                 outcome: str = "ok", **extra) -> dict:
+    """Build the structured payload for a privileged-action audit event."""
+    payload = {"event": "user_action", "action": action, "outcome": outcome,
+               "correlation_id": correlation_id(), **_actor()}
+    if target is not None:
+        payload["target"] = target
+    payload.update(extra)
+    return payload
+
+
+def log_action(action: str, *, target: str | None = None,
+               outcome: str = "ok", **extra) -> dict:
+    """Emit a structured audit event (who did what, to what, in which session).
+
+    This is the operational SIEM stream — complementary to the tamper-evident
+    hash-chained trail in audit_log.py. Call it from privileged handlers
+    (exports, dispositions, stage changes, integrity checks).
+    """
+    payload = action_event(action, target=target, outcome=outcome, **extra)
+    audit_logger.info(action, extra=payload)
+    return payload
 
 
 def self_check() -> dict:

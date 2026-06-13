@@ -52,6 +52,12 @@ operator-supplied config input and is tracked at the repository root. Override
 the artefact locations with the `PIPELINE_DATA_DIR` and `REPORTS_DIR`
 environment variables.
 
+**Production posture.** Enterprise SSO (`auth/sso.py`), a PostgreSQL datastore
+(`common/db.py`), and SIEM-ready structured audit logging (`ops/observability.py`)
+are reachable by configuration — not code changes. See
+**[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md)** for the control
+profile and `.env.example` for every switch.
+
 Modules import each other by bare name. The dashboard, pipeline runner, test
 suite, and fuzz/stress harnesses register the section folders on `sys.path`
 automatically. To run an **individual phase script** directly (Option B below),

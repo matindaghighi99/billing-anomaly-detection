@@ -54,6 +54,10 @@ import streamlit as st
 # IdP (SSO/OAuth/SAML) with server-signed sessions — see MOH_ALIGNMENT.md §7.
 # ---------------------------------------------------------------------------
 
+# Authentication provider: "mock" = built-in password + TOTP (demo); "sso" =
+# federate to an enterprise IdP behind a reverse proxy (see auth/sso.py).
+_AUTH_PROVIDER = os.environ.get("AUTH_PROVIDER", "mock").strip().lower()
+
 _PBKDF2_ITERATIONS = 200_000
 
 # Login throttling (configurable via env). Enforced in render_login_screen().
@@ -192,6 +196,12 @@ def _verify(token) -> dict | None:
 
 
 def _session() -> dict | None:
+    # In production SSO mode the identity comes from the reverse proxy / IdP
+    # (see auth/sso.py), resolved fresh from the request on every call. In demo
+    # mode it comes from the locally-issued, HMAC-signed session token.
+    if _AUTH_PROVIDER == "sso":
+        import sso
+        return sso.sso_identity()
     return _verify(st.session_state.get(_KEY_TOKEN))
 
 
@@ -335,7 +345,24 @@ def logout() -> None:
 # ---------------------------------------------------------------------------
 
 def render_login_screen() -> None:
-    """Render the full-page login form.  Calls st.stop() until login succeeds."""
+    """Render the login UI.  Calls st.stop() until access is established.
+
+    In SSO mode the reverse proxy / IdP performs authentication, so reaching
+    this screen means the request carried no recognised identity (or the user's
+    IdP groups map to no role). We show an access notice instead of a password
+    form — there is nothing to type here.
+    """
+    if _AUTH_PROVIDER == "sso":
+        st.error(
+            "**Access not established.** This deployment authenticates through "
+            "your organisation's single sign-on. You have reached the "
+            "application without a recognised identity, or your account is not "
+            "assigned an audit role. Contact the system administrator to be "
+            "granted access."
+        )
+        st.stop()
+        return
+
     st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
