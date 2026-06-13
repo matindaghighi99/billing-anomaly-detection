@@ -12,7 +12,7 @@ the scored worklist itself is missing.
 
 import os
 
-from dataset_config import CLAIMS_FILE, out, is_large
+from dataset_config import CLAIMS_FILE, out, data_path, is_large
 
 
 def _missing(name: str) -> bool:
@@ -74,10 +74,10 @@ def ensure_data() -> dict:
 
     # 3. MOH casebook artefacts (only meaningful on the large set).
     if is_large():
-        if not os.path.exists("fraud_evidence.csv"):
+        if not os.path.exists(data_path("fraud_evidence.csv")):
             _run_main_with_clean_argv("fraud_evidence")
             status["moh"] = True
-        if not os.path.exists("moh_recovery_summary.csv"):
+        if not os.path.exists(data_path("moh_recovery_summary.csv")):
             _run_main_with_clean_argv("moh_audit")
             status["moh"] = True
 

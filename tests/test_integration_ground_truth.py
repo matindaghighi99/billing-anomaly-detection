@@ -27,25 +27,42 @@ import pandas as pd
 import numpy as np
 import pytest
 
+import dataset_config as _dc
+
+
+def _ensure_demo_pipeline():
+    """Generate the demo dataset + scored outputs on demand if absent.
+
+    Pipeline artefacts live under data/ (git-ignored), so on a fresh clone they
+    won't exist yet; regenerate them once so the end-to-end checks run instead of
+    skipping. The DATASET env is left at its default (demo) for this fixture.
+    """
+    if os.path.exists(_dc.out("risk_scores.csv")) and os.path.exists(_dc.out("ground_truth.json")):
+        return
+    import bootstrap
+    bootstrap.ensure_data()
+
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 @pytest.fixture(scope="module")
 def ground_truth():
-    gt_path = os.path.join(PROJECT_DIR, "ground_truth.json")
+    _ensure_demo_pipeline()
+    gt_path = os.path.join(PROJECT_DIR, _dc.out("ground_truth.json"))
     if not os.path.exists(gt_path):
-        pytest.skip("ground_truth.json not found — run data_gen.py first")
+        pytest.skip("ground_truth.json not found — run data_pipeline/data_gen.py first")
     with open(gt_path) as f:
         return json.load(f)
 
 
 @pytest.fixture(scope="module")
 def risk_scores():
-    scores_path = os.path.join(PROJECT_DIR, "risk_scores.csv")
+    _ensure_demo_pipeline()
+    scores_path = os.path.join(PROJECT_DIR, _dc.out("risk_scores.csv"))
     if not os.path.exists(scores_path):
         pytest.skip(
             "risk_scores.csv not found — run the full pipeline first "
-            "(python run_pipeline.py --no-regen)"
+            "(python data_pipeline/run_pipeline.py --no-regen)"
         )
     df = pd.read_csv(scores_path, dtype={"provider_id": str})
     df = df.reset_index(drop=True)

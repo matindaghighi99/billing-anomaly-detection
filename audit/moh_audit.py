@@ -41,6 +41,7 @@ import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 import pandas as pd
 
 import fee_schedule as fs
+from dataset_config import data_path, report_path
 
 # ── Legislative framework (HIA s.18(8) circumstances) ─────────────────────────
 # The six circumstances under which the GM may refer a matter to HSARB.
@@ -286,7 +287,7 @@ def build_casebook(findings: pd.DataFrame, claims: pd.DataFrame,
                   f"{fs.status_detail()} Fee schedule in use: "
                   f"*{fs.provenance_label()}*. Replace with the authoritative "
                   f"Schedule of Benefits and validate against adjudicated outcomes "
-                  f"before any dollar figure informs a determination (see DEPLOY.md).\n")
+                  f"before any dollar figure informs a determination (see docs/DEPLOY.md).\n")
     else:
         md.append(f"> ✅ **DEFENSIBLE FIGURES.** {fs.status_detail()} "
                   f"Fee schedule: *{fs.provenance_label()}*.\n")
@@ -376,13 +377,13 @@ def build_casebook(findings: pd.DataFrame, claims: pd.DataFrame,
 
 def main():
     ap = argparse.ArgumentParser(description="MOH OHIP post-payment audit casebook")
-    ap.add_argument("--findings", default="fraud_evidence.csv")
-    ap.add_argument("--claims", default="claims_large.csv")
+    ap.add_argument("--findings", default=data_path("fraud_evidence.csv"))
+    ap.add_argument("--claims", default=data_path("claims_large.csv"))
     ap.add_argument("--request-date", default=None,
                     help="GM review-request date (YYYY-MM-DD); default = last claim + 1 day")
     ap.add_argument("--top", type=int, default=25)
-    ap.add_argument("--out-md", default="MOH_AUDIT_CASEBOOK.md")
-    ap.add_argument("--out-csv", default="moh_recovery_summary.csv")
+    ap.add_argument("--out-md", default=report_path("MOH_AUDIT_CASEBOOK.md"))
+    ap.add_argument("--out-csv", default=data_path("moh_recovery_summary.csv"))
     args = ap.parse_args()
 
     for f in (args.findings, args.claims):

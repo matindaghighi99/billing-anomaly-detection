@@ -27,17 +27,25 @@ USAGE
 import argparse
 import json
 import math
+import os
 import random
+import sys
 from datetime import date, timedelta
+
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 
 import numpy as np
 import pandas as pd
 from faker import Faker
 
+from dataset_config import data_path
+
 DEFAULT_SEED = 1337
 
-OUTPUT_CSV        = "claims_large.csv"
-GROUND_TRUTH_JSON = "ground_truth_large.json"
+OUTPUT_CSV        = data_path("claims_large.csv")
+GROUND_TRUTH_JSON = data_path("ground_truth_large.json")
 
 
 # ── Fee schedule (~69 codes) ──────────────────────────────────────────────────

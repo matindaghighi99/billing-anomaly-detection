@@ -18,11 +18,17 @@ import json
 import os
 import sys
 
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
+
 import pandas as pd
 
-GROUND_TRUTH_JSON  = "ground_truth.json"
-SCORES_CSV         = "risk_scores.csv"
-BASELINE_JSON      = "validate_baseline.json"
+from dataset_config import out, data_path
+
+GROUND_TRUTH_JSON  = out("ground_truth.json")
+SCORES_CSV         = out("risk_scores.csv")
+BASELINE_JSON      = data_path("validate_baseline.json")
 
 # A bad actor "counts as detected" when it ranks within this many providers
 CAUGHT_WITHIN_RANK = 20

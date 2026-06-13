@@ -38,7 +38,7 @@ from dataset_config import out
 
 DISPOSITIONS_CSV  = out("dispositions.csv")
 FEEDBACK_CSV      = out("feedback_scores.csv")
-GROUND_TRUTH_JSON = "ground_truth.json"
+GROUND_TRUTH_JSON = out("ground_truth.json")
 
 METRICS_CSV       = out("provider_metrics.csv")
 CODEMIX_CSV       = out("provider_codemix.csv")

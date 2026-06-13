@@ -1,8 +1,0 @@
-provider_id,provider_name,specialty,cohort_key,practice_setting,kl_divergence,cosine_distance,drift_flag,estimated_exposure
-PRV0045,Angelica Tucker,Dermatology,Dermatology | full_time,full_time,7.057522,0.347957,True,71068.06
-PRV0112,Shannon Walker,Family Medicine,Family Medicine | full_time,full_time,4.215237,0.070621,True,59523.74
-PRV0142,David Douglas Jr.,Cardiology,Cardiology | full_time,full_time,0.908873,0.56678,True,30137.84
-PRV0006,Connie Lawrence,Surgery,Surgery | full_time,full_time,0.452906,0.248252,True,141573.3
-PRV0008,Gina Moore,Psychiatry,Psychiatry | full_time,full_time,0.323615,0.163542,True,37630.89
-PRV0089,Lisa Archer,Family Medicine,Family Medicine | full_time,full_time,0.268249,0.195402,True,76214.07
-TRAP03,Dr. Sandra Beaumont,Family Medicine,Family Medicine | full_time,full_time,0.250263,0.183446,True,71129.18

@@ -11,12 +11,21 @@ Produces:
 import json
 import os
 import sqlite3
+import sys
 import textwrap
+
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 
 import pandas as pd
 
-DB_FILE     = "billing_anomaly.db"
-SCHEMA_FILE = "schema.sql"
+import dataset_config as _dc
+
+_HERE       = os.path.dirname(os.path.abspath(__file__))
+DB_FILE     = _dc.data_path("billing_anomaly.db")
+SCHEMA_FILE = os.path.join(_HERE, "sql", "schema.sql")
+QUERIES_FILE = os.path.join(_HERE, "sql", "queries.sql")
 
 # ── Fee schedule (source of truth, not derived from CSV) ─────────────────────
 FEE_SCHEDULE = [
@@ -96,7 +105,7 @@ def load_reference_data(conn: sqlite3.Connection):
 
 
 def load_claims(conn: sqlite3.Connection):
-    df = pd.read_csv("claims.csv", parse_dates=["service_date"],
+    df = pd.read_csv(_dc.out("claims.csv"), parse_dates=["service_date"],
                      dtype={"fee_code": str, "provider_id": str,
                             "patient_id": str, "clinic_id": str})
 
@@ -126,9 +135,9 @@ def load_claims(conn: sqlite3.Connection):
 
 
 def load_rule_flags(conn: sqlite3.Connection):
-    if not os.path.exists("rules_flags.csv"):
+    if not os.path.exists(_dc.out("rules_flags.csv")):
         return
-    df = pd.read_csv("rules_flags.csv", dtype={"provider_id": str})
+    df = pd.read_csv(_dc.out("rules_flags.csv"), dtype={"provider_id": str})
     df = df.rename(columns={"rule": "rule_name"})
     df[["provider_id","rule_name","evidence","estimated_exposure"]].to_sql(
         "rule_flags", conn, if_exists="append", index=False)
@@ -137,9 +146,9 @@ def load_rule_flags(conn: sqlite3.Connection):
 
 
 def load_peer_flags(conn: sqlite3.Connection):
-    if not os.path.exists("peer_flags.csv"):
+    if not os.path.exists(_dc.out("peer_flags.csv")):
         return
-    df = pd.read_csv("peer_flags.csv", dtype={"provider_id": str})
+    df = pd.read_csv(_dc.out("peer_flags.csv"), dtype={"provider_id": str})
     df[["provider_id","metric","provider_value","peer_median",
         "z_score","estimated_exposure"]].to_sql(
         "peer_flags", conn, if_exists="append", index=False)
@@ -148,9 +157,9 @@ def load_peer_flags(conn: sqlite3.Connection):
 
 
 def load_provider_metrics(conn: sqlite3.Connection):
-    if not os.path.exists("provider_metrics.csv"):
+    if not os.path.exists(_dc.out("provider_metrics.csv")):
         return
-    df = pd.read_csv("provider_metrics.csv", dtype={"provider_id": str})
+    df = pd.read_csv(_dc.out("provider_metrics.csv"), dtype={"provider_id": str})
     cols = ["provider_id","total_claims","total_billed","avg_billed","avg_minutes",
             "billed_days","claims_per_day","unique_patients","services_per_patient",
             "top_tier_share","unique_codes","max_daily_minutes","dup_rate"]
@@ -161,9 +170,9 @@ def load_provider_metrics(conn: sqlite3.Connection):
 
 
 def load_ml_scores(conn: sqlite3.Connection):
-    if not os.path.exists("ml_scores.csv"):
+    if not os.path.exists(_dc.out("ml_scores.csv")):
         return
-    df = pd.read_csv("ml_scores.csv", dtype={"provider_id": str})
+    df = pd.read_csv(_dc.out("ml_scores.csv"), dtype={"provider_id": str})
     df[["provider_id","ml_raw_score","ml_score","ml_is_anomaly"]].to_sql(
         "ml_scores", conn, if_exists="append", index=False)
     conn.commit()
@@ -171,9 +180,9 @@ def load_ml_scores(conn: sqlite3.Connection):
 
 
 def load_risk_scores(conn: sqlite3.Connection):
-    if not os.path.exists("risk_scores.csv"):
+    if not os.path.exists(_dc.out("risk_scores.csv")):
         return
-    df = pd.read_csv("risk_scores.csv", dtype={"provider_id": str})
+    df = pd.read_csv(_dc.out("risk_scores.csv"), dtype={"provider_id": str})
     df[["provider_id","risk_score","estimated_exposure","rules_score",
         "peer_score","ml_score","ml_is_anomaly","top_reason"]].to_sql(
         "risk_scores", conn, if_exists="append", index=False)
@@ -182,9 +191,9 @@ def load_risk_scores(conn: sqlite3.Connection):
 
 
 def load_explanations(conn: sqlite3.Connection):
-    if not os.path.exists("explanations.json"):
+    if not os.path.exists(_dc.out("explanations.json")):
         return
-    with open("explanations.json") as f:
+    with open(_dc.out("explanations.json")) as f:
         data = json.load(f)
     rows = [
         (pid, v["risk_score"], v["estimated_exposure"], v["explanation"], "template")
@@ -457,9 +466,9 @@ ORDER BY n_reviews DESC;
 
 
 def write_queries_file():
-    with open("queries.sql", "w", encoding="utf-8") as f:
+    with open(QUERIES_FILE, "w", encoding="utf-8") as f:
         f.write(QUERIES)
-    print("  Analytical queries written to queries.sql")
+    print(f"  Analytical queries written to {QUERIES_FILE}")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -513,7 +522,7 @@ def main():
 
     print("\n  Quick-start:")
     print(f"    sqlite3 {DB_FILE}")
-    print(f"    .read queries.sql")
+    print(f"    .read {QUERIES_FILE}")
     print("=" * 60)
 
 

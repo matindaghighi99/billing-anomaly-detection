@@ -21,10 +21,15 @@ Outputs: VALIDATION_REPORT.md + validation_metrics.json.
 
 import json
 import os
+import sys
+
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 
 import pandas as pd
 
-from dataset_config import out
+from dataset_config import out, data_path, report_path
 
 try:
     import config
@@ -34,8 +39,8 @@ except Exception:
     OUTCOMES_CSV = os.environ.get("VALIDATION_OUTCOMES_CSV", "adjudicated_outcomes.csv")
     TRUSTED = os.environ.get("VALIDATION_TRUSTED", "").strip().lower() in ("1", "true", "yes")
 
-DISPOSITIONS_CSV  = "dispositions.csv"
-GROUND_TRUTH_JSON = "ground_truth_large.json"
+DISPOSITIONS_CSV  = out("dispositions.csv")
+GROUND_TRUTH_JSON = data_path("ground_truth_large.json")
 RISK_THRESHOLD    = 10   # mirrors scoring MIN_SCORE_THRESHOLD / app RISK_THRESHOLD
 
 
@@ -123,7 +128,7 @@ def recovery_calibration(labels: pd.DataFrame) -> dict | None:
     """Compare estimated recoverable vs actual recovered (needs recovered_amount)."""
     if "recovered_amount" not in labels.columns:
         return None
-    rec_path = "moh_recovery_summary.csv"
+    rec_path = data_path("moh_recovery_summary.csv")
     if not os.path.exists(rec_path):
         return None
     est = pd.read_csv(rec_path, dtype={"provider_id": str})[
@@ -197,9 +202,9 @@ def build_report() -> tuple[str, dict]:
 
 def main():
     md, result = build_report()
-    with open("VALIDATION_REPORT.md", "w", encoding="utf-8") as fh:
+    with open(report_path("VALIDATION_REPORT.md"), "w", encoding="utf-8") as fh:
         fh.write(md)
-    with open("validation_metrics.json", "w", encoding="utf-8") as fh:
+    with open(data_path("validation_metrics.json"), "w", encoding="utf-8") as fh:
         json.dump(result, fh, indent=2)
     print("Detection Accuracy Validation")
     print("=" * 60)
@@ -210,7 +215,7 @@ def main():
         print(f"  TP/FP/FN/TN: {m['tp']}/{m['fp']}/{m['fn']}/{m['tn']}")
     if not result["validated"]:
         print("  ⚠ NOT validated against real adjudicated outcomes — see report.")
-    print("  → VALIDATION_REPORT.md, validation_metrics.json")
+    print(f"  → {report_path('VALIDATION_REPORT.md')}, {data_path('validation_metrics.json')}")
 
 
 if __name__ == "__main__":

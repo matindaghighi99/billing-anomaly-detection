@@ -9,12 +9,9 @@ venv/
 .env
 .env.*
 *.db
-# Big raw claims files are regenerated at build/runtime (the small *_large
-# aggregate outputs ARE shipped so the dashboard has data even without a build).
-claims.csv
-claims_large.csv
-shap_values.csv
+# Generated artefacts — the image regenerates the full dataset + casebook at
+# build time (RUN python data_pipeline/run_pipeline.py …), so local copies of
+# these are not copied into the build context.
+data/
+reports/
 audit_log_export.csv
-audit_log.db
-# Docs/reports not needed at runtime
-*_REPORT.md

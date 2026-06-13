@@ -25,9 +25,10 @@ import streamlit as st
 import auth_mock
 import case_management as cm
 from moh_audit import HIA_S18_8, SLA, classify
+from dataset_config import data_path
 
-RECOVERY_CSV = "moh_recovery_summary.csv"
-EVIDENCE_CSV = "fraud_evidence.csv"
+RECOVERY_CSV = data_path("moh_recovery_summary.csv")
+EVIDENCE_CSV = data_path("fraud_evidence.csv")
 
 # Stages mirror case_management (persistent store) — includes terminal "Closed".
 STAGES = cm.STAGES

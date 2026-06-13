@@ -42,6 +42,7 @@ import numpy as np
 import pandas as pd
 
 from data_gen_large import FEE_SCHEDULE, BUNDLE_RULES, UNIT_BILLABLE
+from dataset_config import data_path, report_path
 
 # ── Code groups ───────────────────────────────────────────────────────────────
 EM_OFFICE   = {"99211", "99212", "99213", "99214", "99215",
@@ -474,10 +475,10 @@ def build_report(df, findings: pd.DataFrame, input_path: str, gt: dict | None) -
 
 def main():
     ap = argparse.ArgumentParser(description="Mine claims for revenue-inflation evidence")
-    ap.add_argument("--input", default="claims_large.csv")
-    ap.add_argument("--ground-truth", default="ground_truth_large.json")
-    ap.add_argument("--out-csv", default="fraud_evidence.csv")
-    ap.add_argument("--out-md", default="FRAUD_EVIDENCE_REPORT.md")
+    ap.add_argument("--input", default=data_path("claims_large.csv"))
+    ap.add_argument("--ground-truth", default=data_path("ground_truth_large.json"))
+    ap.add_argument("--out-csv", default=data_path("fraud_evidence.csv"))
+    ap.add_argument("--out-md", default=report_path("FRAUD_EVIDENCE_REPORT.md"))
     args = ap.parse_args()
 
     if not os.path.exists(args.input):

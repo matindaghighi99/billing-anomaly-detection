@@ -23,17 +23,24 @@ Outputs:
 
 import json
 import os
+import sys
+
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
 
-CLAIMS_CSV       = "claims.csv"
-SCORES_CSV       = "risk_scores.csv"
-GROUND_TRUTH_JSON = "ground_truth.json"
-METRICS_CSV      = "provider_metrics.csv"
-OUTPUT_CSV       = "fairness_summary.csv"
-OUTPUT_REPORT    = "fairness_report.md"
+from dataset_config import out, data_path, report_path
+
+CLAIMS_CSV       = out("claims.csv")
+SCORES_CSV       = out("risk_scores.csv")
+GROUND_TRUTH_JSON = out("ground_truth.json")
+METRICS_CSV      = out("provider_metrics.csv")
+OUTPUT_CSV       = data_path("fairness_summary.csv")
+OUTPUT_REPORT    = report_path("fairness_report.md")
 
 MIN_GROUP_SIZE   = 5    # skip groups too small for meaningful chi-square
 P_VALUE_ALERT    = 0.05 # flag groups with statistically significant differences

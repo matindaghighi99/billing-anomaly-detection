@@ -1,10 +1,19 @@
 """Verification: how many planted bad actors were detected and at what rank?"""
 
 import json
+import os
+import sys
+
+# Make the section folders importable as flat modules regardless of CWD.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
+
 import pandas as pd
 
-GROUND_TRUTH_JSON = "ground_truth.json"
-SCORES_CSV        = "risk_scores.csv"
+from dataset_config import out
+
+GROUND_TRUTH_JSON = out("ground_truth.json")
+SCORES_CSV        = out("risk_scores.csv")
 
 
 def main():
