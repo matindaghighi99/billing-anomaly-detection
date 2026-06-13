@@ -16,25 +16,47 @@ must set for anything beyond a local demo.
 | Variable | Purpose | Default |
 |---|---|---|
 | `DATASET` | `large` (expanded MOH set) or `demo` (original 6-specialty set) | `large` in app/Docker |
-| `HIDE_DEMO_CREDS` | Hide the on-screen demo-credential hint | unset (shown) |
-| `BAAD_USERS_JSON` | Override the user store (JSON, salted PBKDF2 hashes) | unset (demo users) |
+| `SESSION_SECRET` | HMAC key for signing session tokens. **Set this in production** (a strong random string) so sessions survive restarts and cannot be forged. | ephemeral per-process key |
+| `MFA_ENABLED` | Enforce the TOTP second factor at login | `1` (on) |
+| `SESSION_TTL_SECONDS` | Absolute session lifetime before re-login | `28800` (8h) |
+| `HIDE_DEMO_CREDS` | Hide the on-screen demo credentials + live MFA codes | unset (shown) |
+| `BAAD_USERS_JSON` | Override the user store (JSON, salted PBKDF2 hashes + TOTP secrets) | unset (demo users) |
 | `BAAD_MAX_LOGIN_FAILS` | Failed logins before lockout | `5` |
 | `BAAD_LOCKOUT_SECONDS` | Lockout duration after too many fails | `60` |
 | `ANTHROPIC_API_KEY` | Enables AI-enriched explanations (optional) | unset (templates) |
 
-Generate a real user record (no plaintext stored):
+### Authentication
+
+Login is **password (PBKDF2-hashed) + TOTP MFA**, and the session is an
+**HMAC server-signed token** whose role is verified on every request — editing
+client-side state cannot escalate privileges. Set a strong `SESSION_SECRET` and
+keep `MFA_ENABLED=1` in production.
+
+Generate a real user record (no plaintext stored; includes a fresh TOTP secret):
 
 ```bash
 python -c "import auth_mock; print(auth_mock.make_user_record('S0me-Strong-Pass','supervisor','Jane Q. Auditor'))"
-# → {"salt": "...", "hash": "...", "role": "supervisor", "display": "Jane Q. Auditor"}
+# → {"salt":"...", "hash":"...", "totp_secret":"...", "role":"supervisor", "display":"Jane Q. Auditor"}
+```
+
+Enrol the `totp_secret` in an authenticator app (Google Authenticator, Authy, …):
+
+```bash
+python -c "import auth_mock; print(auth_mock.provisioning_uri('jane','<totp_secret>'))"
+# → otpauth://totp/... (paste into the app, or render as a QR code)
 ```
 
 Then set, e.g.:
 
 ```bash
-export BAAD_USERS_JSON='{"jane": {"salt":"...","hash":"...","role":"supervisor","display":"Jane Q. Auditor"}}'
+export SESSION_SECRET="$(python -c 'import secrets;print(secrets.token_hex(32))')"
+export BAAD_USERS_JSON='{"jane": {"salt":"...","hash":"...","totp_secret":"...","role":"supervisor","display":"Jane Q. Auditor"}}'
 export HIDE_DEMO_CREDS=1
 ```
+
+> The bundled demo accounts (`auditor1` / `supervisor1` / `admin1`) show their
+> live MFA code on the login screen so the demo is usable without enrolling a
+> device. This only happens when `HIDE_DEMO_CREDS` is unset — never in production.
 
 ## Deploy to Render (configured — recommended)
 

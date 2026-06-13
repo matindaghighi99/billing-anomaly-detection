@@ -8,6 +8,8 @@ anthropic>=0.20.0
 plotly>=5.15.0
 # Required by pandas Styler.background_gradient (worklist + OHIP tables)
 matplotlib>=3.7.0
+# TOTP multi-factor authentication (RFC 6238)
+pyotp>=2.9.0
 
 # Phase 8 — SHAP feature attribution
 shap>=0.43.0

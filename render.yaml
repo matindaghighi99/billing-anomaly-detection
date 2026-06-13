@@ -13,9 +13,18 @@ services:
     envVars:
       - key: DATASET
         value: large
-      - key: HIDE_DEMO_CREDS
+      # Stable HMAC key for signing session tokens — Render generates and
+      # persists a secure value across deploys.
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MFA_ENABLED
         value: "1"
-      # Set your own users in the Render dashboard (JSON of PBKDF2 records):
+      # Demo deployment shows the demo accounts + their live MFA codes so it is
+      # usable out of the box. For a real pilot set this to "1" AND supply
+      # BAAD_USERS_JSON below.
+      - key: HIDE_DEMO_CREDS
+        value: "0"
+      # Real users (JSON of PBKDF2 + TOTP records); generate with:
       #   python -c "import auth_mock; print(auth_mock.make_user_record('pw','supervisor','Name'))"
       - key: BAAD_USERS_JSON
         sync: false
