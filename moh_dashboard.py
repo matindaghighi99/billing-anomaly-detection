@@ -22,12 +22,15 @@ import os
 import pandas as pd
 import streamlit as st
 
+import auth_mock
+import case_management as cm
 from moh_audit import HIA_S18_8, SLA, classify
 
 RECOVERY_CSV = "moh_recovery_summary.csv"
 EVIDENCE_CSV = "fraud_evidence.csv"
 
-STAGES = ["Initial Action", "Full Audit Review", "Board Hearing"]
+# Stages mirror case_management (persistent store) — includes terminal "Closed".
+STAGES = cm.STAGES
 STAGE_SLA = {
     "Initial Action": "Preliminary claims-data review complete. Outcomes: no action, "
                       "billing education, self-correction, or proceed to full audit.",
@@ -38,6 +41,7 @@ STAGE_SLA = {
         f"Physician acknowledgement requested within {SLA['physician_ack_weeks']} weeks."),
     "Board Hearing": "HSARB referral (independent tribunal). Recovery only by order or "
                      "negotiated settlement; appeal to Divisional Court.",
+    "Closed": "Case closed — review complete / settled / no further action.",
 }
 
 
@@ -239,18 +243,76 @@ def render_ohip_tab(icon):
     row = table[table["provider_id"] == pid].iloc[0]
     ev_rows = ev[ev["provider_id"] == pid] if not ev.empty else pd.DataFrame()
 
-    # three-stage tracker (session-state; honest demo of the workflow)
-    skey = f"moh_stage_{pid}"
-    current = st.session_state.get(skey, STAGES[0])
+    # ── Persistent 3-stage case workflow (records / correspondence) ───────────
+    concern_names = ev_rows["scheme"].tolist() if not ev_rows.empty else []
+    case = cm.get_case(pid)
+    current = case["stage"] if case["stage"] in STAGES else STAGES[0]
     st.markdown(_stage_tracker(current), unsafe_allow_html=True)
+
+    _can_act = auth_mock.has_permission("take_action")
     cset, cinfo = st.columns([1, 3])
     with cset:
         new_stage = st.selectbox("Case stage", STAGES, index=STAGES.index(current),
-                                 key=f"sel_{skey}")
-        st.session_state[skey] = new_stage
+                                 key=f"sel_stage_{pid}", disabled=not _can_act)
+        if new_stage != current and _can_act:
+            try:
+                auth_mock.require_permission("take_action")
+                cm.set_stage(pid, new_stage, user=auth_mock.current_user() or "auditor")
+                cm.record_correspondence(
+                    pid, "note", f"Stage → {new_stage}", direction="internal",
+                    user=auth_mock.current_user() or "auditor")
+                st.rerun()
+            except PermissionError as pe:
+                st.error(f"Access denied: {pe}")
     with cinfo:
-        st.caption(STAGE_SLA[new_stage] +
+        st.caption(STAGE_SLA.get(new_stage, "") +
                    f"  ·  Ministry target: entire audit < {SLA['total_target_months']} months.")
+
+    # SLA dates / acknowledgement clock
+    case = cm.get_case(pid)
+    date_bits = []
+    if case.get("records_requested_date"):
+        date_bits.append(f"Records requested **{case['records_requested_date']}**")
+    if case.get("ack_due_date"):
+        flag = " ⚠ OVERDUE" if cm.overdue(case) else ""
+        date_bits.append(f"Ack due **{case['ack_due_date']}**{flag}")
+    if case.get("gm_opinion_date"):
+        date_bits.append(f"GM's Opinion **{case['gm_opinion_date']}**")
+    if date_bits:
+        st.caption(" · ".join(date_bits))
+
+    # ── Letters (generated, downloadable) ─────────────────────────────────────
+    with st.expander("Correspondence — generate letter"):
+        _letters = {
+            "Request for Records and Information": "records_request",
+            "Billing Education Letter":            "billing_education",
+            "Notice of GM's Opinion":              "gm_opinion",
+            "Review Complete — No Further Action": "review_complete",
+        }
+        lc1, lc2 = st.columns([2, 2])
+        with lc1:
+            choice = st.selectbox("Letter type", list(_letters), key=f"lt_{pid}")
+        kind = _letters[choice]
+        letter_md = cm.generate_letter(
+            pid, kind, specialty=str(row["specialty"]), concerns=concern_names,
+            recoverable=float(row["statutory_recoverable"]),
+            figure_status=str(row.get("figure_status", "INDICATIVE")))
+        st.markdown(f"```\n{letter_md}\n```")
+        with lc2:
+            if _can_act:
+                if st.download_button("Download letter", data=letter_md,
+                                      file_name=f"OHIP_{kind}_{pid}.md",
+                                      mime="text/markdown", key=f"dl_{pid}_{kind}"):
+                    cm.record_correspondence(
+                        pid, kind, f"{choice} generated", direction="outbound",
+                        user=auth_mock.current_user() or "auditor")
+            else:
+                st.caption("Your role cannot send correspondence (take_action required).")
+        corr = cm.get_correspondence(pid)
+        if corr:
+            st.caption("Correspondence log:")
+            st.dataframe(pd.DataFrame(corr), hide_index=True,
+                         use_container_width=True, height=160)
 
     # header card
     barred_line = (f'<span class="prov-stat"><div class="prov-stat-label">Barred by statute</div>'

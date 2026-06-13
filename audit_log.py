@@ -24,7 +24,12 @@ import sqlite3
 import datetime
 from typing import Optional
 
-DB_PATH = "audit_log.db"
+# Storage location is configurable so the tamper-evident trail can live on a
+# managed/persistent volume (or be repointed at managed storage) in production.
+try:
+    from config import AUDIT_DB_PATH as DB_PATH
+except Exception:  # config is optional; fall back to env / cwd
+    DB_PATH = os.environ.get("AUDIT_DB_PATH", "audit_log.db")
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS audit_log (

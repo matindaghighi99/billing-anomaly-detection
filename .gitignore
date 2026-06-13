@@ -49,3 +49,5 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+audit_cases.db
+backups/
