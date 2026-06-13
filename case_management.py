@@ -71,7 +71,9 @@ def _today() -> datetime.date:
 
 
 def _open() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    # Resolve the path at call time so a runtime CASE_DB_PATH (managed volume,
+    # or per-test override) is always honoured.
+    conn = sqlite3.connect(os.environ.get("CASE_DB_PATH", DB_PATH))
     conn.executescript(_SCHEMA)
     conn.commit()
     return conn

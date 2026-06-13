@@ -374,6 +374,49 @@ def render_ohip_tab(icon):
             f"documentation per s.17.4. Physician acknowledgement within "
             f"{SLA['physician_ack_weeks']} weeks.")
 
+    # ── Clinical / medical-necessity review loop (HIA s.18(8)(e)) ─────────────
+    import clinical_review as cr
+    consult_concerns = [c for c in concern_names if classify(c)["needs_medical_consult"]]
+    if consult_concerns:
+        with st.expander(f"Clinical / medical-necessity review "
+                         f"({len(consult_concerns)} concern(s) require s.18(8)(e) review)"):
+            _can_clin = auth_mock.has_permission("clinical_review")
+            for concern in consult_concerns:
+                op = cr.latest_opinion(pid, concern)
+                if op:
+                    st.markdown(f"- **{html.escape(concern)}** — "
+                                f"`{op['opinion']}` by {html.escape(op['consultant'])} "
+                                f"({op['utc_timestamp'][:10]})"
+                                + (f": {html.escape(op['rationale'])}" if op["rationale"] else ""))
+                else:
+                    st.markdown(f"- **{html.escape(concern)}** — _awaiting clinical opinion_")
+            if _can_clin:
+                st.markdown("**Record a consultant opinion:**")
+                rc1, rc2 = st.columns([2, 2])
+                with rc1:
+                    sel_concern = st.selectbox("Concern", consult_concerns, key=f"cc_{pid}")
+                    opinion = st.selectbox("Opinion", cr.OPINIONS, key=f"co_{pid}")
+                with rc2:
+                    rationale = st.text_area("Clinical rationale", key=f"cr_{pid}", height=80)
+                if st.button("Submit clinical opinion", key=f"cb_{pid}"):
+                    try:
+                        auth_mock.require_permission("clinical_review")
+                        cr.record_opinion(pid, sel_concern, opinion,
+                                          consultant=auth_mock.current_user() or "consultant",
+                                          rationale=rationale)
+                        cm.record_correspondence(
+                            pid, "note",
+                            f"Clinical opinion ({sel_concern}): {opinion}",
+                            direction="internal",
+                            user=auth_mock.current_user() or "consultant")
+                        st.success("Clinical opinion recorded.")
+                        st.rerun()
+                    except PermissionError as pe:
+                        st.error(f"Access denied: {pe}")
+            else:
+                st.caption("Requires the clinical_review permission "
+                           "(supervisor/admin, or a medical consultant role).")
+
     # one-click export
     md = single_case_markdown(row, ev_rows)
     st.download_button(

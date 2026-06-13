@@ -137,6 +137,7 @@ PERMISSIONS: dict[str, dict[str, bool]] = {
         "take_action":      True,    # confirm / clear / investigating
         "export_audit_log": False,
         "verify_integrity": False,
+        "clinical_review":  False,   # medical-necessity opinion — clinician/supervisor+
     },
     "supervisor": {
         "view_worklist":    True,
@@ -146,6 +147,7 @@ PERMISSIONS: dict[str, dict[str, bool]] = {
         "take_action":      True,
         "export_audit_log": True,
         "verify_integrity": True,
+        "clinical_review":  True,
     },
     "admin": {
         "view_worklist":    True,
@@ -155,6 +157,7 @@ PERMISSIONS: dict[str, dict[str, bool]] = {
         "take_action":      True,
         "export_audit_log": True,
         "verify_integrity": True,
+        "clinical_review":  True,
     },
 }
 

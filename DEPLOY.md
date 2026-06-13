@@ -27,6 +27,8 @@ must set for anything beyond a local demo.
 | `FEE_SCHEDULE_CSV` | Path to the fee schedule (fee_code,description,amount,tier,minutes) | `fee_schedule.csv` (demo subset) |
 | `FEE_SCHEDULE_META` | Provenance sidecar (source/version/effective_date/authoritative) | `fee_schedule_meta.json` |
 | `RECOVERY_VALIDATED` | Recovery validated against adjudicated outcomes | unset (off) |
+| `VALIDATION_OUTCOMES_CSV` | Real adjudicated outcomes for accuracy validation (provider_id, outcome[, recovered_amount]) | `adjudicated_outcomes.csv` |
+| `VALIDATION_TRUSTED` | Treat auditor dispositions/outcomes as real labels | unset (off) |
 
 ### Fee schedule & recovery defensibility
 

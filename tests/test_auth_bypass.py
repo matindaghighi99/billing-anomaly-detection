@@ -261,6 +261,7 @@ class TestPermissionMatrix(unittest.TestCase):
         "take_action":      (True,  True,  True),
         "export_audit_log": (False, True,  True),
         "verify_integrity": (False, True,  True),
+        "clinical_review":  (False, True,  True),
     }
     _LOGINS = [
         ("auditor1",    "demo_auditor1",    0),
