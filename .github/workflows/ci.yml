@@ -19,7 +19,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
       - name: Run test suite
         run: python -m pytest tests/ -q
 
@@ -54,21 +54,21 @@ jobs:
         # reviewed .secrets.baseline (and not annotated `# pragma: allowlist secret`).
         run: git ls-files | xargs detect-secrets-hook --baseline .secrets.baseline
 
-  # ── Container image scan (informational) ────────────────────────────────────
-  # Builds the production image and scans the OS + Python layers. Reported, not
-  # gating, until the base image's findings are triaged by the hosting team;
-  # set exit-code to "1" to enforce. (Not validated in this offline change.)
-  image-scan:
+  # ── Build gate + image scan ─────────────────────────────────────────────────
+  # Building the production image is GATING: it is the same Dockerfile Render
+  # deploys (run_pipeline → fraud_evidence → moh_audit at build), so a failure
+  # here is a failure Render would hit too. The Trivy CVE scan that follows is
+  # informational (continue-on-error) and surfaces base-image findings for the
+  # hosting team to triage.
+  build:
     runs-on: ubuntu-latest
-    # Informational: never blocks the run. The gating signal is `test` +
-    # `security`; this surfaces base-image CVEs for the hosting team to triage.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
+      - name: Build production image
         run: docker build -t baad:ci .
-      - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.24.0
+      - name: Trivy image scan (informational)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: baad:ci
           format: table
