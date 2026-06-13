@@ -64,7 +64,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: postgres  # pragma: allowlist secret
           POSTGRES_DB: baad
         ports: ["5432:5432"]
         options: >-
@@ -82,7 +82,8 @@ jobs:
         run: pip install -r requirements.txt pytest "psycopg[binary]"
       - name: Run PostgreSQL store integration tests
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/baad
+          # Throwaway credential for the ephemeral CI service container only.
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/baad  # pragma: allowlist secret
         run: python -m pytest tests/test_postgres_store.py -v
 
   # ── Build gate + image scan ─────────────────────────────────────────────────

@@ -12,9 +12,9 @@ Two layers:
 2. PostgreSQL integration (skipped unless DATABASE_URL points at Postgres and
    psycopg is installed): exercises the audit logbook (append, RETURNING id,
    tamper detection) and the reserved-word read-back against a real instance.
-   Run during the integration pass with, e.g.:
-       DATABASE_URL=postgresql://user:pw@host:5432/db python -m pytest \
-           tests/test_postgres_store.py -v
+   Run during the integration pass by pointing DATABASE_URL at a PostgreSQL
+   connection string, then:
+       python -m pytest tests/test_postgres_store.py -v
 """
 
 import os
