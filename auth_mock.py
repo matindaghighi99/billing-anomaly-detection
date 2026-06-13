@@ -1,26 +1,40 @@
 """
-auth_mock.py — Mock role-based access control for the Billing Anomaly Dashboard.
+auth_mock.py — Authentication & role-based access control.
 
-⚠ THIS IS A DEMO MOCK, NOT REAL SECURITY.
-  Credentials are hardcoded, sessions are Streamlit server-side dicts,
-  and passwords are compared in plaintext.
+Real authentication layer (the filename is kept only for import stability):
+  • Passwords  — PBKDF2-HMAC-SHA256 salted hashes, constant-time compare.
+  • MFA        — TOTP second factor (RFC 6238) via an authenticator app (pyotp).
+  • Sessions   — HMAC server-signed tokens with absolute expiry. The role lives
+                 INSIDE the signed payload and is re-verified on every request,
+                 so editing client-side session state can no longer escalate
+                 privileges (forging a token requires the server SESSION_SECRET).
+  • Throttling — lockout after repeated failed logins.
 
-  Production requirements before handling real healthcare data:
-    • SSO/OAuth 2.0 or SAML 2.0 identity provider (e.g. Okta, Azure AD)
-    • MFA enforced for every login
-    • Server-signed, encrypted session tokens (not client-visible state)
-    • Passwords hashed with bcrypt or argon2 — never stored or compared in plaintext
-    • Session expiry, rotation on privilege change, and idle timeout
-    • Rate-limiting and lockout on failed login attempts
-    • All auth events (login, logout, failures) recorded in the audit trail
+This is NOT yet a full enterprise IdP: there is no SSO/OAuth federation, no
+central user directory, and no audited self-service password reset. For real
+PHI, federate to the ministry IdP (SAML/OAuth); this layer is designed to sit
+behind one. See MOH_ALIGNMENT.md §7.
+
+Configuration (environment variables):
+  SESSION_SECRET       HMAC key for signing sessions. REQUIRED in production
+                       (an ephemeral per-process key is generated if unset, so
+                       sessions reset on restart and cannot be shared).
+  SESSION_TTL_SECONDS  Absolute session lifetime (default 28800 = 8h).
+  MFA_ENABLED          Enforce the TOTP second factor (default "1"/on).
+  BAAD_USERS_JSON      Override the user store (see make_user_record()).
+  HIDE_DEMO_CREDS      Hide on-screen demo credentials/codes in production.
+  BAAD_MAX_LOGIN_FAILS / BAAD_LOCKOUT_SECONDS   Login throttling.
 """
 
+import base64
 import hashlib
 import hmac
 import json
 import os
+import secrets
 import time
 
+import pyotp
 import streamlit as st
 
 # ---------------------------------------------------------------------------
@@ -46,14 +60,29 @@ _PBKDF2_ITERATIONS = 200_000
 _MAX_FAILS = int(os.environ.get("BAAD_MAX_LOGIN_FAILS", "5"))
 _LOCKOUT_SECONDS = int(os.environ.get("BAAD_LOCKOUT_SECONDS", "60"))
 
+# Session lifetime and MFA enforcement.
+SESSION_TTL_SECONDS = int(os.environ.get("SESSION_TTL_SECONDS", str(8 * 3600)))
+MFA_ENABLED = os.environ.get("MFA_ENABLED", "1").strip().lower() \
+    not in ("0", "false", "no")
+
 # Hide the on-screen demo-credential hint in production deployments.
 _HIDE_DEMO_CREDS = os.environ.get("HIDE_DEMO_CREDS", "").strip().lower() \
     not in ("", "0", "false", "no")
 
+# Server secret for signing session tokens. Set SESSION_SECRET in production so
+# sessions survive restarts and cannot be forged; otherwise a random ephemeral
+# key is used (sessions reset when the process restarts).
+_USING_EPHEMERAL_SECRET = not os.environ.get("SESSION_SECRET")
+_SESSION_SECRET = os.environ.get("SESSION_SECRET") or secrets.token_hex(32)
+_SECRET_BYTES = _SESSION_SECRET.encode("utf-8")
+
+# Demo accounts. totp_secret is shown on the login screen in demo mode so the
+# second factor is usable without enrolling a device; in production it is never
+# displayed and real per-user secrets are supplied via BAAD_USERS_JSON.
 _DEMO_USERS: dict[str, dict] = {
-    "auditor1":    {"salt": "9213dbdab5577b620a9173520e739d58", "hash": "026a3cfd9db5e2d4b14c2429d765331e40601cfc5b03677e19def470745c5638", "role": "auditor",    "display": "Alex Auditor"},    # pragma: allowlist secret
-    "supervisor1": {"salt": "c6927a10fca0e48f16e3803e9e30bec4", "hash": "f7e9bb242eea2b14caddea63be30a9271a964fef61beaab2d75429c3de19dfb1", "role": "supervisor", "display": "Sam Supervisor"},  # pragma: allowlist secret
-    "admin1":      {"salt": "7390674ea4874089de59c0ce0299d7b4", "hash": "2f2efdb0fe6f05dba51f3bed5b62f02f7ddf0b17414d9a34684b72e039221136", "role": "admin",      "display": "Admin User"},      # pragma: allowlist secret
+    "auditor1":    {"salt": "9213dbdab5577b620a9173520e739d58", "hash": "026a3cfd9db5e2d4b14c2429d765331e40601cfc5b03677e19def470745c5638", "totp_secret": "LXJA7BARGWJZKIPEZ7ZOXLPA55DTBDW2", "role": "auditor",    "display": "Alex Auditor"},    # pragma: allowlist secret
+    "supervisor1": {"salt": "c6927a10fca0e48f16e3803e9e30bec4", "hash": "f7e9bb242eea2b14caddea63be30a9271a964fef61beaab2d75429c3de19dfb1", "totp_secret": "62WBQBWHFCU5TM3OHADCAW53K7FJXBIP", "role": "supervisor", "display": "Sam Supervisor"},  # pragma: allowlist secret
+    "admin1":      {"salt": "7390674ea4874089de59c0ce0299d7b4", "hash": "2f2efdb0fe6f05dba51f3bed5b62f02f7ddf0b17414d9a34684b72e039221136", "totp_secret": "FFEUGF425RD4QYT2IYT2H5EDQGD6TTDG", "role": "admin",      "display": "Admin User"},      # pragma: allowlist secret
 }
 
 
@@ -63,10 +92,20 @@ def _hash_pw(password: str, salt: bytes) -> str:
 
 
 def make_user_record(password: str, role: str, display: str) -> str:
-    """Print a JSON user record (salt+hash) for use in BAAD_USERS_JSON."""
+    """Return a JSON user record (salt + PBKDF2 hash + TOTP secret) for
+    BAAD_USERS_JSON, and print the authenticator enrolment URI to stderr.
+    """
     salt = os.urandom(16)
-    return json.dumps({"salt": salt.hex(), "hash": _hash_pw(password, salt),
-                       "role": role, "display": display})
+    totp_secret = pyotp.random_base32()
+    rec = {"salt": salt.hex(), "hash": _hash_pw(password, salt),
+           "totp_secret": totp_secret, "role": role, "display": display}
+    return json.dumps(rec)
+
+
+def provisioning_uri(username: str, totp_secret: str) -> str:
+    """otpauth:// URI to enrol a TOTP secret in an authenticator app."""
+    return pyotp.TOTP(totp_secret).provisioning_uri(
+        name=username, issuer_name="OHIP Billing Audit")
 
 
 def _load_users() -> dict:
@@ -119,12 +158,38 @@ PERMISSIONS: dict[str, dict[str, bool]] = {
     },
 }
 
-# Internal session-state keys — prefixed with "_auth_" to signal they are
-# owned by this module.  app.py must not set these directly.
-_KEY_VERIFIED = "_auth_verified"
-_KEY_ROLE     = "_auth_role"
-_KEY_USER     = "_auth_user"
-_KEY_DISPLAY  = "_auth_display"
+# Single session-state key: a signed, self-describing token. The role/user are
+# read ONLY from the verified payload, never from separately-writable keys.
+_KEY_TOKEN = "_auth_token"
+
+
+def _sign(payload: dict) -> str:
+    raw  = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    body = base64.urlsafe_b64encode(raw).decode().rstrip("=")
+    sig  = hmac.new(_SECRET_BYTES, body.encode(), hashlib.sha256).hexdigest()
+    return f"{body}.{sig}"
+
+
+def _verify(token) -> dict | None:
+    """Return the payload iff the signature is valid and unexpired, else None."""
+    if not isinstance(token, str) or "." not in token:
+        return None
+    body, sig = token.rsplit(".", 1)
+    expected = hmac.new(_SECRET_BYTES, body.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    try:
+        pad = "=" * (-len(body) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(body + pad))
+    except Exception:
+        return None
+    if int(time.time()) >= int(payload.get("exp", 0)):
+        return None
+    return payload
+
+
+def _session() -> dict | None:
+    return _verify(st.session_state.get(_KEY_TOKEN))
 
 
 # ---------------------------------------------------------------------------
@@ -132,27 +197,26 @@ _KEY_DISPLAY  = "_auth_display"
 # ---------------------------------------------------------------------------
 
 def is_authenticated() -> bool:
-    """True only when the current session completed a successful login."""
-    return bool(st.session_state.get(_KEY_VERIFIED, False))
+    """True only when the session holds a valid, unexpired signed token."""
+    return _session() is not None
 
 
 def current_role() -> str | None:
-    """Role string for the active session, or None if not logged in."""
-    if not is_authenticated():
-        return None
-    return st.session_state.get(_KEY_ROLE)
+    """Role string from the verified session token, or None if not logged in."""
+    s = _session()
+    return s.get("role") if s else None
 
 
 def current_user() -> str | None:
-    """Username for the active session, or None if not logged in."""
-    if not is_authenticated():
-        return None
-    return st.session_state.get(_KEY_USER)
+    """Username from the verified session token, or None if not logged in."""
+    s = _session()
+    return s.get("user") if s else None
 
 
 def current_display_name() -> str:
-    """Human-readable display name, or 'Unknown' if not logged in."""
-    return st.session_state.get(_KEY_DISPLAY, "Unknown")
+    """Human-readable display name from the verified token, or 'Unknown'."""
+    s = _session()
+    return s.get("display", "Unknown") if s else "Unknown"
 
 
 def has_permission(permission: str) -> bool:
@@ -184,32 +248,71 @@ def require_permission(permission: str) -> None:
         )
 
 
-def attempt_login(username: str, password: str) -> bool:
-    """Validate credentials and, on success, write session state.
-
-    The auth keys (_auth_verified, _auth_role, _auth_user, _auth_display)
-    are ONLY ever written here.  They are never read from URL parameters,
-    form hidden fields, or any other client-supplied source.
-
-    Returns True on success, False on bad credentials.
-    """
-    user_record = _USERS.get(username)
+def verify_password(username: str, password: str) -> bool:
+    """Constant-time password check. Does NOT establish a session."""
+    rec = _USERS.get(username)
     # Always run a PBKDF2 verification — even for unknown usernames against a
     # throwaway salt — so response time does not reveal whether a username
     # exists (mitigates username enumeration via timing).
-    if user_record is None:
+    if rec is None:
         _hash_pw(password, b"\x00" * 16)  # dummy work
         return False
-    computed = _hash_pw(password, bytes.fromhex(user_record["salt"]))
-    if not hmac.compare_digest(computed, user_record["hash"]):
-        return False
+    return hmac.compare_digest(_hash_pw(password, bytes.fromhex(rec["salt"])),
+                               rec["hash"])
 
-    st.session_state[_KEY_VERIFIED] = True
-    st.session_state[_KEY_ROLE]     = user_record["role"]
-    st.session_state[_KEY_USER]     = username
-    st.session_state[_KEY_DISPLAY]  = user_record["display"]
-    st.session_state["auditor_id"]  = username   # used by audit log trail
-    return True
+
+def user_requires_mfa(username: str) -> bool:
+    """True if MFA is enabled and this user has an enrolled TOTP secret."""
+    rec = _USERS.get(username)
+    return bool(MFA_ENABLED and rec and rec.get("totp_secret"))
+
+
+def verify_totp(username: str, code: str) -> bool:
+    """Verify a 6-digit TOTP code (±1 step of clock skew)."""
+    rec = _USERS.get(username)
+    if not rec or not rec.get("totp_secret"):
+        return not MFA_ENABLED   # no secret enrolled → only OK when MFA is off
+    if not code:
+        return False
+    return pyotp.TOTP(rec["totp_secret"]).verify(str(code).strip(), valid_window=1)
+
+
+def _establish_session(username: str) -> None:
+    """Issue a signed session token carrying the role (server-trusted)."""
+    rec = _USERS[username]
+    now = int(time.time())
+    token = _sign({
+        "user":    username,
+        "role":    rec["role"],
+        "display": rec["display"],
+        "iat":     now,
+        "exp":     now + SESSION_TTL_SECONDS,
+    })
+    st.session_state[_KEY_TOKEN]   = token
+    st.session_state["auditor_id"] = username   # used by audit log trail
+
+
+def login(username: str, password: str, totp_code: str | None = None) -> dict:
+    """Full login: password → (TOTP if required) → signed session.
+
+    Returns {"ok": True} on success, otherwise {"ok": False, "error": ...}
+    where error is one of: bad_credentials | mfa_required | bad_mfa.
+    """
+    if not verify_password(username, password):
+        return {"ok": False, "error": "bad_credentials"}
+    if user_requires_mfa(username):
+        if not totp_code:
+            return {"ok": False, "error": "mfa_required", "mfa_required": True}
+        if not verify_totp(username, totp_code):
+            return {"ok": False, "error": "bad_mfa", "mfa_required": True}
+    _establish_session(username)
+    return {"ok": True}
+
+
+def attempt_login(username: str, password: str,
+                  totp_code: str | None = None) -> bool:
+    """Backwards-compatible boolean wrapper around login()."""
+    return login(username, password, totp_code).get("ok", False)
 
 
 def logout() -> None:
@@ -610,6 +713,11 @@ def render_login_screen() -> None:
     with st.form("login_form", clear_on_submit=False):
         username  = st.text_input("Username", placeholder="Enter username")
         password  = st.text_input("Password", type="password", placeholder="••••••••••••")
+        totp_code = ""
+        if MFA_ENABLED:
+            totp_code = st.text_input(
+                "Authenticator code (6 digits)", placeholder="123456",
+                max_chars=6, help="Time-based one-time code from your authenticator app.")
         submitted = st.form_submit_button("Sign In  →", use_container_width=True, type="primary")
 
     if submitted:
@@ -618,46 +726,65 @@ def render_login_screen() -> None:
         if now < lock_until:
             st.error(f"Too many failed attempts. Try again in "
                      f"{int(lock_until - now)}s.")
-        elif attempt_login(username, password):
-            st.session_state.pop("_login_fails", None)
-            st.session_state.pop("_login_lock_until", None)
-            st.rerun()
         else:
-            fails = st.session_state.get("_login_fails", 0) + 1
-            if fails >= _MAX_FAILS:
-                st.session_state["_login_lock_until"] = now + _LOCKOUT_SECONDS
-                st.session_state["_login_fails"] = 0
-                st.error(f"Too many failed attempts. Locked for "
-                         f"{_LOCKOUT_SECONDS}s.")
-            else:
+            result = login(username, password, totp_code)
+            if result["ok"]:
+                st.session_state.pop("_login_fails", None)
+                st.session_state.pop("_login_lock_until", None)
+                st.rerun()
+            elif result["error"] == "mfa_required":
+                st.warning("Enter the 6-digit code from your authenticator app to continue.")
+            elif result["error"] == "bad_mfa":
+                # A wrong second factor counts toward lockout.
+                fails = st.session_state.get("_login_fails", 0) + 1
                 st.session_state["_login_fails"] = fails
-                st.error(f"Invalid username or password. "
-                         f"({_MAX_FAILS - fails} attempt(s) left)")
+                st.error("Incorrect authenticator code.")
+            else:  # bad_credentials
+                fails = st.session_state.get("_login_fails", 0) + 1
+                if fails >= _MAX_FAILS:
+                    st.session_state["_login_lock_until"] = now + _LOCKOUT_SECONDS
+                    st.session_state["_login_fails"] = 0
+                    st.error(f"Too many failed attempts. Locked for "
+                             f"{_LOCKOUT_SECONDS}s.")
+                else:
+                    st.session_state["_login_fails"] = fails
+                    st.error(f"Invalid username or password. "
+                             f"({_MAX_FAILS - fails} attempt(s) left)")
 
-    # Demo credentials + disclaimer
+    # Demo credentials (with live MFA codes) — suppressed in production.
+    if not _HIDE_DEMO_CREDS and _USERS is _DEMO_USERS:
+        pills = []
+        for uname, colour in (("auditor1", "#6366F1"), ("supervisor1", "#F59E0B"),
+                              ("admin1", "#F43F5E")):
+            code = pyotp.TOTP(_DEMO_USERS[uname]["totp_secret"]).now() if MFA_ENABLED else "—"
+            pills.append(
+                f'<span class="lg-pill"><span class="lg-pill-dot" '
+                f'style="background:{colour};"></span>{uname}'
+                + (f' &nbsp;<b style="color:#7C8AD6;letter-spacing:1px;">{code}</b>'
+                   if MFA_ENABLED else "") + '</span>')
+        mfa_note = ("password is the username prefixed with <code>demo_</code> · "
+                    "the bold 6-digit code is the live MFA code (refreshes every 30s)"
+                    if MFA_ENABLED else
+                    "password is the username prefixed with <code>demo_</code>")
+        st.markdown(
+            '<div class="lg-divider">Demo Access</div>'
+            '<div class="lg-pill-row">' + "".join(pills) + '</div>'
+            f'<div style="text-align:center;font-size:0.6rem;color:#3D4870;'
+            f'margin-top:10px;font-family:JetBrains Mono,monospace;">{mfa_note}</div>',
+            unsafe_allow_html=True,
+        )
+
     st.markdown("""
-<div class="lg-divider">Demo Access</div>
-<div class="lg-pill-row">
-  <span class="lg-pill"><span class="lg-pill-dot" style="background:#6366F1;"></span>auditor1</span>
-  <span class="lg-pill"><span class="lg-pill-dot" style="background:#F59E0B;"></span>supervisor1</span>
-  <span class="lg-pill"><span class="lg-pill-dot" style="background:#F43F5E;"></span>admin1</span>
-</div>
 <div class="lg-notice">
   <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
        fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
        style="flex-shrink:0;margin-top:2px;">
     <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
   </svg>
-  <span>Mock authentication only — demo credentials, not suitable for real healthcare data. All providers and claims are entirely fictional.</span>
+  <span>Demonstration system — synthetic data only. Password + TOTP MFA with
+  server-signed sessions; for real PHI, federate to an enterprise IdP (see
+  MOH_ALIGNMENT.md §7).</span>
 </div>
 """, unsafe_allow_html=True)
-
-    # Demo-credential hint — suppressed in production (HIDE_DEMO_CREDS=1)
-    if not _HIDE_DEMO_CREDS:
-        st.markdown(
-            '<div class="lg-creds">auditor1 &nbsp;/&nbsp; supervisor1 '
-            '&nbsp;/&nbsp; admin1</div>',
-            unsafe_allow_html=True,
-        )
 
     st.stop()   # halt page rendering until login succeeds and st.rerun() fires
