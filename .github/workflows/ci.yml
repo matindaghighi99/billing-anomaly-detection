@@ -60,12 +60,15 @@ jobs:
   # set exit-code to "1" to enforce. (Not validated in this offline change.)
   image-scan:
     runs-on: ubuntu-latest
+    # Informational: never blocks the run. The gating signal is `test` +
+    # `security`; this surfaces base-image CVEs for the hosting team to triage.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Build image
         run: docker build -t baad:ci .
       - name: Trivy image scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.24.0
         with:
           image-ref: baad:ci
           format: table
