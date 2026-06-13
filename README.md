@@ -27,6 +27,37 @@ cases appear at the top of the worklist.
 
 ---
 
+## Repository layout
+
+Code is organised into section folders; data files, SQL, and generated
+artefacts stay at the repository root (they are read/written relative to the
+working directory).
+
+| Folder | Contents |
+|--------|----------|
+| `common/` | Shared config + utilities (`dataset_config`, `validators`, `config`) |
+| `detection/` | Analytic layers + scoring + ML + explainability (`rules`, `peer_stats`, `codemix`, `temporal`, `anomaly_model`, `scoring`, `feedback`, `explain`, `fairness`, `privacy`, `model_registry`) |
+| `data_pipeline/` | Synthetic data generation + orchestration (`data_gen`, `data_gen_large`, `create_db`, `run_pipeline`, `bootstrap`) |
+| `dashboard/` | Streamlit UI (`app`, `moh_dashboard`) |
+| `auth/` | Authentication / MFA / signed sessions (`auth_mock`) |
+| `audit/` | OHIP casebook, case management, clinical review, audit trail, fee schedule (`moh_audit`, `case_management`, `clinical_review`, `audit_log`, `fraud_evidence`, `fee_schedule`) |
+| `ops/` | Backups, observability, accuracy-validation framework (`backup`, `observability`, `validation`, `validate`, `verify`) |
+| `testing/` | Fuzz + stress harnesses |
+| `tests/` | Pytest suite |
+| `docs/` | Hand-written documentation and reports |
+
+Modules import each other by bare name. The dashboard, pipeline runner, test
+suite, and fuzz/stress harnesses register the section folders on `sys.path`
+automatically. To run an **individual phase script** directly (Option B below),
+source the path helper first and run from the repository root:
+
+```bash
+source env.sh
+python detection/rules.py
+```
+
+---
+
 ## Requirements
 
 ```
@@ -47,50 +78,50 @@ pip install -r requirements.txt
 
 ```bash
 # Full pipeline with timing output
-python run_pipeline.py
+python data_pipeline/run_pipeline.py
 
 # Fast mode: two-stage funnel (ML only on rule/peer candidates)
-python run_pipeline.py --fast
+python data_pipeline/run_pipeline.py --fast
 
 # Skip data regeneration if claims.csv already exists
-python run_pipeline.py --no-regen
+python data_pipeline/run_pipeline.py --no-regen
 ```
 
 ### Option B: Run phases individually
 
 ```bash
 # Phase 1 -- generate 52,000+ synthetic claims + plant 10 bad actors + 3 clean traps
-python data_gen.py
+python data_pipeline/data_gen.py
 
 # Phase 2 -- deterministic rule checks (impossible days, duplicates, unbundling)
-python rules.py
+python detection/rules.py
 
 # Phase 3 -- peer-group benchmarking (MAD z-scores within specialty + practice-setting cohort)
-python peer_stats.py
+python detection/peer_stats.py
 
 # Phase 3b -- code-mix drift (KL divergence + cosine distance)
-python codemix.py
+python detection/codemix.py
 
 # Phase 4 -- temporal change-point detection (CUSUM + spike)
-python temporal.py
+python detection/temporal.py
 
 # Phase 4b -- ensemble anomaly scoring (IF + LOF + OC-SVM)
-python anomaly_model.py
+python detection/anomaly_model.py
 
 # Phase 5 -- combine all layers into ranked risk scores with confidence tiers
-python scoring.py
+python detection/scoring.py
 
 # Phase 6 -- SHAP explanations + plain-English audit summaries
-python explain.py
+python detection/explain.py
 
 # Phase 7 -- feedback loop: seed demo dispositions, train semi-supervised model
-python feedback.py --seed-demo
+python detection/feedback.py --seed-demo
 
 # Phase 9 -- fairness audit by specialty / clinic / practice-setting
-python fairness.py
+python detection/fairness.py
 
 # Validate detection against ground truth
-python validate.py
+python ops/validate.py
 ```
 
 **Optional Anthropic API enrichment** (explain.py):
@@ -99,7 +130,7 @@ python validate.py
 # Copy the example and fill in your key (never commit the real .env)
 cp .env.example .env
 # then edit .env and set ANTHROPIC_API_KEY=sk-ant-...
-python explain.py
+python detection/explain.py
 ```
 
 ---
@@ -126,7 +157,7 @@ run `detect-secrets scan > .secrets.baseline` to update the baseline and commit 
 ## Launch the Dashboard
 
 ```bash
-streamlit run app.py
+streamlit run dashboard/app.py
 ```
 
 Open http://localhost:8501 in your browser.
@@ -184,7 +215,7 @@ Event types logged:
 
 ```bash
 # Test the hash chain and tamper detection
-python audit_log.py
+python audit/audit_log.py
 
 # Export the full log to CSV for auditors
 python -c "import audit_log; print(audit_log.export_to_csv())"
@@ -206,7 +237,7 @@ incrementing version ID (`v001`, `v002`, …). Each version saves:
 
 ```bash
 # Train and register a model version
-python feedback.py --seed-demo
+python detection/feedback.py --seed-demo
 
 # Reload a specific version and replay its scores
 python -c "
@@ -216,7 +247,7 @@ print(card['version_id'], card['training_data_hash'][:16])
 "
 
 # Run the self-test
-python model_registry.py
+python detection/model_registry.py
 ```
 
 The dashboard's **Model Card** tab shows the current version, training
@@ -246,7 +277,7 @@ the fallback is `numpy.random.default_rng().laplace()`.
 
 ```bash
 # Run the self-test (bounds check + ordering preservation)
-python privacy.py
+python detection/privacy.py
 ```
 
 ---

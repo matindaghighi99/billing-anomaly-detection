@@ -1,10 +1,13 @@
 # Billing Anomaly Audit Dashboard — production-style container image.
 FROM python:3.11-slim
 
+# Code is organised into section folders (common/, detection/, …) but modules
+# import each other by bare name, so every section folder is on PYTHONPATH.
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     DATASET=large \
-    HIDE_DEMO_CREDS=1
+    HIDE_DEMO_CREDS=1 \
+    PYTHONPATH=/app:/app/common:/app/detection:/app/data_pipeline:/app/dashboard:/app/auth:/app/audit:/app/ops:/app/testing
 
 WORKDIR /app
 
@@ -20,9 +23,9 @@ COPY . .
 
 # Generate the expanded dataset, run the full detection pipeline, and build the
 # MOH casebook at build time so the image ships with data ready to serve.
-RUN python run_pipeline.py \
-    && python fraud_evidence.py \
-    && python moh_audit.py
+RUN python data_pipeline/run_pipeline.py \
+    && python audit/fraud_evidence.py \
+    && python audit/moh_audit.py
 
 # Drop root for runtime.
 RUN useradd --create-home appuser && chown -R appuser /app

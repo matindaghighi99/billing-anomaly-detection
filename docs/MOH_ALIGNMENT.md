@@ -145,9 +145,9 @@ demonstrator to a production deployment handling real OHIP data:
 ## 8. Try it
 
 ```bash
-python data_gen_large.py     # synthetic claims (15 specialties, 2 years)
-python fraud_evidence.py     # discover Potential Billing Concerns + evidence
-python moh_audit.py          # build the MOH-aligned casebook + recovery summary
+python data_pipeline/data_gen_large.py   # synthetic claims (15 specialties, 2 years)
+python audit/fraud_evidence.py           # discover Potential Billing Concerns + evidence
+python audit/moh_audit.py                # build the MOH-aligned casebook + recovery summary
 ```
 
 Outputs: `FRAUD_EVIDENCE_REPORT.md`, `MOH_AUDIT_CASEBOOK.md`, `moh_recovery_summary.csv`.
