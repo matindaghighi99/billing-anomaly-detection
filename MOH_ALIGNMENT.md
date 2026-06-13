@@ -134,7 +134,7 @@ A ministry buyer should trust the vendor who names the gaps. To move from this
 demonstrator to a production deployment handling real OHIP data:
 
 - **Identity & access:** replace the mock auth with the ministry SSO/IdP (SAML/OAuth), MFA, session expiry, and full auth-event logging. *(Tracked in the security review.)*
-- **Schedule of Benefits ingestion:** load the authoritative Reg 552 / Schedule of Benefits fee rules and bundle/eligibility logic (the demo uses a representative subset).
+- **Schedule of Benefits ingestion:** *partially addressed.* The fee schedule is now a replaceable, provenance-stamped data source (`fee_schedule.csv` + `fee_schedule_meta.json`, loaded by `fee_schedule.py`) — drop in a Schedule of Benefits export and flip `authoritative: true`. Until then, and until recovery is validated against adjudicated outcomes (`RECOVERY_VALIDATED=1`), every recovery/exposure figure is **enforced as INDICATIVE** (stamped in the casebook, the recovery CSV, and the dashboard) and is **not** presented as usable for a GM's Opinion. Remaining work: obtain the authoritative schedule + bundle/eligibility rules, and run the adjudicated-outcome validation.
 - **Records & correspondence workflow:** integrate records intake, the 2-week acknowledgement, extension tracking, physician written submissions, and letter generation; persist case state across the three stages.
 - **Referral routing:** structured CPSO / OPP / program-area referral packages.
 - **Privacy & residency:** Ontario data-residency, PHIPA alignment, formal privacy-budget management (the demo's noise is demo-grade, clearly labelled).

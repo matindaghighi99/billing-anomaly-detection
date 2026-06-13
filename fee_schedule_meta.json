@@ -1,0 +1,10 @@
+{
+  "source": "synthetic_demo",
+  "description": "Representative DEMO fee subset (69 CPT-style codes) used to generate synthetic claims. NOT the authoritative Ontario Schedule of Benefits for Physician Services (Regulation 552).",
+  "version": "demo-1",
+  "effective_date": null,
+  "authoritative": false,
+  "n_codes": 69,
+  "generated_utc": "2026-06-13T02:36:04Z",
+  "replace_with": "Export of the Schedule of Benefits (same columns: fee_code,description,amount,tier,minutes); then set authoritative=true, version, effective_date."
+}
