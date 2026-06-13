@@ -9,10 +9,10 @@ ministry's infrastructure, security, and privacy teams during a pilot intake.
 > **Status:** the application runs today as a synthetic-data demonstration.
 > The production posture below is reachable by **configuration** (environment
 > variables) plus the hosting organisation's standard platform services — not
-> by code changes. Two items require validation passes and are called out as
-> such: the PostgreSQL adapter (one integration test against the target
-> instance) and detection accuracy (validation against real adjudicated
-> outcomes — see `ops/validation.py`).
+> by code changes. The PostgreSQL adapter has now been validated against a real
+> PostgreSQL 16 instance (see §3). The one validation pass that still requires
+> the ministry's involvement is detection accuracy against real adjudicated
+> outcomes (see `ops/validation.py`).
 
 ---
 
@@ -73,10 +73,16 @@ for the full list.
 - The managed PostgreSQL instance (HA, backups, encryption at rest, network
   isolation, DR), and the connection string injected from a secrets vault.
 
-**Validation pending:** the PostgreSQL adapter is structurally complete and the
-SQLite path is covered by the test suite; the PostgreSQL path needs **one
-integration pass against the target instance** (no Postgres server is available
-in CI).
+**Validated against PostgreSQL 16.** The adapter has been run against a real
+instance: the audit logbook (append + `RETURNING id`, integrity verification,
+and tamper detection), the case store, and the clinical-review store all pass.
+The reserved word `user` is double-quoted in the schemas and queries (an
+unquoted `user` silently resolves to PostgreSQL's CURRENT_USER function and
+would read back the DB role instead of the stored value — confirmed and fixed).
+`tests/test_postgres_store.py` keeps a static quoting guard in normal CI and
+runs the full integration check whenever `DATABASE_URL` points at PostgreSQL.
+The remaining task on the target instance is operational (HA/backups/DR), not
+code.
 
 ---
 
@@ -144,7 +150,7 @@ real claims data is processed.
 |---|---|---|---|
 | SSO / MFA / directory | role mapping + enforcement | IdP + MFA + proxy | config |
 | RBAC, server-side | ✅ `require_permission` | — | done |
-| Enterprise DB | adapter + seam | managed Postgres | integration pass |
+| Enterprise DB | adapter + seam, **validated on PG 16** | managed Postgres (HA/DR) | done (code) |
 | Tamper-evident audit | ✅ hash chain | WORM retention | done |
 | SIEM logging | ✅ structured JSON + actor | SIEM/drain | config |
 | Secrets management | env-only, fail-fast gate | vault | config |

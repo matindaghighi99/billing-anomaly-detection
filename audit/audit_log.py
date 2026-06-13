@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     utc_timestamp  TEXT    NOT NULL,
     event_type     TEXT    NOT NULL,
-    user           TEXT    NOT NULL DEFAULT 'system',
+    "user"         TEXT    NOT NULL DEFAULT 'system',
     provider_id    TEXT,
     model_version  TEXT,
     signals_shown  TEXT,
@@ -130,15 +130,20 @@ def append_event(
         }
         row_hash = _sha256(prev, _content_str(record))
 
+        # "user" is quoted because it is a reserved word in PostgreSQL (where an
+        # unquoted `user` resolves to the CURRENT_USER function, not the column).
+        # Double-quoted identifiers are valid in both SQLite and PostgreSQL.
+        # RETURNING id is portable (SQLite >= 3.35, PostgreSQL) and avoids relying
+        # on a backend-specific lastrowid.
         cur = conn.execute(
             "INSERT INTO audit_log "
-            "(utc_timestamp, event_type, user, provider_id, model_version, "
+            '(utc_timestamp, event_type, "user", provider_id, model_version, '
             " signals_shown, action_taken, reasoning, row_hash, prev_hash) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
             (ts, event_type, user, provider_id, model_version,
              sigs, action_taken, reasoning, row_hash, prev),
         )
-        new_id = cur.lastrowid
+        new_id = cur.fetchone()[0]
         conn.commit()
     except Exception:
         conn.rollback()
@@ -159,7 +164,7 @@ def verify_integrity() -> dict:
     """
     conn = _open_db()
     rows = conn.execute(
-        "SELECT id, utc_timestamp, event_type, user, provider_id, model_version, "
+        'SELECT id, utc_timestamp, event_type, "user", provider_id, model_version, '
         "signals_shown, action_taken, reasoning, row_hash, prev_hash "
         "FROM audit_log ORDER BY id ASC"
     ).fetchall()
@@ -217,7 +222,7 @@ def export_to_csv(path: str = "audit_log_export.csv") -> int:
     """Export the full audit log to a CSV file for auditors. Returns row count."""
     conn = _open_db()
     rows = conn.execute(
-        "SELECT id, utc_timestamp, event_type, user, provider_id, model_version, "
+        'SELECT id, utc_timestamp, event_type, "user", provider_id, model_version, '
         "signals_shown, action_taken, reasoning, row_hash, prev_hash "
         "FROM audit_log ORDER BY id ASC"
     ).fetchall()
@@ -239,7 +244,7 @@ def get_recent(n: int = 100) -> list:
     """Return the n most recent log entries as a list of dicts (no hash fields)."""
     conn = _open_db()
     rows = conn.execute(
-        "SELECT id, utc_timestamp, event_type, user, provider_id, model_version, "
+        'SELECT id, utc_timestamp, event_type, "user", provider_id, model_version, '
         "signals_shown, action_taken, reasoning "
         "FROM audit_log ORDER BY id DESC LIMIT ?",
         (n,),

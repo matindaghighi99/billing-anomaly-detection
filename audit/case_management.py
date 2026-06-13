@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS case_correspondence (
     direction     TEXT,    -- outbound | inbound
     kind          TEXT,    -- records_request | billing_education | gm_opinion | submission | note
     summary       TEXT,
-    user          TEXT
+    "user"        TEXT          -- quoted: reserved word in PostgreSQL
 );
 """
 
@@ -158,7 +158,7 @@ def record_correspondence(provider_id: str, kind: str, summary: str,
     try:
         conn.execute(
             "INSERT INTO case_correspondence "
-            "(provider_id, utc_timestamp, direction, kind, summary, user) "
+            '(provider_id, utc_timestamp, direction, kind, summary, "user") '
             "VALUES (?,?,?,?,?,?)",
             (provider_id, _now(), direction, kind, summary, user))
         conn.commit()
@@ -170,7 +170,7 @@ def get_correspondence(provider_id: str) -> list[dict]:
     conn = _open()
     try:
         rows = conn.execute(
-            "SELECT utc_timestamp, direction, kind, summary, user "
+            'SELECT utc_timestamp, direction, kind, summary, "user" '
             "FROM case_correspondence WHERE provider_id=? ORDER BY id DESC",
             (provider_id,)).fetchall()
         cols = ["utc_timestamp", "direction", "kind", "summary", "user"]

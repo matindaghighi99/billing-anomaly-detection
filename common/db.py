@@ -53,11 +53,9 @@ def portable_ddl(sqlite_ddl: str) -> str:
     # Auto-incrementing surrogate key.
     ddl = re.sub(r"INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT",
                  "BIGSERIAL PRIMARY KEY", ddl, flags=re.IGNORECASE)
-    # "user" is a reserved word in PostgreSQL; the stores already quote columns
-    # only where needed, but the audit schema uses a bare `user` column name.
-    # Leave identifiers as-is: PostgreSQL accepts `user` as a column name when
-    # written lowercase in CREATE/INSERT here because it is not used unquoted in
-    # an ambiguous context. (Documented; revisit during the integration pass.)
+    # Reserved words (e.g. the audit log's "user" column) are already
+    # double-quoted in the source schema, which is valid in both backends, so no
+    # identifier rewriting is needed here.
     return ddl
 
 
