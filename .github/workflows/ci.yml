@@ -54,6 +54,37 @@ jobs:
         # reviewed .secrets.baseline (and not annotated `# pragma: allowlist secret`).
         run: git ls-files | xargs detect-secrets-hook --baseline .secrets.baseline
 
+  # ── PostgreSQL integration: the tamper-evident logbook on the real DB ───────
+  # Runs the audit/case/clinical stores against a real PostgreSQL 16 service
+  # (not SQLite), so the reserved-word "user" handling, RETURNING ids, and
+  # tamper detection are verified on the production backend on every push.
+  postgres-integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: baad
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies + Postgres driver
+        run: pip install -r requirements.txt pytest "psycopg[binary]"
+      - name: Run PostgreSQL store integration tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/baad
+        run: python -m pytest tests/test_postgres_store.py -v
+
   # ── Build gate + image scan ─────────────────────────────────────────────────
   # Building the production image is GATING: it is the same Dockerfile Render
   # deploys (run_pipeline → fraud_evidence → moh_audit at build), so a failure
