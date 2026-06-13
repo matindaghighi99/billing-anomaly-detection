@@ -31,3 +31,19 @@ services:
       # Optional — enables AI-enriched explanations:
       - key: ANTHROPIC_API_KEY
         sync: false
+      # ── Operational hardening (PILOT/PRODUCTION) ─────────────────────────
+      # For a real pilot, in addition to the above:
+      #   - Set APP_ENV=production (the app then FAILS FAST unless SESSION_SECRET
+      #     is set, MFA_ENABLED=1, HIDE_DEMO_CREDS=1, and BAAD_USERS_JSON is set).
+      #   - Move to a paid plan and attach a persistent disk so the tamper-evident
+      #     audit trail + case state survive restarts, e.g.:
+      #         disk:
+      #           name: data
+      #           mountPath: /data
+      #           sizeGB: 1
+      #     and set DATA_DIR=/data (audit_log.db, audit_cases.db, backups live there).
+      #   - Secrets come from Render env (a managed vault) — never the repo.
+      #   - Schedule `python backup.py` (Render Cron Job) and sync DATA_DIR/backups
+      #     to object storage; wire a log drain + uptime check (/_stcore/health).
+      - key: DATA_DIR
+        value: "."

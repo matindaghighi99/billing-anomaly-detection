@@ -138,6 +138,38 @@ python moh_audit.py                    # OHIP casebook + recovery summary
 streamlit run app.py
 ```
 
+## Operational hardening
+
+The app is built to be vault-ready and fail-fast; the managed services below are
+provisioned in **your** cloud account and wired in via environment variables.
+
+- **Secrets in a managed vault.** All secrets come from the environment
+  (`SESSION_SECRET`, `BAAD_USERS_JSON`, `ANTHROPIC_API_KEY`, …), so a vault
+  (Azure Key Vault, AWS Secrets Manager, GCP Secret Manager, HashiCorp Vault)
+  injects them at runtime — nothing secret is in the repo. Set
+  `APP_ENV=production` and the app **refuses to start** unless `SESSION_SECRET`
+  is set and strong, `MFA_ENABLED=1`, `HIDE_DEMO_CREDS=1`, and `BAAD_USERS_JSON`
+  is configured (`config.py:enforce()`).
+- **Audit log + case state to managed storage.** Both SQLite stores are path-
+  configurable: set `DATA_DIR` (or `AUDIT_DB_PATH` / `CASE_DB_PATH`) to a mounted
+  persistent disk / managed volume so the tamper-evident trail and case
+  workflow survive restarts. For a clustered deployment, point these at managed
+  Postgres (the access is centralised in `audit_log.py` / `case_management.py`).
+- **Backups.** `python backup.py` writes an integrity-checked snapshot of the
+  audit + case DBs (and a CSV export) to `BACKUP_DIR`. Schedule it (e.g. a Render
+  Cron Job) and sync `BACKUP_DIR` to object storage (S3 / Azure Blob / GCS).
+- **Monitoring.** `observability.py` emits structured JSON logs to stdout (wire a
+  log drain) and exposes `self_check()` (data present, audit chain intact, case
+  store reachable, fee-schedule provenance, config problems) — surfaced in the
+  Audit Trail tab's *System status* panel. Use `/_stcore/health` for uptime
+  probes.
+- **Records / correspondence workflow.** The 3-stage case lifecycle (Initial
+  Action → Full Audit Review → Board Hearing → Closed) is persisted in
+  `case_management.py` with statutory SLA dates (2-week acknowledgement, etc.),
+  an append-only correspondence log, and generated MOH letters (Request for
+  Records, Billing Education, GM's Opinion, Review Complete) — drivable from the
+  OHIP Casebook tab.
+
 ## Production checklist (real MOH data)
 
 Ontario data residency · PHIPA review · IdP SSO/MFA replacing the mock auth ·

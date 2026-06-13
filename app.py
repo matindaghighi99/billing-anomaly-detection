@@ -17,6 +17,13 @@ load_dotenv()
 # curated 6-specialty set instead.
 os.environ.setdefault("DATASET", "large")
 
+# Operational hardening: structured logging + fail-fast production config check
+# (raises in APP_ENV=production if SESSION_SECRET/MFA/users are misconfigured).
+import observability as _obs
+import config as _config
+_obs.configure_logging()
+_config.enforce()
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -1346,6 +1353,31 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                 "recorded with a SHA-256 hash chain. Verify Integrity checks that "
                 "no record has been altered or deleted."
             )
+
+            # ── System status / operational diagnostics ───────────────────────
+            with st.expander("System status & operational diagnostics"):
+                try:
+                    chk = _obs.self_check()
+                    st.markdown(
+                        f"**Overall:** {'🟢 OK' if chk['ok'] else '🔴 attention needed'}")
+                    st.dataframe(
+                        pd.DataFrame([
+                            {"check": k, "ok": v["ok"], "detail": v["detail"]}
+                            for k, v in chk["checks"].items()
+                        ]),
+                        hide_index=True, use_container_width=True,
+                    )
+                    cfg = _config.summary()
+                    st.caption(
+                        f"env={cfg['app_env']} · audit_db={cfg['audit_db']} · "
+                        f"case_db={cfg['case_db']} · MFA={'on' if cfg['mfa_enabled'] else 'off'} "
+                        f"· SESSION_SECRET={'set' if cfg['session_secret_set'] else 'ephemeral'}"
+                    )
+                    if cfg["config_problems"]:
+                        st.warning("Production config problems: " +
+                                   "; ".join(cfg["config_problems"]))
+                except Exception as _exc:
+                    st.caption(f"Diagnostics unavailable: {_exc}")
 
             col_v, col_e, col_spacer = st.columns([3, 3, 4])
             with col_v:
