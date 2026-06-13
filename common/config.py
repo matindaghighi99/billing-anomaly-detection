@@ -44,12 +44,36 @@ def _is_off(name: str, default: str = "") -> bool:
 def validate() -> list[str]:
     """Return a list of production-readiness problems (empty list = OK).
 
-    Only enforced when APP_ENV=production; in demo mode this is advisory.
+    Only enforced when APP_ENV=production; in demo mode this is advisory. The
+    checks depend on AUTH_PROVIDER: the built-in password+TOTP path and the
+    enterprise SSO path have different security-critical settings.
     """
     problems: list[str] = []
     if not IS_PRODUCTION:
         return problems
 
+    provider = os.environ.get("AUTH_PROVIDER", "mock").strip().lower()
+
+    if provider == "sso":
+        # Authentication, MFA, and the user directory are owned by the enterprise
+        # IdP, so the local-auth settings do not apply. The CRITICAL app-side
+        # requirement is that proxy-header trust is only safe behind the
+        # authenticating proxy. SSO_PROXY_SHARED_SECRET is the in-app safeguard
+        # that rejects forged identity headers if a request ever bypasses the
+        # proxy; without it the app relies SOLELY on network isolation, which it
+        # cannot verify — so in production we refuse to start.
+        jwt_mode = bool(os.environ.get("SSO_JWT_HEADER"))
+        if not jwt_mode and not os.environ.get("SSO_PROXY_SHARED_SECRET"):
+            problems.append(
+                "AUTH_PROVIDER=sso uses proxy-header trust but "
+                "SSO_PROXY_SHARED_SECRET is not set. The app MUST be unreachable "
+                "except through the authenticating proxy; the shared secret blocks "
+                "forged identity headers if a request bypasses it. Set "
+                "SSO_PROXY_SHARED_SECRET (and enforce network isolation), or use "
+                "JWT mode (SSO_JWT_HEADER) where signatures are verified in-app.")
+        return problems
+
+    # Built-in password + TOTP authentication.
     secret = os.environ.get("SESSION_SECRET", "")
     if not secret:
         problems.append("SESSION_SECRET is not set — sessions would use an "
@@ -88,6 +112,7 @@ def summary() -> dict:
     return {
         "app_env": APP_ENV,
         "production": IS_PRODUCTION,
+        "auth_provider": os.environ.get("AUTH_PROVIDER", "mock").strip().lower(),
         "data_dir": DATA_DIR,
         "audit_db": AUDIT_DB_PATH,
         "case_db": CASE_DB_PATH,

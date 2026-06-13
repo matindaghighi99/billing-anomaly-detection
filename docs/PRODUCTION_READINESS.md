@@ -58,6 +58,30 @@ deployment never silently serves.
 `SSO_GROUP_ROLE_MAP`, and (if used) the `SSO_JWT_*` settings. See `auth/sso.py`
 for the full list.
 
+> ### ⚠️ CRITICAL DEPLOYMENT REQUIREMENT — network isolation
+>
+> In **header-trust** SSO mode the app believes the `X-Forwarded-*` identity
+> headers added by the authenticating proxy. This is safe **only if the
+> application is unreachable except through that proxy.** If any side path
+> reaches the app directly (a public port, an internal network route, a
+> misconfigured load balancer), an attacker can forge those headers and enter
+> **as an admin**. This is the single highest-impact deployment control.
+>
+> **The hosting organisation MUST guarantee** that the only ingress to the app
+> is the proxy, and that the proxy strips any client-supplied `X-Forwarded-*`
+> headers.
+>
+> **App-side safeguards already in place:**
+> - `SSO_PROXY_SHARED_SECRET` — a secret the proxy injects on every request;
+>   the app rejects any request without it, so a direct/bypass request cannot
+>   spoof identity even if it reaches the app.
+> - In `APP_ENV=production` the app **refuses to start** in header-trust SSO mode
+>   unless `SSO_PROXY_SHARED_SECRET` is set (or JWT mode, which verifies
+>   signatures in-app, is used) — see `common/config.py`.
+>
+> Prefer **JWT mode** (`SSO_JWT_HEADER`, signature verified in-app) when the IdP
+> can present a signed token end-to-end; it does not depend on network topology.
+
 ---
 
 ## 3. Datastore (enterprise database)
