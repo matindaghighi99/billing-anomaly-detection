@@ -1,0 +1,62 @@
+{
+  "claims_internalmed_upcoding.csv": {
+    "rows": 5351,
+    "providers": 13,
+    "specialty": "Internal Medicine",
+    "bad_actors": [
+      {
+        "provider_id": "IMP999",
+        "scheme": "Upcoding (E/M complexity inflation)",
+        "expect": "peer-stats flag: high top-tier share / avg billed vs cohort"
+      }
+    ]
+  },
+  "claims_radiology_overimaging.csv": {
+    "rows": 6714,
+    "providers": 13,
+    "specialty": "Radiology",
+    "bad_actors": [
+      {
+        "provider_id": "RAD999",
+        "scheme": "Over-utilisation / self-referral imaging",
+        "expect": "peer-stats flag: volume + total-billed outlier vs cohort"
+      }
+    ]
+  },
+  "claims_familymed_impossibleday.csv": {
+    "rows": 5224,
+    "providers": 13,
+    "specialty": "Family Medicine",
+    "bad_actors": [
+      {
+        "provider_id": "FAM999",
+        "scheme": "Impossible day (phantom visits)",
+        "expect": "rules flag: >1,440 billed minutes in a single day"
+      }
+    ]
+  },
+  "claims_cardiology_unbundling.csv": {
+    "rows": 5133,
+    "providers": 13,
+    "specialty": "Cardiology",
+    "bad_actors": [
+      {
+        "provider_id": "CAR999",
+        "scheme": "Unbundling (ECG 93005+93010 vs 93000)",
+        "expect": "rules flag: component codes billed instead of the bundle"
+      }
+    ]
+  },
+  "claims_psychiatry_temporalspike.csv": {
+    "rows": 4188,
+    "providers": 13,
+    "specialty": "Psychiatry",
+    "bad_actors": [
+      {
+        "provider_id": "PSY999",
+        "scheme": "Temporal billing spike (sudden-onset)",
+        "expect": "temporal flag: CUSUM change-point / spike mid-year"
+      }
+    ]
+  }
+}

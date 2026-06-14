@@ -255,12 +255,16 @@ def build_risk_scores() -> pd.DataFrame:
         df["feedback_score"]
     ).clip(upper=100).round(1)
 
-    # Estimated exposure: rules exposure where available, else fraction of total billed
-    df["estimated_exposure"] = (
+    # Estimated exposure: rules exposure where available, else peer exposure,
+    # else a fraction of total billed. Coerce to float and fill gaps so a dataset
+    # with no rule-based exposure (e.g. a pure upcoding/volume cohort) doesn't
+    # leave the column object-typed and break the downstream log1p ranking.
+    df["estimated_exposure"] = pd.to_numeric(
         df["rules_exposure"]
           .fillna(df["peer_exposure"])
-          .fillna(df["total_billed"] * 0.10)
-    )
+          .fillna(df["total_billed"] * 0.10),
+        errors="coerce",
+    ).fillna(0.0)
 
     # Dollar-weighted rank score (used only for ordering)
     df["_rank_score"] = df["risk_score"] * np.log1p(df["estimated_exposure"] / 1_000)
