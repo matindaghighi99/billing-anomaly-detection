@@ -1,11 +1,16 @@
+# Streamlit server configuration (hardened defaults for deployment).
 [server]
 headless = true
-enableCORS = false
-enableXsrfProtection = true
-maxUploadSize = 50
+enableXsrfProtection = true     # CSRF protection ON (do not disable)
+enableCORS = true
+maxUploadSize = 5
 
 [browser]
 gatherUsageStats = false
 
 [theme]
-base = "dark"
+base = "light"
+primaryColor = "#4F46E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F6FB"
+textColor = "#0F172A"
