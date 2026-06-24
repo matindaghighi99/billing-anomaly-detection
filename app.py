@@ -4,18 +4,39 @@ Single-screen decision-support tool for human billing auditors.
 NEVER makes automated decisions — all outputs are for human review only.
 """
 
+import html
 import json
 import os
+import sys
+
+# Make the section folders importable as flat modules regardless of how the
+# app is launched (`streamlit run dashboard/app.py`, Docker, etc.).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import _sectionpath  # noqa: E402  (registers section folders on sys.path)
 
 from dotenv import load_dotenv
 load_dotenv()
+
+# Consolidated on the expanded MOH dataset (claims_large.csv → *_large outputs)
+# so every tab — worklist, analytics, and the OHIP casebook — shows the same
+# 300-physician / 15-specialty universe. Set DATASET=demo to use the original
+# curated 6-specialty set instead.
+os.environ.setdefault("DATASET", "large")
+
+# Operational hardening: structured logging + fail-fast production config check
+# (raises in APP_ENV=production if SESSION_SECRET/MFA/users are misconfigured).
+import observability as _obs
+import config as _config
+_obs.configure_logging()
+_config.enforce()
 
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import ux as _ux  # user-facing observability helpers
 
-import auth
+import auth_mock
 
 # ── SVG icon helpers ───────────────────────────────────────────────────────────
 # Heroicons v2 outline (24×24 viewBox, stroke-width 1.5)
@@ -50,18 +71,20 @@ def _icon(name: str, size: int = 16, color: str = "currentColor", style: str = "
         f'<path d="{path}"/></svg>'
     )
 
-SCORES_CSV  = "risk_scores.csv"
-RULES_CSV   = "rules_flags.csv"
-PEER_CSV    = "peer_flags.csv"
-ML_CSV      = "ml_scores.csv"
-METRICS_CSV = "provider_metrics.csv"
-EXPLS_JSON  = "explanations.json"
-CLAIMS_CSV  = "claims.csv"
-SHAP_CSV    = "shap_explanations.csv"
+from dataset_config import CLAIMS_FILE, out
+
+SCORES_CSV  = out("risk_scores.csv")
+RULES_CSV   = out("rules_flags.csv")
+PEER_CSV    = out("peer_flags.csv")
+ML_CSV      = out("ml_scores.csv")
+METRICS_CSV = out("provider_metrics.csv")
+EXPLS_JSON  = out("explanations.json")
+CLAIMS_CSV  = CLAIMS_FILE
+SHAP_CSV    = out("shap_explanations.csv")
 
 RISK_THRESHOLD = 10
 
-CONF_COLOR = {"HIGH": "#FF6B6B", "MEDIUM": "#FFD93D", "LOW": "#6BCB77"}
+CONF_COLOR = {"HIGH": "#DC2626", "MEDIUM": "#D97706", "LOW": "#059669"}
 CONF_BG    = {"HIGH": "rgba(180,20,20,0.18)", "MEDIUM": "rgba(180,150,0,0.18)", "LOW": "rgba(20,140,20,0.18)"}
 
 st.set_page_config(
@@ -101,10 +124,10 @@ st.markdown("""
 
   /* ── Design tokens ── */
   :root {
-    --bg-0: #020209;
-    --bg-1: #06061A;
-    --bg-2: #0A0A1E;
-    --bg-3: #0E0E26;
+    --bg-0: #F7F9FC;
+    --bg-1: #FFFFFF;
+    --bg-2: #FFFFFF;
+    --bg-3: #EEF1F8;
 
     --indigo:    #6366F1;
     --indigo-lo: rgba(99,102,241,0.12);
@@ -119,16 +142,16 @@ st.markdown("""
     --emerald:   #10B981;
     --emerald-lo:rgba(16,185,129,0.12);
 
-    --txt-hi:  #EEF0FF;
-    --txt-mid: #8A96C8;
-    --txt-lo:  #3D4870;
+    --txt-hi:  #0F172A;
+    --txt-mid: #475569;
+    --txt-lo:  #64748B;
 
-    --stroke:    #131830;
-    --stroke-hi: #252D58;
+    --stroke:    #E5E9F2;
+    --stroke-hi: #CBD5E1;
 
-    --shadow-sm: 0 1px 4px rgba(0,0,0,0.55);
-    --shadow-md: 0 4px 20px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.55);
-    --shadow-lg: 0 16px 56px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.55);
+    --shadow-sm: 0 1px 3px rgba(15,23,42,0.06);
+    --shadow-md: 0 4px 16px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.05);
+    --shadow-lg: 0 16px 48px rgba(15,23,42,0.12), 0 4px 12px rgba(15,23,42,0.06);
     --glow-ind:  0 0 24px rgba(99,102,241,0.3);
     --glow-cyn:  0 0 24px rgba(6,182,212,0.3);
 
@@ -160,9 +183,9 @@ st.markdown("""
   /* ── Warning banner ── */
   .banner {
     position: relative; overflow: hidden;
-    background: linear-gradient(90deg, #4A0A14 0%, #6B1020 50%, #4A0A14 100%);
+    background: linear-gradient(90deg, #FEE2E2 0%, #FECACA 50%, #FEE2E2 100%);
     background-size: 200% 100%;
-    color: #FFB8C0; padding: 11px 22px; border-radius: var(--r-md);
+    color: #B91C1C; padding: 11px 22px; border-radius: var(--r-md);
     font-size: 0.82rem; font-weight: 500; text-align: center;
     margin-bottom: 6px;
     border: 1px solid rgba(244,63,94,0.25);
@@ -256,15 +279,15 @@ st.markdown("""
   }
   .signal-chip:hover { transform: translateY(-2px); filter: brightness(1.15); }
 
-  .chip-rule     { background: rgba(244,63,94,0.12);  color: #FB7185; border: 1px solid rgba(244,63,94,0.3); }
+  .chip-rule     { background: rgba(244,63,94,0.12);  color: #E11D48; border: 1px solid rgba(244,63,94,0.3); }
   .chip-rule:hover     { box-shadow: 0 4px 16px rgba(244,63,94,0.25); }
-  .chip-peer     { background: rgba(99,102,241,0.12); color: #A5B4FC; border: 1px solid rgba(99,102,241,0.3); }
+  .chip-peer     { background: rgba(99,102,241,0.12); color: #4F46E5; border: 1px solid rgba(99,102,241,0.3); }
   .chip-peer:hover     { box-shadow: 0 4px 16px rgba(99,102,241,0.25); }
-  .chip-ml       { background: rgba(16,185,129,0.12); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.3); }
+  .chip-ml       { background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
   .chip-ml:hover       { box-shadow: 0 4px 16px rgba(16,185,129,0.25); }
-  .chip-temporal { background: rgba(245,158,11,0.12); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
+  .chip-temporal { background: rgba(245,158,11,0.12); color: #D97706; border: 1px solid rgba(245,158,11,0.3); }
   .chip-temporal:hover { box-shadow: 0 4px 16px rgba(245,158,11,0.25); }
-  .chip-feedback { background: rgba(139,92,246,0.12); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.3); }
+  .chip-feedback { background: rgba(139,92,246,0.12); color: #7C3AED; border: 1px solid rgba(139,92,246,0.3); }
   .chip-feedback:hover { box-shadow: 0 4px 16px rgba(139,92,246,0.25); }
 
   /* ── Confidence pills ── */
@@ -273,11 +296,11 @@ st.markdown("""
     font-size: 0.72rem; font-weight: 800; letter-spacing: 0.8px;
     text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
   }
-  .conf-HIGH   { background: rgba(244,63,94,0.15);  color: #FB7185; border: 1px solid rgba(244,63,94,0.4);
+  .conf-HIGH   { background: rgba(244,63,94,0.15);  color: #E11D48; border: 1px solid rgba(244,63,94,0.4);
                  box-shadow: 0 0 16px rgba(244,63,94,0.2); }
-  .conf-MEDIUM { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.4);
+  .conf-MEDIUM { background: rgba(245,158,11,0.15); color: #D97706; border: 1px solid rgba(245,158,11,0.4);
                  box-shadow: 0 0 16px rgba(245,158,11,0.2); }
-  .conf-LOW    { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.4);
+  .conf-LOW    { background: rgba(16,185,129,0.15); color: #059669; border: 1px solid rgba(16,185,129,0.4);
                  box-shadow: 0 0 16px rgba(16,185,129,0.2); }
 
   /* ── Provider header card ── */
@@ -286,7 +309,7 @@ st.markdown("""
     background:
       radial-gradient(160% 120% at 100% 0%, rgba(99,102,241,0.1) 0%, transparent 55%),
       radial-gradient(100% 100% at 0% 100%, rgba(6,182,212,0.06) 0%, transparent 50%),
-      linear-gradient(145deg, #0C0C24 0%, #080818 100%);
+      linear-gradient(145deg, #FFFFFF 0%, #FFFFFF 100%);
     border: 1px solid var(--stroke-hi);
     border-radius: var(--r-xl);
     padding: 26px 28px;
@@ -335,16 +358,16 @@ st.markdown("""
   .ev-rule:hover { box-shadow: -4px 0 20px -6px rgba(244,63,94,0.5), var(--shadow-md); }
   .ev-peer { border-color: #6366F1; }
   .ev-peer:hover { box-shadow: -4px 0 20px -6px rgba(99,102,241,0.5), var(--shadow-md); }
-  .ev-rule-label { font-size: 0.7rem; font-weight: 800; color: #FB7185; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
-  .ev-peer-label { font-size: 0.7rem; font-weight: 800; color: #A5B4FC; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
-  .ev-exposure { font-size: 0.76rem; color: #FCD34D; font-weight: 700; float: right; font-family: 'JetBrains Mono', monospace; }
+  .ev-rule-label { font-size: 0.7rem; font-weight: 800; color: #E11D48; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
+  .ev-peer-label { font-size: 0.7rem; font-weight: 800; color: #4F46E5; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
+  .ev-exposure { font-size: 0.76rem; color: #D97706; font-weight: 700; float: right; font-family: 'JetBrains Mono', monospace; }
   .ev-text { font-size: 0.84rem; color: var(--txt-mid); margin-top: 7px; line-height: 1.55; }
 
   /* ── Sidebar ── */
   [data-testid="stSidebar"] {
     background:
       radial-gradient(140% 80% at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 60%),
-      linear-gradient(180deg, #07071E 0%, #050510 100%);
+      linear-gradient(180deg, #FFFFFF 0%, #F7F9FC 100%);
     border-right: 1px solid var(--stroke);
     box-shadow: 4px 0 32px rgba(0,0,0,0.4);
   }
@@ -448,7 +471,7 @@ st.markdown("""
     background: rgba(99,102,241,0.05) !important;
   }
   [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-    color: #C8D4FF !important;
+    color: #334155 !important;
     border-bottom: 2px solid var(--indigo) !important;
     background: rgba(99,102,241,0.08) !important;
     font-weight: 700 !important;
@@ -464,7 +487,7 @@ st.markdown("""
   ::-webkit-scrollbar       { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--stroke-hi); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #3D4A8A; }
+  ::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
@@ -480,6 +503,19 @@ st.markdown("""
     .kpi-card:hover { transform: none; }
     .ev-card:hover  { transform: none; }
   }
+
+  /* ── Light-theme safety overrides ───────────────────────────────────────── */
+  [data-testid="stSidebar"], [data-testid="stSidebar"] > div:first-child {
+      background: #FFFFFF !important; border-right: 1px solid #E5E9F2 !important; }
+  [data-testid="stHeader"], .stAppHeader { background: transparent !important; }
+  [data-testid="stMarkdownContainer"] { color: #334155; }
+  input, textarea { background:#FFFFFF !important; color:#0F172A !important; border-color:#E2E6F0 !important; }
+  [data-baseweb="select"] > div { background:#FFFFFF !important; color:#0F172A !important; border-color:#E2E6F0 !important; }
+  [data-baseweb="popover"], [role="listbox"], [data-baseweb="menu"] { background:#FFFFFF !important; color:#0F172A !important; }
+  [data-testid="stDataFrame"], .stDataFrame, [data-testid="stTable"] { background:#FFFFFF !important; color:#0F172A !important; }
+  [data-baseweb="tab"] { color:#475569 !important; }
+  [data-baseweb="tab"][aria-selected="true"] { color:#4F46E5 !important; }
+  [data-testid="stExpander"] { background:#FFFFFF !important; border:1px solid #E5E9F2 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -550,9 +586,9 @@ METRIC_LABELS = {
 _CHART_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(6,6,20,0.0)",
-    font=dict(family="Inter, system-ui, sans-serif", color="#6A78A8", size=11),
+    font=dict(family="Inter, system-ui, sans-serif", color="#475569", size=11),
 )
-_AXIS_STYLE = dict(gridcolor="#0E1230", zerolinecolor="#1A2050", linecolor="#0E1230")
+_AXIS_STYLE = dict(gridcolor="#E5E9F2", zerolinecolor="#E2E6F0", linecolor="#E5E9F2")
 
 
 def peer_comparison_chart(provider_id: str, metrics_df: pd.DataFrame,
@@ -580,14 +616,14 @@ def peer_comparison_chart(provider_id: str, metrics_df: pd.DataFrame,
                     opacity=0.85),
         text=[f"{v:.2f} (peer {m:.2f})" for v, m in zip(prov_vals, med_vals)],
         textposition="outside",
-        textfont=dict(size=11, color="#6A78A8", family="JetBrains Mono"),
+        textfont=dict(size=11, color="#475569", family="JetBrains Mono"),
         hovertemplate="%{y}: %{x:.2f}x peer median<extra></extra>",
     ))
     fig.add_vline(x=1.0, line_dash="dot", line_color="rgba(99,102,241,0.4)")
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text=f"<b>{specialty}</b> — Provider vs Peer Median",
-                   font=dict(size=13, color="#8A96C8")),
+                   font=dict(size=13, color="#475569")),
         xaxis=dict(title="Ratio to Peer Median", **_AXIS_STYLE),
         yaxis=dict(**_AXIS_STYLE),
         height=300,
@@ -625,12 +661,12 @@ def monthly_claims_chart(provider_id: str, claims_df: pd.DataFrame):
     ))
     fig.update_layout(
         **_CHART_LAYOUT,
-        title=dict(text="<b>Monthly Billing Volume</b>", font=dict(size=13, color="#8A96C8")),
+        title=dict(text="<b>Monthly Billing Volume</b>", font=dict(size=13, color="#475569")),
         height=260,
         yaxis=dict(title="Claims", **_AXIS_STYLE),
         yaxis2=dict(title="Billed ($)", overlaying="y", side="right", **_AXIS_STYLE),
         margin=dict(l=10, r=70, t=44, b=30),
-        legend=dict(orientation="h", y=-0.25, font=dict(size=11, color="#6A78A8")),
+        legend=dict(orientation="h", y=-0.25, font=dict(size=11, color="#475569")),
     )
     return fig
 
@@ -646,15 +682,15 @@ def risk_gauge(score: float, confidence: str) -> go.Figure:
                     family="JetBrains Mono")),
         gauge=dict(
             axis=dict(range=[0, 100],
-                      tickfont=dict(size=9, color="#3D4870", family="JetBrains Mono"),
+                      tickfont=dict(size=9, color="#64748B", family="JetBrains Mono"),
                       tickvals=[0, 25, 50, 75, 100]),
             bar=dict(color=color, thickness=0.28),
             bgcolor="rgba(0,0,0,0)",
             bordercolor="rgba(0,0,0,0)",
             steps=[
-                dict(range=[0, 33],   color="#08081C"),
-                dict(range=[33, 66],  color="#0A0A22"),
-                dict(range=[66, 100], color="#0E0E2A"),
+                dict(range=[0, 33],   color="#FFFFFF"),
+                dict(range=[33, 66],  color="#FFFFFF"),
+                dict(range=[66, 100], color="#EEF1F8"),
             ],
             threshold=dict(
                 line=dict(color=color, width=2),
@@ -664,7 +700,7 @@ def risk_gauge(score: float, confidence: str) -> go.Figure:
     ))
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#6A78A8", family="Inter"),
+        font=dict(color="#475569", family="Inter"),
         height=160,
         margin=dict(l=10, r=10, t=10, b=10),
     )
@@ -679,19 +715,19 @@ def exposure_by_specialty_chart(worklist: pd.DataFrame) -> go.Figure:
         orientation="h",
         marker=dict(
             color=grp["estimated_exposure"],
-            colorscale=[[0, "#1A1A4A"], [0.4, "#6366F1"], [0.75, "#8B5CF6"], [1, "#F43F5E"]],
+            colorscale=[[0, "#EEF1F8"], [0.4, "#6366F1"], [0.75, "#8B5CF6"], [1, "#F43F5E"]],
             showscale=False,
             opacity=0.85,
         ),
         text=["${:,.0f}".format(v) for v in grp["estimated_exposure"]],
         textposition="outside",
-        textfont=dict(size=11, color="#6A78A8", family="JetBrains Mono"),
+        textfont=dict(size=11, color="#475569", family="JetBrains Mono"),
         hovertemplate="%{y}: $%{x:,.0f}<extra></extra>",
     ))
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text="<b>Estimated Exposure by Specialty</b>",
-                   font=dict(size=13, color="#8A96C8")),
+                   font=dict(size=13, color="#475569")),
         xaxis=dict(title="Estimated Exposure ($)", **_AXIS_STYLE),
         yaxis=dict(gridcolor="rgba(0,0,0,0)"),
         height=300,
@@ -709,7 +745,7 @@ def confidence_breakdown_chart(worklist: pd.DataFrame) -> go.Figure:
     fig = go.Figure(go.Pie(
         labels=counts.index.tolist(),
         values=counts.values.tolist(),
-        marker=dict(colors=colors, line=dict(color="#06061A", width=3)),
+        marker=dict(colors=colors, line=dict(color="#FFFFFF", width=3)),
         textinfo="label+percent",
         textfont=dict(size=11, family="Inter"),
         hole=0.6,
@@ -718,9 +754,9 @@ def confidence_breakdown_chart(worklist: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text="<b>Confidence Tier Breakdown</b>",
-                   font=dict(size=13, color="#8A96C8")),
+                   font=dict(size=13, color="#475569")),
         height=300,
-        legend=dict(orientation="h", y=-0.1, font=dict(size=11, color="#6A78A8")),
+        legend=dict(orientation="h", y=-0.1, font=dict(size=11, color="#475569")),
         margin=dict(l=10, r=10, t=44, b=30),
     )
     return fig
@@ -732,8 +768,8 @@ def score_distribution_chart(worklist: pd.DataFrame) -> go.Figure:
         nbinsx=20,
         marker=dict(
             color=worklist["risk_score"],
-            colorscale=[[0, "#1A1A4A"], [0.45, "#6366F1"], [0.75, "#8B5CF6"], [1, "#F43F5E"]],
-            line=dict(color="#06061A", width=0.5),
+            colorscale=[[0, "#EEF1F8"], [0.45, "#6366F1"], [0.75, "#8B5CF6"], [1, "#F43F5E"]],
+            line=dict(color="#FFFFFF", width=0.5),
             opacity=0.85,
         ),
         hovertemplate="Score %{x}: %{y} providers<extra></extra>",
@@ -741,7 +777,7 @@ def score_distribution_chart(worklist: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text="<b>Risk Score Distribution</b>",
-                   font=dict(size=13, color="#8A96C8")),
+                   font=dict(size=13, color="#475569")),
         xaxis=dict(title="Risk Score", **_AXIS_STYLE),
         yaxis=dict(title="Providers",  **_AXIS_STYLE),
         height=280,
@@ -759,14 +795,14 @@ def shap_bar_chart(features: list, values: list) -> go.Figure:
                     line=dict(color="rgba(0,0,0,0.2)", width=0.5)),
         text=[f"{v:+.4f}" for v in values],
         textposition="outside",
-        textfont=dict(size=11, color="#6A78A8", family="JetBrains Mono"),
+        textfont=dict(size=11, color="#475569", family="JetBrains Mono"),
         hovertemplate="%{y}: %{x:+.4f}<extra></extra>",
     ))
     fig.add_vline(x=0, line_color="rgba(99,102,241,0.35)")
     fig.update_layout(
         **_CHART_LAYOUT,
         title=dict(text="<b>SHAP Feature Attribution</b>",
-                   font=dict(size=13, color="#8A96C8")),
+                   font=dict(size=13, color="#475569")),
         xaxis=dict(title="SHAP value (anomaly contribution)", **_AXIS_STYLE),
         yaxis=dict(gridcolor="rgba(0,0,0,0)"),
         height=220,
@@ -783,26 +819,26 @@ def signal_badges(pid: str, rules_df, peer_df, ml_df, worklist_row=None) -> str:
     if not rules_df.empty:
         for r in rules_df[rules_df["provider_id"] == pid]["rule"].unique():
             label = r.replace("_", " ").title()
-            badges.append(f'<span class="signal-chip chip-rule">{_icon("exclamation-triangle",11,"#FB7185","margin-right:4px;")} {label}</span>')
+            badges.append(f'<span class="signal-chip chip-rule">{_icon("exclamation-triangle",11,"#E11D48","margin-right:4px;")} {label}</span>')
     if not peer_df.empty:
         n_peer = len(peer_df[peer_df["provider_id"] == pid])
         if n_peer:
-            badges.append(f'<span class="signal-chip chip-peer">{_icon("chart-bar",11,"#A5B4FC","margin-right:4px;")} Peer Outlier ({n_peer} metrics)</span>')
+            badges.append(f'<span class="signal-chip chip-peer">{_icon("chart-bar",11,"#4F46E5","margin-right:4px;")} Peer Outlier ({n_peer} metrics)</span>')
     if not ml_df.empty:
         ml_row = ml_df[ml_df["provider_id"] == pid]
         if not ml_row.empty and ml_row.iloc[0]["ml_is_anomaly"]:
             score = ml_row.iloc[0]["ml_score"]
-            badges.append(f'<span class="signal-chip chip-ml">{_icon("cpu-chip",11,"#6EE7B7","margin-right:4px;")} ML Anomaly ({score:.0f}/100)</span>')
+            badges.append(f'<span class="signal-chip chip-ml">{_icon("cpu-chip",11,"#059669","margin-right:4px;")} ML Anomaly ({score:.0f}/100)</span>')
     if worklist_row is not None:
         if worklist_row.get("codemix_flag", 0):
             kl = worklist_row.get("kl_divergence", 0)
-            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrows-right-left",11,"#FCD34D","margin-right:4px;")} Code-Mix Drift (KL={kl:.3f})</span>')
+            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrows-right-left",11,"#D97706","margin-right:4px;")} Code-Mix Drift (KL={kl:.3f})</span>')
         if worklist_row.get("temporal_flag", 0):
-            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrow-trending-up",11,"#FCD34D","margin-right:4px;")} Temporal Change-Point</span>')
+            badges.append(f'<span class="signal-chip chip-temporal">{_icon("arrow-trending-up",11,"#D97706","margin-right:4px;")} Temporal Change-Point</span>')
         fb = worklist_row.get("feedback_score", 0)
         if fb and float(fb) > 0:
-            badges.append(f'<span class="signal-chip chip-feedback">{_icon("arrow-path",11,"#C4B5FD","margin-right:4px;")} Feedback Model ({float(fb):.1f} pts)</span>')
-    return " ".join(badges) if badges else '<span style="color:#2D3760;font-size:0.82rem;font-style:italic">No specific signal detected</span>'
+            badges.append(f'<span class="signal-chip chip-feedback">{_icon("arrow-path",11,"#7C3AED","margin-right:4px;")} Feedback Model ({float(fb):.1f} pts)</span>')
+    return " ".join(badges) if badges else '<span style="color:#94A3B8;font-size:0.82rem;font-style:italic">No specific signal detected</span>'
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -814,7 +850,7 @@ def render_sidebar(scores: pd.DataFrame):
 <div style="padding:20px 4px 18px; text-align:center;">
   <div style="display:inline-flex;align-items:center;justify-content:center;
        width:52px;height:52px;
-       background:linear-gradient(145deg,#1E1B55,#2D2A7A);
+       background:linear-gradient(145deg,#E8ECF7,#DDE3F2);
        border-radius:16px;
        border:1px solid rgba(99,102,241,0.4);
        box-shadow:0 0 24px rgba(99,102,241,0.2);
@@ -822,38 +858,38 @@ def render_sidebar(scores: pd.DataFrame):
     {_icon("clipboard-list", 24, "url(#sb-grad)")}
     <svg width="0" height="0"><defs>
       <linearGradient id="sb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#A5B4FC"/><stop offset="100%" stop-color="#67E8F9"/>
+        <stop offset="0%" stop-color="#4F46E5"/><stop offset="100%" stop-color="#0891B2"/>
       </linearGradient>
     </defs></svg>
   </div>
   <div style="font-size:0.95rem;font-weight:800;
-       background:linear-gradient(130deg,#EEF0FF,#A5B4FC 60%,#67E8F9);
+       background:linear-gradient(130deg,#0F172A,#4F46E5 60%,#0891B2);
        -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
        letter-spacing:-0.3px;line-height:1.2;margin-bottom:4px;">
     Billing Anomaly<br>Audit System
   </div>
-  <div style="font-size:0.58rem;color:#2D3760;letter-spacing:2px;text-transform:uppercase;
+  <div style="font-size:0.58rem;color:#94A3B8;letter-spacing:2px;text-transform:uppercase;
        font-family:'JetBrains Mono',monospace;">
     Decision Support Only
   </div>
 </div>
-<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:0 4px 18px;"></div>
+<div style="height:1px;background:linear-gradient(90deg,transparent,#E2E6F0,transparent);margin:0 4px 18px;"></div>
 """, unsafe_allow_html=True)
 
         # ── Filters ───────────────────────────────────────────────────────
-        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;font-family:\'JetBrains Mono\',monospace;">Filters</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;font-family:\'JetBrains Mono\',monospace;">Filters</div>', unsafe_allow_html=True)
 
         specs = ["All"] + sorted(scores["specialty"].unique().tolist())
-        sel_spec = st.selectbox("Specialty", specs, key="sb_spec")
+        sel_spec = st.selectbox("Specialty", specs, key="sb_spec", help="Show only providers in this medical specialty.")
 
         conf_opts = ["All", "HIGH", "MEDIUM", "LOW"]
-        sel_conf = st.selectbox("Confidence Tier", conf_opts, key="sb_conf")
+        sel_conf = st.selectbox("Confidence Tier", conf_opts, key="sb_conf", help="Filter by the model's confidence in each flag (HIGH / MEDIUM / LOW).")
 
-        min_score = st.slider("Min Risk Score", 0, 100, RISK_THRESHOLD, 5, key="sb_score")
+        min_score = st.slider("Min Risk Score", 0, 100, RISK_THRESHOLD, 5, key="sb_score", help="Hide providers scoring below this 0–100 risk threshold.")
 
         # ── Quick stats ───────────────────────────────────────────────────
-        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:18px 4px 16px;"></div>""", unsafe_allow_html=True)
-        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;font-family:\'JetBrains Mono\',monospace;">Confidence Breakdown</div>', unsafe_allow_html=True)
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#E2E6F0,transparent);margin:18px 4px 16px;"></div>""", unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;font-family:\'JetBrains Mono\',monospace;">Confidence Breakdown</div>', unsafe_allow_html=True)
 
         flagged = scores[scores["risk_score"] >= RISK_THRESHOLD]
         hi = len(flagged[flagged["confidence"] == "HIGH"])
@@ -862,16 +898,16 @@ def render_sidebar(scores: pd.DataFrame):
         total = hi + me + lo or 1
 
         for label, count, color, bg in [
-            ("High",   hi, "#FB7185", "rgba(244,63,94,0.1)"),
-            ("Medium", me, "#FCD34D", "rgba(245,158,11,0.1)"),
-            ("Low",    lo, "#6EE7B7", "rgba(16,185,129,0.1)"),
+            ("High",   hi, "#E11D48", "rgba(244,63,94,0.1)"),
+            ("Medium", me, "#D97706", "rgba(245,158,11,0.1)"),
+            ("Low",    lo, "#059669", "rgba(16,185,129,0.1)"),
         ]:
             pct = int(count / total * 100)
             st.markdown(f"""
 <div style="margin-bottom:8px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
     <span style="font-size:0.72rem;font-weight:700;color:{color};letter-spacing:0.5px;">{label}</span>
-    <span style="font-size:0.72rem;color:#3D4870;font-family:'JetBrains Mono',monospace;">{count}</span>
+    <span style="font-size:0.72rem;color:#64748B;font-family:'JetBrains Mono',monospace;">{count}</span>
   </div>
   <div style="background:{bg};border-radius:999px;height:4px;overflow:hidden;">
     <div style="width:{pct}%;height:100%;background:{color};border-radius:999px;
@@ -881,10 +917,10 @@ def render_sidebar(scores: pd.DataFrame):
 """, unsafe_allow_html=True)
 
         # ── User card ─────────────────────────────────────────────────────
-        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:18px 4px 16px;"></div>""", unsafe_allow_html=True)
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#E2E6F0,transparent);margin:18px 4px 16px;"></div>""", unsafe_allow_html=True)
 
-        _role    = auth.current_role() or "?"
-        _display = auth.current_display_name()
+        _role    = auth_mock.current_role() or "?"
+        _display = auth_mock.current_display_name()
         _role_meta = {
             "auditor":    ("#6366F1", "rgba(99,102,241,0.08)"),
             "supervisor": ("#F59E0B", "rgba(245,158,11,0.08)"),
@@ -904,7 +940,7 @@ def render_sidebar(scores: pd.DataFrame):
       {_initials}
     </div>
     <div>
-      <div style="font-size:0.82rem;font-weight:700;color:#C8D4F0;letter-spacing:-0.1px;">{_display}</div>
+      <div style="font-size:0.82rem;font-weight:700;color:#334155;letter-spacing:-0.1px;">{_display}</div>
       <div style="font-size:0.6rem;color:{_rc};font-family:'JetBrains Mono',monospace;
            text-transform:uppercase;letter-spacing:1px;margin-top:1px;">{_role}</div>
     </div>
@@ -912,43 +948,66 @@ def render_sidebar(scores: pd.DataFrame):
 </div>
 """, unsafe_allow_html=True)
 
-        if st.button("Sign Out", icon=":material/logout:", use_container_width=True, key="btn_logout"):
-            auth.logout()
+        if st.button("Sign Out", icon=":material/logout:", use_container_width=True, key="btn_logout", help="End your session and return to the sign-in screen."):
+            auth_mock.logout()
 
-        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:16px 4px 14px;"></div>""", unsafe_allow_html=True)
-        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">Auditor ID</div>', unsafe_allow_html=True)
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#E2E6F0,transparent);margin:16px 4px 14px;"></div>""", unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">Auditor ID</div>', unsafe_allow_html=True)
         auditor_id = st.text_input(
             "Your ID (for audit log)",
-            value=st.session_state.get("auditor_id", auth.current_user() or "auditor"),
+            value=st.session_state.get("auditor_id", auth_mock.current_user() or "auditor"),
             key="sb_auditor_id",
+            help="Recorded against every action you take in the audit trail.",
             label_visibility="collapsed",
         )
         st.session_state["auditor_id"] = auditor_id
 
-        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:14px 4px 14px;"></div>""", unsafe_allow_html=True)
-        if st.button("Clear Cache & Reload", icon=":material/refresh:", use_container_width=True):
+        st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#E2E6F0,transparent);margin:14px 4px 14px;"></div>""", unsafe_allow_html=True)
+        if st.button("Clear Cache & Reload", icon=":material/refresh:", use_container_width=True, help="Re-read data from disk and rebuild cached tables."):
             st.cache_data.clear()
             st.rerun()
 
-        st.markdown('<div style="font-size:0.58rem;color:#1A2050;text-align:center;margin-top:20px;font-family:\'JetBrains Mono\',monospace;letter-spacing:0.5px;">SYNTHETIC DATA ONLY<br>All entities are fictional.</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.58rem;color:#E2E6F0;text-align:center;margin-top:20px;font-family:\'JetBrains Mono\',monospace;letter-spacing:0.5px;">SYNTHETIC DATA ONLY<br>All entities are fictional.</div>', unsafe_allow_html=True)
 
     return sel_spec, sel_conf, min_score
 
 
 # ── Main app ──────────────────────────────────────────────────────────────────
 
+@st.cache_resource(show_spinner=False)
+def _ensure_demo_data():
+    """Generate any missing pipeline data once per server process.
+
+    Makes the app self-sufficient on a fresh deployment where the gitignored
+    raw claims file (and, in the worst case, the scored outputs) may be absent.
+    """
+    try:
+        import bootstrap
+        with st.spinner("First-time setup — preparing demonstration data… "
+                        "(this runs once and may take ~30s)"):
+            bootstrap.ensure_data()
+    except Exception as exc:
+        # Never block the app on bootstrap; surface a hint instead.
+        st.warning(f"Automatic data setup did not complete ({exc}). "
+                   "The dashboard will use whatever data is present.")
+    return True
+
+
 def main():
     # ── Authentication gate ───────────────────────────────────────────────────
-    if not auth.is_authenticated():
-        auth.render_login_screen()   # calls st.stop() if not yet logged in
+    if not auth_mock.is_authenticated():
+        auth_mock.render_login_screen()   # calls st.stop() if not yet logged in
 
-    scores  = load_scores()
-    rules   = load_rules()
-    peer    = load_peer()
-    ml      = load_ml()
-    metrics = load_metrics()
-    expls   = load_explanations()
-    claims  = load_claims_sample()
+    _ensure_demo_data()   # self-heal: generate any missing data on first run
+
+    with st.spinner("Loading audit worklist…"):
+        scores  = load_scores()
+        rules   = load_rules()
+        peer    = load_peer()
+        ml      = load_ml()
+        metrics = load_metrics()
+        expls   = load_explanations()
+        claims  = load_claims_sample()
 
     if scores.empty:
         st.error("No scoring data found. Run `python scoring.py` first.")
@@ -965,7 +1024,7 @@ def main():
 
     # ── Warning banner ────────────────────────────────────────────────────────
     st.markdown(
-        f'<div class="banner">{_icon("exclamation-triangle",14,"#FCA5A5","margin-right:7px;")} '
+        f'<div class="banner">{_icon("exclamation-triangle",14,"#DC2626","margin-right:7px;")} '
         '<strong>SYNTHETIC DATA</strong> — Decision-support tool for human auditors only. '
         'No automated decisions or penalties are applied. All providers and claims are entirely fictional.</div>',
         unsafe_allow_html=True,
@@ -979,14 +1038,14 @@ def main():
   <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;">
     <h1 style="font-size:clamp(1.5rem,2.2vw,2.1rem); font-weight:800; margin:0;
                letter-spacing:-0.6px; line-height:1.1;
-               background:linear-gradient(130deg,#EEF0FF 0%,#A5B4FC 38%,#67E8F9 72%,#A5B4FC 100%);
+               background:linear-gradient(130deg,#0F172A 0%,#4F46E5 38%,#0891B2 72%,#4F46E5 100%);
                background-size:300%;
                -webkit-background-clip:text; background-clip:text;
                -webkit-text-fill-color:transparent;">
       Physician Billing Anomaly Detection
     </h1>
   </div>
-  <p style="font-size:0.78rem; color:#2D3760; margin-top:6px; letter-spacing:0.2px;">
+  <p style="font-size:0.78rem; color:#94A3B8; margin-top:6px; letter-spacing:0.2px;">
     Dollar-ranked proactive audit worklist &nbsp;·&nbsp; Rules + Peer Stats + ML Ensemble &nbsp;·&nbsp; Human review required for all flags
   </p>
 </div>
@@ -1005,15 +1064,15 @@ def main():
     st.markdown('<div style="height:10px;"></div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     kpis = [
-        (c1, _icon("banknotes",26,"#6EE7B7"),          "#10B981", "Total Flagged Exposure", f"${total_exposure:,.0f}", "Sum of est. exposure for all flagged providers"),
-        (c2, _icon("bell-alert",26,"#FB7185"),         "#F43F5E", "Providers Flagged",       str(n_flagged),            f"Risk score ≥ {RISK_THRESHOLD}"),
-        (c3, _icon("magnifying-glass",26,"#A5B4FC"),   "#6366F1", "Proactive Finds",          str(n_proactive),          "Stats/ML — not complaint-driven"),
-        (c4, _icon("map-pin",26,"#FCD34D"),            "#F59E0B", "Top Single Exposure",      f"${top_exposure:,.0f}",   "Highest individual estimated exposure"),
+        (c1, _icon("banknotes",26,"#059669"),          "#10B981", "Total Flagged Exposure", f"${total_exposure:,.0f}", "Sum of est. exposure for all flagged providers"),
+        (c2, _icon("bell-alert",26,"#E11D48"),         "#F43F5E", "Providers Flagged",       str(n_flagged),            f"Risk score ≥ {RISK_THRESHOLD}"),
+        (c3, _icon("magnifying-glass",26,"#4F46E5"),   "#6366F1", "Proactive Finds",          str(n_proactive),          "Stats/ML — not complaint-driven"),
+        (c4, _icon("map-pin",26,"#D97706"),            "#F59E0B", "Top Single Exposure",      f"${top_exposure:,.0f}",   "Highest individual estimated exposure"),
     ]
     for col, icon, accent, label, value, sub in kpis:
         with col:
             st.markdown(f"""
-            <div class="kpi-card" style="--kpi-accent:{accent};">
+            <div class="kpi-card" title="{label} — {sub}" style="--kpi-accent:{accent};">
               <div style="position:absolute;top:0;left:0;bottom:0;width:3px;
                 background:linear-gradient(180deg,{accent},transparent);border-radius:4px 0 0 4px;"></div>
               <div class="kpi-icon">{icon}</div>
@@ -1025,18 +1084,26 @@ def main():
 
     # ── Tabs ─────────────────────────────────────────────────────────────────
     st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
-    tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
-        ["🗂 Worklist", "📊 Analytics", "🧠 Model Card", "📋 Audit Trail"]
+    tab_ohip, tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
+        ["🏛 OHIP Casebook", "🗂 Worklist", "📊 Analytics", "🧠 Model Card", "📋 Audit Trail"]
     )
     # Role labels for the access-denied banners below
-    _can_model = auth.has_permission("view_model_card")
-    _can_audit = auth.has_permission("view_audit_trail")
+    _can_model = auth_mock.has_permission("view_model_card")
+    _can_audit = auth_mock.has_permission("view_audit_trail")
+
+    # ═══════════════ OHIP CASEBOOK TAB ════════════════════════════════════════
+    with tab_ohip:
+        try:
+            import moh_dashboard
+            moh_dashboard.render_ohip_tab(_icon)
+        except Exception as exc:
+            st.warning(f"OHIP casebook unavailable: {exc}")
 
     # ═══════════════ WORKLIST TAB ═════════════════════════════════════════════
     with tab_wl:
         st.markdown(
             f'<div class="section-title"><span class="section-dot"></span>'
-            f'Audit Worklist — <span style="color:#7070A0">{len(worklist)} providers shown</span>, ranked by risk × exposure</div>',
+            f'Audit Worklist — <span style="color:#64748B">{len(worklist)} providers shown</span>, ranked by risk × exposure</div>',
             unsafe_allow_html=True,
         )
 
@@ -1057,9 +1124,9 @@ def main():
             table.index = table.index + 1
 
             def conf_style(val):
-                css = {"HIGH": "color:#FF6B6B; font-weight:700",
-                       "MEDIUM": "color:#FFD93D; font-weight:700",
-                       "LOW": "color:#6BCB77; font-weight:700"}
+                css = {"HIGH": "color:#DC2626; font-weight:700",
+                       "MEDIUM": "color:#D97706; font-weight:700",
+                       "LOW": "color:#059669; font-weight:700"}
                 return css.get(val, "")
 
             styled = (
@@ -1094,6 +1161,7 @@ def main():
         selected_pid = st.selectbox(
             "Select provider",
             pid_options,
+            help="Choose a flagged provider to inspect the full evidence detail.",
             format_func=lambda p: (
                 f"[{conf_map.get(p, '?'):6s}] {score_map.get(p, 0):5.1f}/100 — "
                 f"{p}  {name_map.get(p, '')}  ({spec_map.get(p, '')})"
@@ -1173,10 +1241,45 @@ def main():
         # ── Role gate — use else block, NOT st.stop(), so subsequent tabs still render
         if not _can_model:
             st.warning(
-                f"Access restricted — Role **{auth.current_role()}** "
+                f"Access restricted — Role **{auth_mock.current_role()}** "
                 "cannot view the Model Card. Supervisor or Admin role required."
             )
         else:
+
+            # ── Detection accuracy validation ─────────────────────────────────
+            st.markdown(
+                '<div class="section-title"><span class="section-dot"></span>'
+                'Detection Accuracy Validation</div>',
+                unsafe_allow_html=True,
+            )
+            try:
+                import validation as _val
+                _, _vres = _val.build_report()
+                _m = _vres.get("metrics", {})
+                if _vres["validated"]:
+                    st.success(f"Validated against {_vres['basis']}.")
+                else:
+                    st.warning(
+                        f"NOT validated for production — basis: **{_vres['basis']}**. "
+                        "Metrics below are measured on the synthetic answer key, not "
+                        "real adjudicated outcomes. Provide `adjudicated_outcomes.csv` "
+                        "and set `VALIDATION_TRUSTED=1` once accuracy is confirmed."
+                    )
+                if _m:
+                    vc1, vc2, vc3, vc4 = st.columns(4)
+                    vc1.metric("Precision", _m.get("precision"))
+                    vc2.metric("Recall", _m.get("recall"))
+                    vc3.metric("F1", _m.get("f1"))
+                    vc4.metric("Flagged", _vres.get("n_flagged"))
+                    st.caption(
+                        f"TP {_m['tp']} · FP {_m['fp']} · FN {_m['fn']} · TN {_m['tn']} "
+                        f"over {_m['n_labelled']} labelled providers. Recovery-estimate "
+                        "calibration requires actual recovered amounts (real outcomes)."
+                    )
+            except Exception as _exc:
+                st.caption(f"Validation unavailable: {_exc}")
+
+            st.markdown("---")
 
             # ── Model registry section ───────────────────────────────────────
             st.markdown(
@@ -1197,18 +1300,18 @@ def main():
                     det = cur.get("val_detection_rate")
                     fpr = cur.get("val_false_pos_rate")
                     st.markdown(f"""
-<div style="background:#13131F; border:1px solid #2D2D4E; border-radius:10px; padding:18px 22px; max-width:720px; margin-bottom:12px;">
-  <div style="font-size:0.75rem; color:#7070A0; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Current model version</div>
+<div style="background:#F4F6FB; border:1px solid #E5E9F2; border-radius:10px; padding:18px 22px; max-width:720px; margin-bottom:12px;">
+  <div style="font-size:0.75rem; color:#64748B; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Current model version</div>
   <div style="display:flex; flex-wrap:wrap; gap:24px;">
-    <div><div style="font-size:0.68rem; color:#5A5A8A;">Version</div><div style="font-size:1.1rem; font-weight:700; color:#D0D0F0; font-family:monospace;">{cur['version_id']}</div></div>
-    <div><div style="font-size:0.68rem; color:#5A5A8A;">Trained</div><div style="font-size:0.88rem; color:#B0B0D0;">{cur['utc_timestamp'][:19].replace('T',' ')} UTC</div></div>
-    <div><div style="font-size:0.68rem; color:#5A5A8A;">Model type</div><div style="font-size:0.88rem; color:#B0B0D0;">{cur['model_type']}</div></div>
-    <div><div style="font-size:0.68rem; color:#5A5A8A;">Labels</div><div style="font-size:0.88rem; color:#B0B0D0;">{cur['n_total_labels']} ({cur['n_confirmed']} confirmed, {cur['n_cleared']} cleared)</div></div>
+    <div><div style="font-size:0.68rem; color:#64748B;">Version</div><div style="font-size:1.1rem; font-weight:700; color:#334155; font-family:monospace;">{cur['version_id']}</div></div>
+    <div><div style="font-size:0.68rem; color:#64748B;">Trained</div><div style="font-size:0.88rem; color:#475569;">{cur['utc_timestamp'][:19].replace('T',' ')} UTC</div></div>
+    <div><div style="font-size:0.68rem; color:#64748B;">Model type</div><div style="font-size:0.88rem; color:#475569;">{cur['model_type']}</div></div>
+    <div><div style="font-size:0.68rem; color:#64748B;">Labels</div><div style="font-size:0.88rem; color:#475569;">{cur['n_total_labels']} ({cur['n_confirmed']} confirmed, {cur['n_cleared']} cleared)</div></div>
   </div>
-  <div style="margin-top:14px; border-top:1px solid #2A2A4A; padding-top:12px; display:flex; gap:24px; flex-wrap:wrap;">
-    <div><div style="font-size:0.68rem; color:#5A5A8A;">Training data hash</div><div style="font-size:0.78rem; color:#7070A0; font-family:monospace;">{cur['training_data_hash'][:32]}...</div></div>
-    <div><div style="font-size:0.68rem; color:#5A5A8A;">Detection rate (val)</div><div style="font-size:0.88rem; color:#{'6BCB77' if det and det >= 0.8 else 'FFD93D' if det else '6A6A9A'};">{f"{det:.1%}" if det is not None else "N/A"}</div></div>
-    <div><div style="font-size:0.68rem; color:#5A5A8A;">FP rate (val)</div><div style="font-size:0.88rem; color:#{'6BCB77' if fpr is not None and fpr <= 0.1 else 'FF6B6B' if fpr else '6A6A9A'};">{f"{fpr:.1%}" if fpr is not None else "N/A"}</div></div>
+  <div style="margin-top:14px; border-top:1px solid #E5E9F2; padding-top:12px; display:flex; gap:24px; flex-wrap:wrap;">
+    <div><div style="font-size:0.68rem; color:#64748B;">Training data hash</div><div style="font-size:0.78rem; color:#64748B; font-family:monospace;">{cur['training_data_hash'][:32]}...</div></div>
+    <div><div style="font-size:0.68rem; color:#64748B;">Detection rate (val)</div><div style="font-size:0.88rem; color:#{'6BCB77' if det and det >= 0.8 else 'FFD93D' if det else '6A6A9A'};">{f"{det:.1%}" if det is not None else "N/A"}</div></div>
+    <div><div style="font-size:0.68rem; color:#64748B;">FP rate (val)</div><div style="font-size:0.88rem; color:#{'6BCB77' if fpr is not None and fpr <= 0.1 else 'FF6B6B' if fpr else '6A6A9A'};">{f"{fpr:.1%}" if fpr is not None else "N/A"}</div></div>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -1294,7 +1397,7 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
         # ── Role gate — use else block, NOT st.stop(), so subsequent tabs still render
         if not _can_audit:
             st.warning(
-                f"Access restricted — Role **{auth.current_role()}** "
+                f"Access restricted — Role **{auth_mock.current_role()}** "
                 "cannot view the Audit Trail. Supervisor or Admin role required."
             )
         else:
@@ -1309,23 +1412,51 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
                 "no record has been altered or deleted."
             )
 
+            # ── System status / operational diagnostics ───────────────────────
+            with st.expander("System status & operational diagnostics"):
+                try:
+                    chk = _obs.self_check()
+                    st.markdown(
+                        f"**Overall:** {'🟢 OK' if chk['ok'] else '🔴 attention needed'}")
+                    st.dataframe(
+                        pd.DataFrame([
+                            {"check": k, "ok": v["ok"], "detail": v["detail"]}
+                            for k, v in chk["checks"].items()
+                        ]),
+                        hide_index=True, use_container_width=True,
+                    )
+                    cfg = _config.summary()
+                    st.caption(
+                        f"env={cfg['app_env']} · audit_db={cfg['audit_db']} · "
+                        f"case_db={cfg['case_db']} · MFA={'on' if cfg['mfa_enabled'] else 'off'} "
+                        f"· SESSION_SECRET={'set' if cfg['session_secret_set'] else 'ephemeral'}"
+                    )
+                    if cfg["config_problems"]:
+                        st.warning("Production config problems: " +
+                                   "; ".join(cfg["config_problems"]))
+                except Exception as _exc:
+                    st.caption(f"Diagnostics unavailable: {_exc}")
+
             col_v, col_e, col_spacer = st.columns([3, 3, 4])
             with col_v:
-                _vi_clicked = st.button("Verify Integrity", icon=":material/shield:", key="audit_verify", use_container_width=True)
+                _vi_clicked = st.button("Verify Integrity", icon=":material/shield:", key="audit_verify", use_container_width=True, help="Recompute the audit-log hash chain to detect any tampering.")
             with col_e:
-                _ex_clicked = st.button("Export to CSV", icon=":material/download:", key="audit_export", use_container_width=True)
+                _ex_clicked = st.button("Export to CSV", icon=":material/download:", key="audit_export", use_container_width=True, help="Download the full audit trail as a CSV file.")
 
             if _vi_clicked:
                 try:
                     # ── Function-level gate (second line of defence) ──────
-                    auth.require_permission("verify_integrity")
+                    auth_mock.require_permission("verify_integrity")
                     import audit_log as _al
                     res = _al.verify_integrity()
+                    _obs.log_action("verify_integrity", target="audit_log",
+                                    outcome="ok" if res["ok"] else "integrity_break")
                     if res["ok"]:
                         st.success(res['message'])
                     else:
                         st.error(res['message'])
                 except PermissionError as pe:
+                    _obs.log_action("verify_integrity", outcome="denied")
                     st.error(f"Access denied: {pe}")
                 except Exception as exc:
                     st.error(f"Audit log error: {exc}")
@@ -1333,11 +1464,14 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
             if _ex_clicked:
                 try:
                     # ── Function-level gate (second line of defence) ──────
-                    auth.require_permission("export_audit_log")
+                    auth_mock.require_permission("export_audit_log")
                     import audit_log as _al
                     n = _al.export_to_csv()
+                    _obs.log_action("export_audit_log", target="audit_log_export.csv",
+                                    rows=n)
                     st.success(f"Exported {n} records → audit_log_export.csv")
                 except PermissionError as pe:
+                    _obs.log_action("export_audit_log", outcome="denied")
                     st.error(f"Access denied: {pe}")
                 except Exception as exc:
                     st.error(f"Export error: {exc}")
@@ -1388,15 +1522,15 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     <div class="prov-header">
       <div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;">
         <div>
-          <div class="prov-name">{prow['provider_name']}</div>
-          <div class="prov-pid">{pid} · {prow['specialty']}</div>
+          <div class="prov-name">{html.escape(str(prow['provider_name']))}</div>
+          <div class="prov-pid">{html.escape(str(pid))} · {html.escape(str(prow['specialty']))}</div>
         </div>
         <span class="conf-pill conf-{confidence}">{confidence} CONFIDENCE</span>
       </div>
       <div class="prov-stats">
         <div class="prov-stat">
           <div class="prov-stat-label">Risk Score</div>
-          <div class="prov-stat-value" style="color:{{'HIGH':'#FB7185','MEDIUM':'#FCD34D','LOW':'#6EE7B7'}}.get('{confidence}','#CCC')">{risk_score:.0f} / 100</div>
+          <div class="prov-stat-value" style="color:{{'HIGH':'#E11D48','MEDIUM':'#D97706','LOW':'#059669'}}.get('{confidence}','#CCC')">{risk_score:.0f} / 100</div>
         </div>
         <div class="prov-stat">
           <div class="prov-stat-label">Est. Exposure</div>
@@ -1408,20 +1542,20 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
         </div>
         <div class="prov-stat">
           <div class="prov-stat-label">Specialty</div>
-          <div class="prov-stat-value">{prow['specialty']}</div>
+          <div class="prov-stat-value">{html.escape(str(prow['specialty']))}</div>
         </div>
       </div>
     </div>
     """, unsafe_allow_html=True)
 
     # Signals
-    st.markdown('<div style="font-size:0.62rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">Active Signals</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:0.62rem;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">Active Signals</div>', unsafe_allow_html=True)
     st.markdown(signal_badges(pid, rules, peer, ml, prow), unsafe_allow_html=True)
     st.markdown('<div style="height:12px;"></div>', unsafe_allow_html=True)
 
     # ── Auditor action buttons ────────────────────────────────────────────────
     st.markdown(
-        '<div style="font-size:0.62rem;font-weight:700;color:#2D3760;text-transform:uppercase;'
+        '<div style="font-size:0.62rem;font-weight:700;color:#94A3B8;text-transform:uppercase;'
         'letter-spacing:1.3px;margin-bottom:8px;font-family:\'JetBrains Mono\',monospace;">'
         'Record Disposition (logged to audit trail)</div>',
         unsafe_allow_html=True,
@@ -1440,15 +1574,15 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     btn_c, btn_cl, btn_i, _ = st.columns([2, 2, 3, 2])
 
     with btn_c:
-        _confirm_clicked = st.button("Confirm", icon=":material/check:", key=f"btn_confirm_{pid}", type="primary", use_container_width=True)
+        _confirm_clicked = st.button("Confirm", icon=":material/check:", key=f"btn_confirm_{pid}", type="primary", use_container_width=True, help="Record this flag as a confirmed finding.")
     with btn_cl:
-        _clear_clicked = st.button("Clear", icon=":material/close:", key=f"btn_clear_{pid}", use_container_width=True)
+        _clear_clicked = st.button("Clear", icon=":material/close:", key=f"btn_clear_{pid}", use_container_width=True, help="Dismiss this flag as not an issue.")
     with btn_i:
-        _invest_clicked = st.button("Investigating", icon=":material/flag:", key=f"btn_invest_{pid}", use_container_width=True)
+        _invest_clicked = st.button("Investigating", icon=":material/flag:", key=f"btn_invest_{pid}", use_container_width=True, help="Mark this case as under active investigation.")
 
     if _confirm_clicked:
         try:
-            auth.require_permission("take_action")   # function-level gate
+            auth_mock.require_permission("take_action")   # function-level gate
             import audit_log as _al
             from feedback import record_disposition
             _al.append_event(
@@ -1462,6 +1596,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             record_disposition(pid, "confirmed",
                                notes=f"Confirmed via dashboard by {_user}",
                                source="dashboard")
+            _obs.log_action("take_action", target=pid, disposition="confirmed")
             st.success(f"Recorded: {pid} confirmed")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
@@ -1470,7 +1605,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
 
     if _clear_clicked:
         try:
-            auth.require_permission("take_action")   # function-level gate
+            auth_mock.require_permission("take_action")   # function-level gate
             import audit_log as _al
             from feedback import record_disposition
             _al.append_event(
@@ -1484,6 +1619,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             record_disposition(pid, "cleared",
                                notes=f"Cleared via dashboard by {_user}",
                                source="dashboard")
+            _obs.log_action("take_action", target=pid, disposition="cleared")
             st.success(f"Recorded: {pid} cleared")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
@@ -1492,7 +1628,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
 
     if _invest_clicked:
         try:
-            auth.require_permission("take_action")   # function-level gate
+            auth_mock.require_permission("take_action")   # function-level gate
             import audit_log as _al
             _al.append_event(
                 "action_taken",
@@ -1502,6 +1638,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                 action_taken="investigating",
                 reasoning=f"Auditor {_user} opened investigation",
             )
+            _obs.log_action("take_action", target=pid, disposition="investigating")
             st.info(f"Recorded: {pid} under investigation")
         except PermissionError as pe:
             st.error(f"Access denied: {pe}")
@@ -1514,7 +1651,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
     gauge_col, tabs_col = st.columns([1, 3])
     with gauge_col:
         st.plotly_chart(risk_gauge(risk_score, confidence), use_container_width=True)
-        st.markdown(f'<div style="text-align:center; font-size:0.7rem; color:#5A5A8A; margin-top:-10px;">Risk Score</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="text-align:center; font-size:0.7rem; color:#64748B; margin-top:-10px;">Risk Score</div>', unsafe_allow_html=True)
 
     with tabs_col:
         tab1, tab2, tab3, tab4 = st.tabs(
@@ -1530,23 +1667,23 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                 for _, r in rule_rows.iterrows():
                     st.markdown(f"""
                     <div class="ev-card ev-rule">
-                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#FF7070","margin-right:3px;")} {r['rule'].replace('_', ' ').upper()}</span>
+                      <span class="ev-rule-label">{_icon("exclamation-triangle",12,"#DC2626","margin-right:3px;")} {html.escape(str(r['rule']).replace('_', ' ').upper())}</span>
                       <span class="ev-exposure">${r['estimated_exposure']:,.2f}</span>
-                      <div class="ev-text">{r['evidence']}</div>
+                      <div class="ev-text">{html.escape(str(r['evidence']))}</div>
                     </div>
                     """, unsafe_allow_html=True)
 
             peer_rows = peer[peer["provider_id"] == pid] if not peer.empty else pd.DataFrame()
             if not peer_rows.empty:
-                st.markdown('<div style="margin-top:14px; font-size:0.82rem; font-weight:600; color:#80AAFF;">Peer-Stat Flags (|z| &gt; 3):</div>', unsafe_allow_html=True)
+                st.markdown('<div style="margin-top:14px; font-size:0.82rem; font-weight:600; color:#2563EB;">Peer-Stat Flags (|z| &gt; 3):</div>', unsafe_allow_html=True)
                 for _, r in peer_rows.sort_values("z_score", key=abs, ascending=False).iterrows():
                     direction = "above" if r["z_score"] > 0 else "below"
                     st.markdown(f"""
                     <div class="ev-card ev-peer">
-                      <span class="ev-peer-label">{_icon("chart-bar",12,"#6A9FFF","margin-right:3px;")} {r['metric'].replace('_', ' ').upper()}</span>
+                      <span class="ev-peer-label">{_icon("chart-bar",12,"#2563EB","margin-right:3px;")} {html.escape(str(r['metric']).replace('_', ' ').upper())}</span>
                       <div class="ev-text">
-                        Provider: <strong style="color:#D0D0F0">{r['provider_value']:.2f}</strong> &nbsp;·&nbsp;
-                        z = <strong style="color:#FFD93D">{r['z_score']:.2f}</strong> &nbsp;·&nbsp;
+                        Provider: <strong style="color:#334155">{r['provider_value']:.2f}</strong> &nbsp;·&nbsp;
+                        z = <strong style="color:#D97706">{r['z_score']:.2f}</strong> &nbsp;·&nbsp;
                         peer median: {r['peer_median']:.2f} &nbsp;·&nbsp;
                         {abs(r['z_score']):.1f}σ {direction}
                       </div>
@@ -1594,7 +1731,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                         st.markdown(
                             f'<div style="background:rgba(80,60,0,0.25); border:1px solid '
                             f'rgba(200,150,0,0.4); border-radius:6px; padding:8px 12px; '
-                            f'font-size:0.75rem; color:#C8A020; margin-top:4px;">'
+                            f'font-size:0.75rem; color:#B45309; margin-top:4px;">'
                             f'<strong>Privacy notice (epsilon={float(_eps):.1f}):</strong> '
                             f'Explanation values include calibrated Laplace privacy noise. '
                             f'This is a <em>demo-grade</em> privacy measure, NOT a formal '
@@ -1621,7 +1758,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
             if pid in expls:
                 _is_ai = "[Generated with Anthropic API]" in expls[pid]["explanation"]
                 if _has_key and not _is_ai:
-                    if st.button("Regenerate with Claude", icon=":material/auto_awesome:", key=f"regen_expl_{pid}"):
+                    if st.button("Regenerate with Claude", icon=":material/auto_awesome:", key=f"regen_expl_{pid}", help="Re-run the AI to rewrite this provider's explanation."):
                         with st.spinner("Calling Claude…"):
                             from explain import build_explanations
                             build_explanations(use_api=True)
@@ -1635,7 +1772,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
                 )
             else:
                 st.info("Explanation not pre-generated for this provider.")
-                if st.button("Generate explanation now", icon=":material/auto_awesome:", key=f"gen_expl_{pid}"):
+                if st.button("Generate explanation now", icon=":material/auto_awesome:", key=f"gen_expl_{pid}", help="Produce a plain-language explanation for this flag."):
                     with st.spinner("Calling Claude…" if _has_key else "Building template…"):
                         from explain import build_explanations
                         build_explanations(use_api=_has_key)
@@ -1644,4 +1781,5 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
 
 
 if __name__ == "__main__":
-    main()
+    with _ux.error_boundary("dashboard"):
+        main()
