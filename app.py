@@ -1069,10 +1069,6 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-    # ── System diagnostics (supervisors+) ─────────────────────────────────────
-    if auth_mock.has_permission("verify_integrity"):
-        _ux.diagnostics()
-
     # ── Tabs ─────────────────────────────────────────────────────────────────
     st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
     tab_ohip, tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
