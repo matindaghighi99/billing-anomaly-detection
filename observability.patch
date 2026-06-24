@@ -1,0 +1,261 @@
+diff --git a/dashboard/app.py b/dashboard/app.py
+index 1a56431..9c570e5 100644
+--- a/dashboard/app.py
++++ b/dashboard/app.py
+@@ -34,6 +34,7 @@ import pandas as pd
+ import plotly.express as px
+ import plotly.graph_objects as go
+ import streamlit as st
++import ux as _ux  # user-facing observability helpers
+ 
+ import auth_mock
+ 
+@@ -866,12 +867,12 @@ def render_sidebar(scores: pd.DataFrame):
+         st.markdown('<div style="font-size:0.6rem;font-weight:700;color:#2D3760;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;font-family:\'JetBrains Mono\',monospace;">Filters</div>', unsafe_allow_html=True)
+ 
+         specs = ["All"] + sorted(scores["specialty"].unique().tolist())
+-        sel_spec = st.selectbox("Specialty", specs, key="sb_spec")
++        sel_spec = st.selectbox("Specialty", specs, key="sb_spec", help="Show only providers in this medical specialty.")
+ 
+         conf_opts = ["All", "HIGH", "MEDIUM", "LOW"]
+-        sel_conf = st.selectbox("Confidence Tier", conf_opts, key="sb_conf")
++        sel_conf = st.selectbox("Confidence Tier", conf_opts, key="sb_conf", help="Filter by the model's confidence in each flag (HIGH / MEDIUM / LOW).")
+ 
+-        min_score = st.slider("Min Risk Score", 0, 100, RISK_THRESHOLD, 5, key="sb_score")
++        min_score = st.slider("Min Risk Score", 0, 100, RISK_THRESHOLD, 5, key="sb_score", help="Hide providers scoring below this 0–100 risk threshold.")
+ 
+         # ── Quick stats ───────────────────────────────────────────────────
+         st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:18px 4px 16px;"></div>""", unsafe_allow_html=True)
+@@ -934,7 +935,7 @@ def render_sidebar(scores: pd.DataFrame):
+ </div>
+ """, unsafe_allow_html=True)
+ 
+-        if st.button("Sign Out", icon=":material/logout:", use_container_width=True, key="btn_logout"):
++        if st.button("Sign Out", icon=":material/logout:", use_container_width=True, key="btn_logout", help="End your session and return to the sign-in screen."):
+             auth_mock.logout()
+ 
+         st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:16px 4px 14px;"></div>""", unsafe_allow_html=True)
+@@ -943,12 +944,13 @@ def render_sidebar(scores: pd.DataFrame):
+             "Your ID (for audit log)",
+             value=st.session_state.get("auditor_id", auth_mock.current_user() or "auditor"),
+             key="sb_auditor_id",
++            help="Recorded against every action you take in the audit trail.",
+             label_visibility="collapsed",
+         )
+         st.session_state["auditor_id"] = auditor_id
+ 
+         st.markdown("""<div style="height:1px;background:linear-gradient(90deg,transparent,#1A2050,transparent);margin:14px 4px 14px;"></div>""", unsafe_allow_html=True)
+-        if st.button("Clear Cache & Reload", icon=":material/refresh:", use_container_width=True):
++        if st.button("Clear Cache & Reload", icon=":material/refresh:", use_container_width=True, help="Re-read data from disk and rebuild cached tables."):
+             st.cache_data.clear()
+             st.rerun()
+ 
+@@ -985,13 +987,14 @@ def main():
+ 
+     _ensure_demo_data()   # self-heal: generate any missing data on first run
+ 
+-    scores  = load_scores()
+-    rules   = load_rules()
+-    peer    = load_peer()
+-    ml      = load_ml()
+-    metrics = load_metrics()
+-    expls   = load_explanations()
+-    claims  = load_claims_sample()
++    with st.spinner("Loading audit worklist…"):
++        scores  = load_scores()
++        rules   = load_rules()
++        peer    = load_peer()
++        ml      = load_ml()
++        metrics = load_metrics()
++        expls   = load_explanations()
++        claims  = load_claims_sample()
+ 
+     if scores.empty:
+         st.error("No scoring data found. Run `python scoring.py` first.")
+@@ -1056,7 +1059,7 @@ def main():
+     for col, icon, accent, label, value, sub in kpis:
+         with col:
+             st.markdown(f"""
+-            <div class="kpi-card" style="--kpi-accent:{accent};">
++            <div class="kpi-card" title="{label} — {sub}" style="--kpi-accent:{accent};">
+               <div style="position:absolute;top:0;left:0;bottom:0;width:3px;
+                 background:linear-gradient(180deg,{accent},transparent);border-radius:4px 0 0 4px;"></div>
+               <div class="kpi-icon">{icon}</div>
+@@ -1066,6 +1069,10 @@ def main():
+             </div>
+             """, unsafe_allow_html=True)
+ 
++    # ── System diagnostics (supervisors+) ─────────────────────────────────────
++    if auth_mock.has_permission("verify_integrity"):
++        _ux.diagnostics()
++
+     # ── Tabs ─────────────────────────────────────────────────────────────────
+     st.markdown('<div style="height:16px;"></div>', unsafe_allow_html=True)
+     tab_ohip, tab_wl, tab_analytics, tab_model, tab_audit = st.tabs(
+@@ -1145,6 +1152,7 @@ def main():
+         selected_pid = st.selectbox(
+             "Select provider",
+             pid_options,
++            help="Choose a flagged provider to inspect the full evidence detail.",
+             format_func=lambda p: (
+                 f"[{conf_map.get(p, '?'):6s}] {score_map.get(p, 0):5.1f}/100 — "
+                 f"{p}  {name_map.get(p, '')}  ({spec_map.get(p, '')})"
+@@ -1422,9 +1430,9 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution.
+ 
+             col_v, col_e, col_spacer = st.columns([3, 3, 4])
+             with col_v:
+-                _vi_clicked = st.button("Verify Integrity", icon=":material/shield:", key="audit_verify", use_container_width=True)
++                _vi_clicked = st.button("Verify Integrity", icon=":material/shield:", key="audit_verify", use_container_width=True, help="Recompute the audit-log hash chain to detect any tampering.")
+             with col_e:
+-                _ex_clicked = st.button("Export to CSV", icon=":material/download:", key="audit_export", use_container_width=True)
++                _ex_clicked = st.button("Export to CSV", icon=":material/download:", key="audit_export", use_container_width=True, help="Download the full audit trail as a CSV file.")
+ 
+             if _vi_clicked:
+                 try:
+@@ -1557,11 +1565,11 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
+     btn_c, btn_cl, btn_i, _ = st.columns([2, 2, 3, 2])
+ 
+     with btn_c:
+-        _confirm_clicked = st.button("Confirm", icon=":material/check:", key=f"btn_confirm_{pid}", type="primary", use_container_width=True)
++        _confirm_clicked = st.button("Confirm", icon=":material/check:", key=f"btn_confirm_{pid}", type="primary", use_container_width=True, help="Record this flag as a confirmed finding.")
+     with btn_cl:
+-        _clear_clicked = st.button("Clear", icon=":material/close:", key=f"btn_clear_{pid}", use_container_width=True)
++        _clear_clicked = st.button("Clear", icon=":material/close:", key=f"btn_clear_{pid}", use_container_width=True, help="Dismiss this flag as not an issue.")
+     with btn_i:
+-        _invest_clicked = st.button("Investigating", icon=":material/flag:", key=f"btn_invest_{pid}", use_container_width=True)
++        _invest_clicked = st.button("Investigating", icon=":material/flag:", key=f"btn_invest_{pid}", use_container_width=True, help="Mark this case as under active investigation.")
+ 
+     if _confirm_clicked:
+         try:
+@@ -1741,7 +1749,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
+             if pid in expls:
+                 _is_ai = "[Generated with Anthropic API]" in expls[pid]["explanation"]
+                 if _has_key and not _is_ai:
+-                    if st.button("Regenerate with Claude", icon=":material/auto_awesome:", key=f"regen_expl_{pid}"):
++                    if st.button("Regenerate with Claude", icon=":material/auto_awesome:", key=f"regen_expl_{pid}", help="Re-run the AI to rewrite this provider's explanation."):
+                         with st.spinner("Calling Claude…"):
+                             from explain import build_explanations
+                             build_explanations(use_api=True)
+@@ -1755,7 +1763,7 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
+                 )
+             else:
+                 st.info("Explanation not pre-generated for this provider.")
+-                if st.button("Generate explanation now", icon=":material/auto_awesome:", key=f"gen_expl_{pid}"):
++                if st.button("Generate explanation now", icon=":material/auto_awesome:", key=f"gen_expl_{pid}", help="Produce a plain-language explanation for this flag."):
+                     with st.spinner("Calling Claude…" if _has_key else "Building template…"):
+                         from explain import build_explanations
+                         build_explanations(use_api=_has_key)
+@@ -1764,4 +1772,5 @@ def _render_provider_detail(pid, rules, peer, ml, metrics, expls, claims,
+ 
+ 
+ if __name__ == "__main__":
+-    main()
++    with _ux.error_boundary("dashboard"):
++        main()
+diff --git a/dashboard/ux.py b/dashboard/ux.py
+new file mode 100644
+index 0000000..f6915da
+--- /dev/null
++++ b/dashboard/ux.py
+@@ -0,0 +1,101 @@
++"""ux.py — user-facing observability for the dashboard.
++
++The backend already emits structured logs (observability.py). This module is the
++*visible* half: it turns failures and slow steps into calm, useful messages for
++the auditor instead of raw Streamlit tracebacks, and surfaces a health panel.
++
++  • error_boundary()  wrap the whole page; on an unexpected error show a short
++    message with a correlation id (also logged) instead of a red traceback.
++  • timed()           wrap a slow step: spinner + duration log + friendly error,
++    with a note when it runs longer than expected.
++  • diagnostics()     admin-only expander backed by observability.self_check().
++"""
++
++from __future__ import annotations
++
++import contextlib
++import time
++import uuid
++
++import streamlit as st
++
++try:
++    import observability as _obs
++except Exception:        # observability is optional; degrade gracefully
++    _obs = None
++
++
++def _is_control_flow(exc: BaseException) -> bool:
++    """Streamlit's rerun/stop signals are control flow, not errors."""
++    return type(exc).__name__ in {"RerunException", "StopException", "RerunData"}
++
++
++def _log(action: str, **fields) -> None:
++    if _obs is not None and hasattr(_obs, "log_action"):
++        try:
++            _obs.log_action(action, **fields)
++        except Exception:
++            pass
++
++
++@contextlib.contextmanager
++def error_boundary(area: str = "page"):
++    """Catch unexpected errors anywhere inside and show a calm message."""
++    try:
++        yield
++    except BaseException as exc:           # noqa: BLE001 - deliberate boundary
++        if _is_control_flow(exc):
++            raise
++        cid = uuid.uuid4().hex[:8]
++        _log("ui_error", target=area, outcome="error",
++             error=type(exc).__name__, correlation_id=cid)
++        st.error(
++            "Something went wrong while loading this view, and it has been "
++            f"logged. If it keeps happening, quote reference **{cid}**.",
++            icon="⚠️",
++        )
++        st.stop()
++
++
++@contextlib.contextmanager
++def timed(label: str, *, slow_after: float = 4.0, area: str = ""):
++    """Spinner + timing + friendly error around a slow step (errors swallowed)."""
++    t0 = time.perf_counter()
++    ok = True
++    try:
++        with st.spinner(f"{label}…"):
++            yield
++    except BaseException as exc:           # noqa: BLE001
++        if _is_control_flow(exc):
++            raise
++        ok = False
++        cid = uuid.uuid4().hex[:8]
++        _log("op_error", target=area or label, outcome="error",
++             error=type(exc).__name__, correlation_id=cid)
++        st.error(f"“{label}” couldn’t complete (ref {cid}). "
++                 "Please retry, or use Clear Cache & Reload.", icon="⚠️")
++    finally:
++        dt_ms = round((time.perf_counter() - t0) * 1000)
++        _log("op_timing", target=area or label,
++             outcome="ok" if ok else "error", duration_ms=dt_ms)
++        if ok and dt_ms > slow_after * 1000:
++            st.caption(f"⏳ “{label}” took {dt_ms/1000:.1f}s — longer than usual.")
++
++
++def diagnostics() -> None:
++    """Admin-only system-health panel backed by observability.self_check()."""
++    if _obs is None or not hasattr(_obs, "self_check"):
++        return
++    with st.expander("🩺 System status (diagnostics)", expanded=False):
++        try:
++            chk = _obs.self_check()
++        except Exception as exc:           # noqa: BLE001
++            st.warning(f"Diagnostics unavailable: {exc}")
++            return
++        overall = chk.get("ok", False)
++        st.markdown(f"**Overall:** {'🟢 Healthy' if overall else '🔴 Attention needed'}")
++        for name, c in (chk.get("checks") or {}).items():
++            mark = "🟢" if c.get("ok") else "🔴"
++            detail = c.get("detail", "")
++            st.markdown(f"{mark} **{name}** — <span style='color:#6A78A8'>{detail}</span>",
++                        unsafe_allow_html=True)
