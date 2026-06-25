@@ -967,7 +967,7 @@ def render_sidebar(scores: pd.DataFrame):
             st.cache_data.clear()
             st.rerun()
 
-        st.markdown('<div style="font-size:0.58rem;color:#E2E6F0;text-align:center;margin-top:20px;font-family:\'JetBrains Mono\',monospace;letter-spacing:0.5px;">SYNTHETIC DATA ONLY<br>All entities are fictional.</div>', unsafe_allow_html=True)
+        st.markdown('<div style="font-size:0.58rem;color:#94A3B8;text-align:center;margin-top:20px;font-family:\'JetBrains Mono\',monospace;letter-spacing:0.5px;">SYNTHETIC DATA ONLY<br>All entities are fictional.</div>', unsafe_allow_html=True)
 
     return sel_spec, sel_conf, min_score
 
@@ -1335,8 +1335,6 @@ def main():
 
             # ── Static methodology card ──────────────────────────────────────
             st.markdown("""
-<div style="max-width:780px;">
-
 ### System overview
 
 | Field | Value |
@@ -1389,7 +1387,6 @@ SHAP TreeExplainer (IsolationForest) provides per-provider feature attribution. 
 
 **Privacy notice:** Displayed SHAP contribution values include calibrated Laplace noise (epsilon shown per explanation). This is a demo-grade privacy measure, NOT a formal differential-privacy guarantee across all queries. Formal DP requires a managed privacy budget across all queries.
 
-</div>
 """)
 
     # ═══════════════ AUDIT TRAIL TAB ══════════════════════════════════════════
